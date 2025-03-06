@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
+import '../services/backup_service.dart';
 
 class SettingsPage extends StatelessWidget {
   @override
@@ -51,10 +52,7 @@ class SettingsPage extends StatelessWidget {
             title: Text('Backup & Restore'),
             trailing: Icon(Icons.chevron_right),
             onTap: () {
-              // Navigate to backup settings
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Backup & Restore coming soon')),
-              );
+              _showBackupRestoreOptions(context);
             },
           ),
           Divider(),
@@ -62,11 +60,8 @@ class SettingsPage extends StatelessWidget {
             leading: Icon(Icons.exit_to_app),
             title: Text('Export Data'),
             trailing: Icon(Icons.chevron_right),
-            onTap: () {
-              // Show export options
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Export functionality coming soon')),
-              );
+            onTap: () async {
+              _showExportOptions(context);
             },
           ),
           Divider(),
@@ -105,7 +100,7 @@ class SettingsPage extends StatelessWidget {
           SizedBox(height: 20),
           Center(
             child: Text(
-              'Finance Tracker v1.0.0',
+              'Budget Buddy v1.0.0',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 12,
@@ -113,6 +108,168 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  void _showBackupRestoreOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext bottomSheetContext) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: Icon(Icons.save, color: Colors.blue),
+            title: Text('Create Backup'),
+            subtitle: Text('Save all your data to a file'),
+            onTap: () async {
+              // Close the bottom sheet first
+              Navigator.pop(bottomSheetContext);
+              
+              // Use the original context for dialog
+              BuildContext dialogContext = context;
+              
+              // Show loading indicator
+              showDialog(
+                context: dialogContext,
+                barrierDismissible: false,
+                builder: (BuildContext loadingContext) {
+                  dialogContext = loadingContext; // Store the loading dialog context
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                },
+              );
+              
+              final filePath = await BackupService.instance.createBackup(context);
+              
+              // Hide loading indicator using the stored context
+              Navigator.of(dialogContext).pop();
+              
+              if (filePath != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Backup created and ready to share')),
+                );
+              }
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.restore, color: Colors.orange),
+            title: Text('Restore from Backup'),
+            subtitle: Text('Load data from a backup file'),
+            onTap: () async {
+              // Close the bottom sheet
+              Navigator.pop(bottomSheetContext);
+              
+              // Confirm restore
+              bool shouldRestore = await showDialog(
+                context: context,
+                builder: (BuildContext alertContext) {
+                  return AlertDialog(
+                    title: Text('Restore from Backup'),
+                    content: Text(
+                      'This will replace all your current data with the data from the backup file. Continue?'
+                    ),
+                    actions: [
+                      TextButton(
+                        child: Text('Cancel'),
+                        onPressed: () => Navigator.pop(alertContext, false),
+                      ),
+                      TextButton(
+                        child: Text('Restore'),
+                        onPressed: () => Navigator.pop(alertContext, true),
+                      ),
+                    ],
+                  );
+                },
+              ) ?? false;
+              
+              if (!shouldRestore) return;
+              
+              // Use a new variable for loading dialog context
+              BuildContext dialogContext = context;
+              
+              // Show loading indicator
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext loadingContext) {
+                  dialogContext = loadingContext; // Store the context
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                },
+              );
+              
+              final success = await BackupService.instance.restoreBackup(context);
+              
+              // Hide loading indicator using the stored context
+              Navigator.of(dialogContext).pop();
+              
+              if (success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Data restored successfully')),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExportOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext bottomSheetContext) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: Icon(Icons.table_chart, color: Colors.green),
+            title: Text('Export as CSV'),
+            subtitle: Text('Export data for spreadsheet applications'),
+            onTap: () async {
+              // Close the bottom sheet first
+              Navigator.pop(bottomSheetContext);
+              
+              // Store the context for the loading dialog
+              BuildContext dialogContext = context;
+              
+              // Show loading indicator
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext loadingContext) {
+                  dialogContext = loadingContext; // Store the loading dialog context
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                },
+              );
+              
+              final filePath = await BackupService.instance.exportToCSV(context);
+              
+              // Hide loading indicator using the stored context
+              if (dialogContext != null) {
+                Navigator.of(dialogContext).pop();
+              }
+              
+              if (filePath != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Data exported and ready to share')),
+                );
+              }
+            },
+          ),
+          // You can add more export options here in the future
         ],
       ),
     );
