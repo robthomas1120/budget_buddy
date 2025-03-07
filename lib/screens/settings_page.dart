@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../services/backup_service.dart';
@@ -12,9 +13,9 @@ class SettingsPage extends StatelessWidget {
       body: ListView(
         children: [
           ListTile(
-            leading: Icon(Icons.person),
+            leading: Icon(CupertinoIcons.person_fill),
             title: Text('Profile'),
-            trailing: Icon(Icons.chevron_right),
+            trailing: Icon(CupertinoIcons.chevron_right),
             onTap: () {
               // Navigate to profile settings
               ScaffoldMessenger.of(context).showSnackBar(
@@ -24,9 +25,9 @@ class SettingsPage extends StatelessWidget {
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.category),
+            leading: Icon(CupertinoIcons.tag_fill),
             title: Text('Categories'),
-            trailing: Icon(Icons.chevron_right),
+            trailing: Icon(CupertinoIcons.chevron_right),
             onTap: () {
               // Navigate to categories settings
               ScaffoldMessenger.of(context).showSnackBar(
@@ -36,9 +37,9 @@ class SettingsPage extends StatelessWidget {
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.notifications),
+            leading: Icon(CupertinoIcons.bell_fill),
             title: Text('Notifications'),
-            trailing: Icon(Icons.chevron_right),
+            trailing: Icon(CupertinoIcons.chevron_right),
             onTap: () {
               // Navigate to notification settings
               ScaffoldMessenger.of(context).showSnackBar(
@@ -48,52 +49,29 @@ class SettingsPage extends StatelessWidget {
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.backup),
+            leading: Icon(CupertinoIcons.arrow_clockwise),
             title: Text('Backup & Restore'),
-            trailing: Icon(Icons.chevron_right),
+            trailing: Icon(CupertinoIcons.chevron_right),
             onTap: () {
               _showBackupRestoreOptions(context);
             },
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.exit_to_app),
+            leading: Icon(CupertinoIcons.square_arrow_right),
             title: Text('Export Data'),
-            trailing: Icon(Icons.chevron_right),
+            trailing: Icon(CupertinoIcons.chevron_right),
             onTap: () async {
               _showExportOptions(context);
             },
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.delete),
+            leading: Icon(CupertinoIcons.delete, color: CupertinoColors.destructiveRed),
             title: Text('Clear All Data'),
-            trailing: Icon(Icons.warning, color: Colors.red),
+            trailing: Icon(CupertinoIcons.chevron_right),
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('Clear All Data?'),
-                  content: Text(
-                      'This will permanently delete all your transactions. This action cannot be undone.'),
-                  actions: [
-                    TextButton(
-                      child: Text('Cancel'),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    TextButton(
-                      child: Text('Delete', style: TextStyle(color: Colors.red)),
-                      onPressed: () async {
-                        await DatabaseHelper.instance.deleteAllTransactions();
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('All data has been deleted')),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              );
+              _showClearDataDialog(context);
             },
           ),
           Divider(),
@@ -114,162 +92,247 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showBackupRestoreOptions(BuildContext context) {
-    showModalBottomSheet(
+    showCupertinoModalPopup(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (BuildContext bottomSheetContext) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: Icon(Icons.save, color: Colors.blue),
-            title: Text('Create Backup'),
-            subtitle: Text('Save all your data to a file'),
-            onTap: () async {
-              // Close the bottom sheet first
+      builder: (bottomSheetContext) => CupertinoActionSheet(
+        title: Text('Backup & Restore'),
+        message: Text('Choose an option'),
+        actions: [
+          CupertinoActionSheetAction(
+            child: Text('Create Backup'),
+            onPressed: () async {
               Navigator.pop(bottomSheetContext);
               
-              // Use the original context for dialog
-              BuildContext dialogContext = context;
-              
               // Show loading indicator
-              showDialog(
-                context: dialogContext,
+              BuildContext dialogContext = context;
+              showCupertinoDialog(
+                context: context,
                 barrierDismissible: false,
-                builder: (BuildContext loadingContext) {
-                  dialogContext = loadingContext; // Store the loading dialog context
-                  return Center(
-                    child: CircularProgressIndicator(),
+                builder: (loadingContext) {
+                  dialogContext = loadingContext;
+                  return CupertinoAlertDialog(
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CupertinoActivityIndicator(),
+                        SizedBox(height: 10),
+                        Text('Creating backup...'),
+                      ],
+                    ),
                   );
                 },
               );
               
               final filePath = await BackupService.instance.createBackup(context);
               
-              // Hide loading indicator using the stored context
+              // Hide loading indicator
               Navigator.of(dialogContext).pop();
               
               if (filePath != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Backup created and ready to share')),
+                showCupertinoModalPopup(
+                  context: context,
+                  builder: (context) => CupertinoActionSheet(
+                    message: Text('Backup created and ready to share'),
+                    actions: [
+                      CupertinoActionSheetAction(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('OK'),
+                      ),
+                    ],
+                  ),
                 );
               }
             },
           ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.restore, color: Colors.orange),
-            title: Text('Restore from Backup'),
-            subtitle: Text('Load data from a backup file'),
-            onTap: () async {
-              // Close the bottom sheet
+          CupertinoActionSheetAction(
+            child: Text('Restore from Backup'),
+            onPressed: () async {
               Navigator.pop(bottomSheetContext);
               
               // Confirm restore
-              bool shouldRestore = await showDialog(
+              bool shouldRestore = await showCupertinoDialog<bool>(
                 context: context,
-                builder: (BuildContext alertContext) {
-                  return AlertDialog(
-                    title: Text('Restore from Backup'),
-                    content: Text(
-                      'This will replace all your current data with the data from the backup file. Continue?'
+                builder: (alertContext) => CupertinoAlertDialog(
+                  title: Text('Restore from Backup'),
+                  content: Text(
+                    'This will replace all your current data with the data from the backup file. Continue?'
+                  ),
+                  actions: [
+                    CupertinoDialogAction(
+                      isDefaultAction: true,
+                      child: Text('Cancel'),
+                      onPressed: () => Navigator.pop(alertContext, false),
                     ),
-                    actions: [
-                      TextButton(
-                        child: Text('Cancel'),
-                        onPressed: () => Navigator.pop(alertContext, false),
-                      ),
-                      TextButton(
-                        child: Text('Restore'),
-                        onPressed: () => Navigator.pop(alertContext, true),
-                      ),
-                    ],
-                  );
-                },
+                    CupertinoDialogAction(
+                      child: Text('Restore'),
+                      onPressed: () => Navigator.pop(alertContext, true),
+                    ),
+                  ],
+                ),
               ) ?? false;
               
               if (!shouldRestore) return;
               
-              // Use a new variable for loading dialog context
-              BuildContext dialogContext = context;
-              
               // Show loading indicator
-              showDialog(
+              BuildContext dialogContext = context;
+              showCupertinoDialog(
                 context: context,
                 barrierDismissible: false,
-                builder: (BuildContext loadingContext) {
-                  dialogContext = loadingContext; // Store the context
-                  return Center(
-                    child: CircularProgressIndicator(),
+                builder: (loadingContext) {
+                  dialogContext = loadingContext;
+                  return CupertinoAlertDialog(
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CupertinoActivityIndicator(),
+                        SizedBox(height: 10),
+                        Text('Restoring data...'),
+                      ],
+                    ),
                   );
                 },
               );
               
               final success = await BackupService.instance.restoreBackup(context);
               
-              // Hide loading indicator using the stored context
+              // Hide loading indicator
               Navigator.of(dialogContext).pop();
               
               if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Data restored successfully')),
+                showCupertinoModalPopup(
+                  context: context,
+                  builder: (context) => CupertinoActionSheet(
+                    message: Text('Data restored successfully'),
+                    actions: [
+                      CupertinoActionSheetAction(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('OK'),
+                      ),
+                    ],
+                  ),
                 );
               }
             },
           ),
         ],
+        cancelButton: CupertinoActionSheetAction(
+          isDestructiveAction: true,
+          onPressed: () => Navigator.pop(bottomSheetContext),
+          child: Text('Cancel'),
+        ),
       ),
     );
   }
 
   void _showExportOptions(BuildContext context) {
-    showModalBottomSheet(
+    showCupertinoModalPopup(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (BuildContext bottomSheetContext) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: Icon(Icons.table_chart, color: Colors.green),
-            title: Text('Export as CSV'),
-            subtitle: Text('Export data for spreadsheet applications'),
-            onTap: () async {
-              // Close the bottom sheet first
+      builder: (bottomSheetContext) => CupertinoActionSheet(
+        title: Text('Export Data'),
+        message: Text('Choose a format'),
+        actions: [
+          CupertinoActionSheetAction(
+            child: Text('Export as CSV'),
+            onPressed: () async {
               Navigator.pop(bottomSheetContext);
               
-              // Store the context for the loading dialog
-              BuildContext dialogContext = context;
-              
               // Show loading indicator
-              showDialog(
+              BuildContext dialogContext = context;
+              showCupertinoDialog(
                 context: context,
                 barrierDismissible: false,
-                builder: (BuildContext loadingContext) {
-                  dialogContext = loadingContext; // Store the loading dialog context
-                  return Center(
-                    child: CircularProgressIndicator(),
+                builder: (loadingContext) {
+                  dialogContext = loadingContext;
+                  return CupertinoAlertDialog(
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CupertinoActivityIndicator(),
+                        SizedBox(height: 10),
+                        Text('Exporting data...'),
+                      ],
+                    ),
                   );
                 },
               );
               
               final filePath = await BackupService.instance.exportToCSV(context);
               
-              // Hide loading indicator using the stored context
-              if (dialogContext != null) {
-                Navigator.of(dialogContext).pop();
-              }
+              // Hide loading indicator
+              Navigator.of(dialogContext).pop();
               
               if (filePath != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Data exported and ready to share')),
+                showCupertinoModalPopup(
+                  context: context,
+                  builder: (context) => CupertinoActionSheet(
+                    message: Text('Data exported and ready to share'),
+                    actions: [
+                      CupertinoActionSheetAction(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('OK'),
+                      ),
+                    ],
+                  ),
                 );
               }
             },
           ),
-          // You can add more export options here in the future
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDestructiveAction: true,
+          onPressed: () => Navigator.pop(bottomSheetContext),
+          child: Text('Cancel'),
+        ),
+      ),
+    );
+  }
+
+  void _showClearDataDialog(BuildContext context) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(
+          'Clear All Data?',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'This will permanently delete all your transactions. This action cannot be undone.',
+          style: TextStyle(
+            fontSize: 13,
+            color: CupertinoColors.black.withOpacity(0.8),
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            child: Text('Delete'),
+            onPressed: () async {
+              await DatabaseHelper.instance.deleteAllTransactions();
+              Navigator.of(context).pop();
+              
+              // Show iOS-style confirmation
+              showCupertinoModalPopup(
+                context: context,
+                builder: (context) => CupertinoActionSheet(
+                  message: Text('All data has been deleted'),
+                  actions: [
+                    CupertinoActionSheetAction(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('OK'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
