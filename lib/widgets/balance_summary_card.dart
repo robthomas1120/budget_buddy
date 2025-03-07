@@ -1,9 +1,9 @@
 // widgets/balance_summary_card.dart
 
 import 'package:flutter/material.dart';
-import '../database/database_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class BalanceSummaryCard extends StatelessWidget {
+class BalanceSummaryCard extends StatefulWidget {
   final double currentBalance;
   final double income;
   final double expenses;
@@ -18,6 +18,42 @@ class BalanceSummaryCard extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _BalanceSummaryCardState createState() => _BalanceSummaryCardState();
+}
+
+class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
+  bool _isBalanceVisible = false;
+  final String _balanceVisibilityKey = 'balance_visibility';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBalanceVisibilityPreference();
+  }
+  
+  // Load saved preference for balance visibility
+  Future<void> _loadBalanceVisibilityPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isBalanceVisible = prefs.getBool(_balanceVisibilityKey) ?? false;
+    });
+  }
+  
+  // Save balance visibility preference
+  Future<void> _saveBalanceVisibilityPreference(bool isVisible) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool(_balanceVisibilityKey, isVisible);
+  }
+
+  // Toggle balance visibility
+  void _toggleBalanceVisibility() {
+    setState(() {
+      _isBalanceVisible = !_isBalanceVisible;
+      _saveBalanceVisibilityPreference(_isBalanceVisible);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
@@ -26,7 +62,7 @@ class BalanceSummaryCard extends StatelessWidget {
       ),
       color: Colors.green,
       child: InkWell(
-        onTap: () => onBalanceTap(),
+        onTap: () => widget.onBalanceTap(),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -42,9 +78,24 @@ class BalanceSummaryCard extends StatelessWidget {
                       fontSize: 16,
                     ),
                   ),
-                  Icon(
-                    Icons.trending_up,
-                    color: Colors.white,
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          _isBalanceVisible ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        onPressed: _toggleBalanceVisibility,
+                        padding: EdgeInsets.zero,
+                        constraints: BoxConstraints(),
+                      ),
+                      SizedBox(width: 8),
+                      Icon(
+                        Icons.trending_up,
+                        color: Colors.white,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -52,7 +103,9 @@ class BalanceSummaryCard extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    '₱${currentBalance.toStringAsFixed(2)}',
+                    _isBalanceVisible 
+                      ? '₱${widget.currentBalance.toStringAsFixed(2)}'
+                      : '₱ ------',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -67,54 +120,7 @@ class BalanceSummaryCard extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Income',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 14,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        '₱${income.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Expenses',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 14,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        '₱${expenses.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              // No income or expenses row - removed as requested
             ],
           ),
         ),

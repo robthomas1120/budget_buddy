@@ -1,88 +1,94 @@
-//
-//  BudgetBuddyWidget.swift
-//  BudgetBuddyWidget
-//
-//  Created by Rob Thomas Alvarez on 3/7/25.
-//
-
 import WidgetKit
 import SwiftUI
+import Intents
 
-struct Provider: AppIntentTimelineProvider {
+struct Provider: IntentTimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), configuration: ConfigurationAppIntent())
+        SimpleEntry(date: Date(), configuration: ConfigurationIntent())
     }
 
-    func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> SimpleEntry {
-        SimpleEntry(date: Date(), configuration: configuration)
+    func getSnapshot(for configuration: ConfigurationIntent, in context: Context, completion: @escaping (SimpleEntry) -> ()) {
+        let entry = SimpleEntry(date: Date(), configuration: configuration)
+        completion(entry)
     }
-    
-    func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<SimpleEntry> {
+
+    func getTimeline(for configuration: ConfigurationIntent, in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         var entries: [SimpleEntry] = []
-
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
-        let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, configuration: configuration)
-            entries.append(entry)
-        }
-
-        return Timeline(entries: entries, policy: .atEnd)
+        
+        // Generate a timeline consisting of one entry
+        let entry = SimpleEntry(date: Date(), configuration: configuration)
+        entries.append(entry)
+        
+        let timeline = Timeline(entries: entries, policy: .atEnd)
+        completion(timeline)
     }
-
-//    func relevances() async -> WidgetRelevances<ConfigurationAppIntent> {
-//        // Generate a list containing the contexts this widget is relevant in.
-//    }
 }
 
 struct SimpleEntry: TimelineEntry {
     let date: Date
-    let configuration: ConfigurationAppIntent
+    let configuration: ConfigurationIntent
 }
 
 struct BudgetBuddyWidgetEntryView : View {
     var entry: Provider.Entry
-
+    
     var body: some View {
         VStack {
-            Text("Time:")
-            Text(entry.date, style: .time)
-
-            Text("Favorite Emoji:")
-            Text(entry.configuration.favoriteEmoji)
+            Text("Budget Buddy")
+                .font(.headline)
+                .padding(.bottom, 5)
+            
+            HStack(spacing: 10) {
+                Link(destination: URL(string: "budgetbuddy://addIncome")!) {
+                    VStack {
+                        Image(systemName: "arrow.down.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.green)
+                        Text("Income")
+                            .font(.caption)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(8)
+                    .background(Color.green.opacity(0.2))
+                    .cornerRadius(8)
+                }
+                
+                Link(destination: URL(string: "budgetbuddy://addExpense")!) {
+                    VStack {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.red)
+                        Text("Expense")
+                            .font(.caption)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(8)
+                    .background(Color.red.opacity(0.2))
+                    .cornerRadius(8)
+                }
+            }
         }
+        .padding()
     }
 }
 
+@main
 struct BudgetBuddyWidget: Widget {
     let kind: String = "BudgetBuddyWidget"
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
+        IntentConfiguration(kind: kind, intent: ConfigurationIntent.self, provider: Provider()) { entry in
             BudgetBuddyWidgetEntryView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
         }
+        .configurationDisplayName("Quick Transaction")
+        .description("Quickly add income or expenses without opening the app.")
+        .supportedFamilies([.systemSmall])
     }
 }
 
-extension ConfigurationAppIntent {
-    fileprivate static var smiley: ConfigurationAppIntent {
-        let intent = ConfigurationAppIntent()
-        intent.favoriteEmoji = "😀"
-        return intent
+struct BudgetBuddyWidget_Previews: PreviewProvider {
+    static var previews: some View {
+        BudgetBuddyWidgetEntryView(entry: SimpleEntry(date: Date(), configuration: ConfigurationIntent()))
+            .previewContext(WidgetPreviewContext(family: .systemSmall))
     }
-    
-    fileprivate static var starEyes: ConfigurationAppIntent {
-        let intent = ConfigurationAppIntent()
-        intent.favoriteEmoji = "🤩"
-        return intent
-    }
-}
-
-#Preview(as: .systemSmall) {
-    BudgetBuddyWidget()
-} timeline: {
-    SimpleEntry(date: .now, configuration: .smiley)
-    SimpleEntry(date: .now, configuration: .starEyes)
 }

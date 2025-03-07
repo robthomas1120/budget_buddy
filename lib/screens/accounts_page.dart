@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../models/account.dart';
 import '../models/transaction.dart';
+import '../widgets/transfer_dialog.dart';
 
 class AccountsPage extends StatefulWidget {
   @override
@@ -39,6 +40,11 @@ class _AccountsPageState extends State<AccountsPage> {
       appBar: AppBar(
         title: Text('My Accounts'),
         actions: [
+          IconButton(
+            icon: Icon(Icons.compare_arrows),
+            tooltip: 'Transfer Money',
+            onPressed: _accounts.length >= 2 ? _showTransferDialog : null,
+          ),
           IconButton(
             icon: Icon(Icons.add),
             onPressed: () => _showAddAccountDialog(),
@@ -217,6 +223,26 @@ class _AccountsPageState extends State<AccountsPage> {
             child: Text('Close'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showTransferDialog() {
+    if (_accounts.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('You need at least 2 accounts to make a transfer'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    showDialog(
+      context: context,
+      builder: (context) => TransferDialog(
+        accounts: _accounts,
+        onTransferComplete: _loadAccounts,
       ),
     );
   }
