@@ -1,12 +1,10 @@
 // screens/accounts_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import '../database/database_helper.dart';
 import '../models/account.dart';
 import '../models/transaction.dart';
 import '../widgets/transfer_dialog.dart';
-import '../utils/ios_theme.dart';
 
 class AccountsPage extends StatefulWidget {
   @override
@@ -38,40 +36,23 @@ class _AccountsPageState extends State<AccountsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      backgroundColor: IOSTheme.backgroundColor,
-      navigationBar: CupertinoNavigationBar(
-        middle: Text('My Accounts', style: IOSTheme.titleStyle),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            GestureDetector(
-              onTap: _accounts.length >= 2 ? _showTransferDialog : null,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Icon(
-                  CupertinoIcons.arrow_right_arrow_left,
-                  color: _accounts.length >= 2 ? IOSTheme.secondaryColor : CupertinoColors.systemGrey3,
-                  size: 22,
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: () => _showAddAccountDialog(),
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Icon(
-                  CupertinoIcons.add,
-                  color: IOSTheme.secondaryColor,
-                  size: 24,
-                ),
-              ),
-            ),
-          ],
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('My Accounts'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.compare_arrows),
+            tooltip: 'Transfer Money',
+            onPressed: _accounts.length >= 2 ? _showTransferDialog : null,
+          ),
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () => _showAddAccountDialog(),
+          ),
+        ],
       ),
-      child: _isLoading 
-        ? Center(child: CupertinoActivityIndicator())
+      body: _isLoading 
+        ? Center(child: CircularProgressIndicator())
         : _accounts.isEmpty 
             ? _buildEmptyState()
             : _buildAccountsList(),
@@ -118,84 +99,59 @@ class _AccountsPageState extends State<AccountsPage> {
   }
 
   Widget _buildAccountsList() {
-    return CustomScrollView(
-      physics: AlwaysScrollableScrollPhysics(),
-      slivers: [
-        CupertinoSliverRefreshControl(
-          onRefresh: _loadAccounts,
-        ),
-        SliverPadding(
-          padding: EdgeInsets.all(16),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final account = _accounts[index];
-                return GestureDetector(
-                  onTap: () => _showAccountDetails(account),
-                  child: Container(
-                    margin: EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 5,
-                          offset: Offset(0, 1),
-                        ),
-                      ],
+    return RefreshIndicator(
+      onRefresh: _loadAccounts,
+      child: ListView.builder(
+        padding: EdgeInsets.all(16),
+        itemCount: _accounts.length,
+        itemBuilder: (context, index) {
+          final account = _accounts[index];
+          return Card(
+            margin: EdgeInsets.only(bottom: 16),
+            elevation: 2,
+            child: ListTile(
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: CircleAvatar(
+                backgroundColor: _getAccountColor(account.type),
+                child: Icon(
+                  _getAccountIcon(account.type),
+                  color: Colors.white,
+                ),
+              ),
+              title: Text(
+                account.name,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Text(account.type),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '₱${account.balance.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: account.balance >= 0 ? Colors.green : Colors.red,
                     ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: _getAccountColor(account.type),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              _getAccountIcon(account.type),
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  account.name,
-                                  style: IOSTheme.titleStyle,
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  account.type,
-                                  style: IOSTheme.captionStyle,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                '₱${account.balance.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
-                                  color: account.balance >= 0 
-                                      ? IOSTheme.primaryColor
-                                      : IOSTheme.destructiveColor,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                'Current Balance',
-                                style:
+                  ),
+                  Text(
+                    'Current Balance',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+              onTap: () => _showAccountDetails(account),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   IconData _getAccountIcon(String accountType) {
