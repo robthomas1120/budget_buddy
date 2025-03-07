@@ -1,7 +1,10 @@
+// widgets/add_transaction_sheet.dart
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../database/database_helper.dart';
 import '../models/transaction.dart';
+import '../models/account.dart';
 
 class AddTransactionSheet extends StatefulWidget {
   final String transactionType;
@@ -25,6 +28,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   String _selectedType = '';
   String _selectedCategory = '';
   DateTime _selectedDate = DateTime.now();
+  int? _selectedAccountId;
+  List<Account> _accounts = [];
+  bool _isLoadingAccounts = true;
   
   List<String> _incomeCategories = [
     'Salary',
@@ -51,6 +57,23 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     super.initState();
     _selectedType = widget.transactionType.isEmpty ? 'income' : widget.transactionType;
     _selectedCategory = _selectedType == 'income' ? _incomeCategories[0] : _expenseCategories[0];
+    _loadAccounts();
+  }
+
+  Future<void> _loadAccounts() async {
+    setState(() {
+      _isLoadingAccounts = true;
+    });
+    
+    final accounts = await DatabaseHelper.instance.getAllAccounts();
+    
+    setState(() {
+      _accounts = accounts;
+      _isLoadingAccounts = false;
+      if (accounts.isNotEmpty) {
+        _selectedAccountId = accounts[0].id;
+      }
+    });
   }
 
   @override
@@ -176,8 +199,68 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 SizedBox(height: 16),
               ],
               
-              // Title field
-              
+              // Account dropdown
+              _isLoadingAccounts
+                  ? Center(child: CircularProgressIndicator())
+                  : _accounts.isEmpty
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'No accounts found',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                            SizedBox(height: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                // You should implement a way to add accounts
+                                // You could navigate to AccountsPage or show a dialog
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Please add an account first')),
+                                );
+                              },
+                              child: Text('Add Account'),
+                            ),
+                            SizedBox(height: 16),
+                          ],
+                        )
+                      : DropdownButtonFormField<int>(
+                          decoration: InputDecoration(
+                            labelText: 'To/From Account',
+                            border: OutlineInputBorder(),
+                          ),
+                          value: _selectedAccountId,
+                          items: _accounts.map((Account account) {
+                            return DropdownMenuItem<int>(
+                              value: account.id,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    _getAccountIcon(account.type),
+                                    color: _getAccountColor(account.type),
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('${account.name} (₱${account.balance.toStringAsFixed(2)})'),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (int? newValue) {
+                            if (newValue != null) {
+                              setState(() {
+                                _selectedAccountId = newValue;
+                              });
+                            }
+                          },
+                          validator: (value) {
+                            if (value == null) {
+                              return 'Please select an account';
+                            }
+                            return null;
+                          },
+                        ),
+              SizedBox(height: 16),
               
               // Amount field
               TextFormField(
@@ -279,9 +362,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _selectedType == 'income' ? Colors.green : Colors.red,
+                    foregroundColor: Colors.white,
                   ),
                   onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
+                    if (_formKey.currentState!.validate() && _selectedAccountId != null) {
                       final transaction = Transaction(
                         title: _titleController.text,
                         amount: double.parse(_amountController.text),
@@ -289,11 +373,16 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         category: _selectedCategory,
                         date: _selectedDate,
                         notes: _notesController.text.isEmpty ? null : _notesController.text,
+                        accountId: _selectedAccountId,
                       );
                       
                       await DatabaseHelper.instance.insertTransaction(transaction);
                       widget.onTransactionAdded();
                       Navigator.pop(context);
+                    } else if (_selectedAccountId == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Please select an account')),
+                      );
                     }
                   },
                   child: Text(
@@ -301,6 +390,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -311,5 +401,33 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         ),
       ),
     );
+  }
+  
+  IconData _getAccountIcon(String accountType) {
+    switch (accountType.toLowerCase()) {
+      case 'bank':
+        return Icons.account_balance;
+      case 'e-wallet':
+      case 'ewallet':
+        return Icons.account_balance_wallet;
+      case 'cash':
+        return Icons.money;
+      default:
+        return Icons.credit_card;
+    }
+  }
+
+  Color _getAccountColor(String accountType) {
+    switch (accountType.toLowerCase()) {
+      case 'bank':
+        return Colors.blue;
+      case 'e-wallet':
+      case 'ewallet':
+        return Colors.purple;
+      case 'cash':
+        return Colors.green;
+      default:
+        return Colors.blueGrey;
+    }
   }
 }

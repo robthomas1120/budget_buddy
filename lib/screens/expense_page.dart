@@ -1,4 +1,4 @@
-//expense_page.dart
+// screens/expense_page.dart
 
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
@@ -12,116 +12,132 @@ class ExpensePage extends StatefulWidget {
 }
 
 class _ExpensePageState extends State<ExpensePage> {
-  List<Transaction> expenseTransactions = [];
-  bool isLoading = true;
+  List<Transaction> _transactions = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadExpenses();
+    _loadTransactions();
   }
 
-  Future<void> _loadExpenses() async {
-    expenseTransactions = await DatabaseHelper.instance.getTransactionsByType('expense');
-    
-    if (mounted) {
-      setState(() {
-        isLoading = false;
-      });
+  Future<void> _loadTransactions() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final transactions = await DatabaseHelper.instance.getTransactionsByType('expense');
+
+    setState(() {
+      _transactions = transactions;
+      _isLoading = false;
+    });
+  }
+
+  void _showAddTransactionSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => AddTransactionSheet(
+        transactionType: 'expense',
+        onTransactionAdded: _loadTransactions,
+      ),
+    );
+  }
+
+  Future<void> _deleteTransaction(int id) async {
+    try {
+      await DatabaseHelper.instance.deleteTransaction(id);
+      _loadTransactions();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Transaction deleted successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete transaction: $e')),
+      );
     }
+  }
+
+  // Add a method to handle updating transactions
+  void _updateTransaction(Transaction transaction) {
+    // Here you would typically show a form to edit the transaction
+    // For now, we'll just reload the data
+    print("Update expense transaction: ${transaction.title}");
+    _loadTransactions();
   }
 
   @override
   Widget build(BuildContext context) {
-    double totalExpense = expenseTransactions.fold(
-        0, (sum, transaction) => sum + transaction.amount);
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Expenses'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: _loadTransactions,
+          ),
+        ],
       ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadExpenses,
-              child: Column(
-                children: [
-                  // Expense summary card
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(16),
-                    margin: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.red[50],
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Total Expenses',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          '₱${totalExpense.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red[700],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  // Expense list
-                  Expanded(
-                    child: expenseTransactions.isEmpty
-                        ? Center(
-                            child: Text(
-                              'No expenses recorded yet',
-                              style: TextStyle(color: Colors.grey[600]),
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: expenseTransactions.length,
-                            itemBuilder: (context, index) {
-                              return TransactionListItem(
-                                transaction: expenseTransactions[index],
-                                onDelete: () async {
-                                  await DatabaseHelper.instance
-                                      .deleteTransaction(expenseTransactions[index].id!);
-                                  _loadExpenses();
-                                },
-                              );
-                            },
-                          ),
-                  ),
-                ],
-              ),
-            ),
+      body: _isLoading 
+        ? Center(child: CircularProgressIndicator()) 
+        : _transactions.isEmpty 
+            ? _buildEmptyState() 
+            : _buildTransactionsList(),
       floatingActionButton: FloatingActionButton(
+        onPressed: _showAddTransactionSheet,
         child: Icon(Icons.add),
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (context) => AddTransactionSheet(
-              transactionType: 'expense',
-              onTransactionAdded: () {
-                _loadExpenses();
-              },
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.money_off,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          SizedBox(height: 16),
+          Text(
+            'No expenses yet',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700],
             ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Add your first expense by tapping the + button',
+            style: TextStyle(
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionsList() {
+    return RefreshIndicator(
+      onRefresh: _loadTransactions,
+      child: ListView.builder(
+        padding: EdgeInsets.all(16),
+        itemCount: _transactions.length,
+        itemBuilder: (context, index) {
+          final transaction = _transactions[index];
+          return TransactionListItem(
+            transaction: transaction,
+            onDelete: () => _deleteTransaction(transaction.id!),
+            onUpdate: () => _updateTransaction(transaction),
           );
         },
       ),

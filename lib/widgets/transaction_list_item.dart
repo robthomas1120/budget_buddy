@@ -1,16 +1,20 @@
+// widgets/transaction_list_item.dart
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction.dart';
-import 'transaction_details_dialog.dart'; // Import the new dialog
+import 'transaction_details_dialog.dart';
 
 class TransactionListItem extends StatelessWidget {
   final Transaction transaction;
   final VoidCallback onDelete;
+  final VoidCallback onUpdate; // Added this required parameter
 
   const TransactionListItem({
     Key? key,
     required this.transaction,
     required this.onDelete,
+    required this.onUpdate, // Make it required
   }) : super(key: key);
 
   @override
@@ -89,6 +93,8 @@ class TransactionListItem extends StatelessWidget {
               builder: (BuildContext context) {
                 return TransactionDetailsDialog(
                   transaction: transaction,
+                  onDelete: onDelete,
+                  onUpdate: onUpdate,
                 );
               },
             );

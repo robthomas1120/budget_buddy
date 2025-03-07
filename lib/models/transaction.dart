@@ -1,4 +1,4 @@
-//transaction.dart
+// models/transaction.dart
 
 class Transaction {
   final int? id;
@@ -8,6 +8,7 @@ class Transaction {
   final String category;
   final DateTime date;
   final String? notes;
+  final int? accountId;  // New field to reference the account
 
   Transaction({
     this.id,
@@ -17,6 +18,7 @@ class Transaction {
     required this.category,
     required this.date,
     this.notes,
+    this.accountId,  // Optional for backward compatibility with existing data
   });
 
   // Convert a Transaction into a Map
@@ -29,6 +31,7 @@ class Transaction {
       'category': category,
       'date': date.millisecondsSinceEpoch,
       'notes': notes,
+      'account_id': accountId,
     };
   }
 
@@ -42,6 +45,7 @@ class Transaction {
       category: map['category'],
       date: DateTime.fromMillisecondsSinceEpoch(map['date']),
       notes: map['notes'],
+      accountId: map['account_id'],
     );
   }
 
@@ -54,6 +58,7 @@ class Transaction {
     String? category,
     DateTime? date,
     String? notes,
+    int? accountId,
   }) {
     return Transaction(
       id: id ?? this.id,
@@ -63,6 +68,7 @@ class Transaction {
       category: category ?? this.category,
       date: date ?? this.date,
       notes: notes ?? this.notes,
+      accountId: accountId ?? this.accountId,
     );
   }
 }
