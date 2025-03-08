@@ -1,93 +1,165 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../services/backup_service.dart';
  
 class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Settings'),
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: Text('Settings'),
       ),
-      body: ListView(
-        children: [
-          ListTile(
-            leading: Icon(CupertinoIcons.person_fill),
-            title: Text('Profile'),
-            trailing: Icon(CupertinoIcons.chevron_right),
-            onTap: () {
-              // Navigate to profile settings
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Profile settings coming soon')),
-              );
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(CupertinoIcons.tag_fill),
-            title: Text('Categories'),
-            trailing: Icon(CupertinoIcons.chevron_right),
-            onTap: () {
-              // Navigate to categories settings
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Category settings coming soon')),
-              );
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(CupertinoIcons.bell_fill),
-            title: Text('Notifications'),
-            trailing: Icon(CupertinoIcons.chevron_right),
-            onTap: () {
-              // Navigate to notification settings
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Notification settings coming soon')),
-              );
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(CupertinoIcons.arrow_clockwise),
-            title: Text('Backup & Restore'),
-            trailing: Icon(CupertinoIcons.chevron_right),
-            onTap: () {
-              _showBackupRestoreOptions(context);
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(CupertinoIcons.square_arrow_right),
-            title: Text('Export Data'),
-            trailing: Icon(CupertinoIcons.chevron_right),
-            onTap: () async {
-              _showExportOptions(context);
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(CupertinoIcons.delete, color: CupertinoColors.destructiveRed),
-            title: Text('Clear All Data'),
-            trailing: Icon(CupertinoIcons.chevron_right),
-            onTap: () {
-              _showClearDataDialog(context);
-            },
-          ),
-          Divider(),
-          SizedBox(height: 20),
-          Center(
-            child: Text(
-              'Budget Buddy v1.0.0',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
+      child: SafeArea(
+        child: ListView(
+          children: [
+            _buildListItem(
+              context,
+              CupertinoIcons.person_fill,
+              'Profile',
+              onTap: () {
+                // Navigate to profile settings
+                showCupertinoDialog(
+                  context: context,
+                  builder: (context) => CupertinoAlertDialog(
+                    title: Text('Coming Soon'),
+                    content: Text('Profile settings coming soon'),
+                    actions: [
+                      CupertinoDialogAction(
+                        child: Text('OK'),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            _buildDivider(),
+            _buildListItem(
+              context,
+              CupertinoIcons.tag_fill,
+              'Categories',
+              onTap: () {
+                // Navigate to categories settings
+                showCupertinoDialog(
+                  context: context,
+                  builder: (context) => CupertinoAlertDialog(
+                    title: Text('Coming Soon'),
+                    content: Text('Category settings coming soon'),
+                    actions: [
+                      CupertinoDialogAction(
+                        child: Text('OK'),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            _buildDivider(),
+            _buildListItem(
+              context,
+              CupertinoIcons.bell_fill,
+              'Notifications',
+              onTap: () {
+                // Navigate to notification settings
+                showCupertinoDialog(
+                  context: context,
+                  builder: (context) => CupertinoAlertDialog(
+                    title: Text('Coming Soon'),
+                    content: Text('Notification settings coming soon'),
+                    actions: [
+                      CupertinoDialogAction(
+                        child: Text('OK'),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            _buildDivider(),
+            _buildListItem(
+              context,
+              CupertinoIcons.arrow_clockwise,
+              'Backup & Restore',
+              onTap: () {
+                _showBackupRestoreOptions(context);
+              },
+            ),
+            _buildDivider(),
+            _buildListItem(
+              context,
+              CupertinoIcons.square_arrow_right,
+              'Export Data',
+              onTap: () async {
+                _showExportOptions(context);
+              },
+            ),
+            _buildDivider(),
+            _buildListItem(
+              context,
+              CupertinoIcons.delete,
+              'Clear All Data',
+              textColor: CupertinoColors.destructiveRed,
+              onTap: () {
+                _showClearDataDialog(context);
+              },
+            ),
+            _buildDivider(),
+            SizedBox(height: 20),
+            Center(
+              child: Text(
+                'Budget Buddy v1.0.0',
+                style: TextStyle(
+                  color: CupertinoColors.systemGrey,
+                  fontSize: 12,
+                ),
               ),
             ),
-          ),
-          SizedBox(height: 20),
-        ],
+            SizedBox(height: 20),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildListItem(
+    BuildContext context,
+    IconData icon,
+    String title, {
+    required VoidCallback onTap,
+    Color? textColor,
+  }) {
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: textColor ?? CupertinoColors.activeBlue, size: 24),
+            SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 17,
+                  color: textColor ?? CupertinoColors.black,
+                ),
+              ),
+            ),
+            Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      margin: EdgeInsets.only(left: 56),
+      height: 0.5,
+      color: CupertinoColors.separator,
     );
   }
 

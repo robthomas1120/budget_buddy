@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'database/database_helper.dart';
 import 'screens/home_page.dart';
@@ -21,18 +23,34 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Finance Tracker',
+    return CupertinoApp(
+      title: 'Budget Buddy',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        scaffoldBackgroundColor: Colors.grey[100],
-        appBarTheme: AppBarTheme(
-          elevation: 0,
+      theme: CupertinoThemeData(
+        brightness: Brightness.light,
+        primaryColor: CupertinoColors.activeGreen,
+        scaffoldBackgroundColor: CupertinoColors.systemGroupedBackground,
+        barBackgroundColor: CupertinoColors.systemBackground,
+        textTheme: CupertinoTextThemeData(
+          primaryColor: CupertinoColors.activeGreen,
+          textStyle: TextStyle(
+            fontFamily: '.SF Pro Text',
+            fontSize: 17,
+            color: CupertinoColors.black,
+          ),
         ),
-        fontFamily: 'Roboto',
       ),
+      localizationsDelegates: [
+        DefaultCupertinoLocalizations.delegate,
+        DefaultMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('en', ''),
+      ],
       home: HomePage(),
     );
   }
-} 
+}

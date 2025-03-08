@@ -1,6 +1,4 @@
-// widgets/transaction_list_item.dart
-
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction.dart';
 import 'transaction_details_dialog.dart';
@@ -8,13 +6,13 @@ import 'transaction_details_dialog.dart';
 class TransactionListItem extends StatelessWidget {
   final Transaction transaction;
   final VoidCallback onDelete;
-  final VoidCallback onUpdate; // Added this required parameter
+  final VoidCallback onUpdate;
 
   const TransactionListItem({
     Key? key,
     required this.transaction,
     required this.onDelete,
-    required this.onUpdate, // Make it required
+    required this.onUpdate,
   }) : super(key: key);
 
   @override
@@ -22,83 +20,85 @@ class TransactionListItem extends StatelessWidget {
     final bool isIncome = transaction.type == 'income';
     final DateFormat formatter = DateFormat('MMM dd, yyyy');
 
-    return Dismissible(
-      key: Key(transaction.id.toString()),
-      background: Container(
-        color: Colors.red,
-        alignment: Alignment.centerRight,
-        padding: EdgeInsets.only(right: 20.0),
-        child: Icon(
-          Icons.delete,
-          color: Colors.white,
-        ),
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: CupertinoColors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.systemGrey6,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
-      direction: DismissDirection.endToStart,
-      confirmDismiss: (direction) async {
-        return await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Confirm Delete'),
-              content: Text('Are you sure you want to delete this transaction?'),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text('Cancel'),
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: () {
+          showCupertinoModalPopup(
+            context: context,
+            builder: (BuildContext context) {
+              return TransactionDetailsDialog(
+                transaction: transaction,
+                onDelete: onDelete,
+                onUpdate: onUpdate,
+              );
+            },
+          );
+        },
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isIncome 
+                      ? CupertinoColors.activeGreen.withOpacity(0.15) 
+                      : CupertinoColors.systemRed.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: Text('Delete'),
+                child: Icon(
+                  isIncome ? CupertinoIcons.arrow_down : CupertinoIcons.arrow_up,
+                  color: isIncome ? CupertinoColors.activeGreen : CupertinoColors.systemRed,
+                  size: 24,
                 ),
-              ],
-            );
-          },
-        );
-      },
-      onDismissed: (direction) {
-        onDelete();
-      },
-      child: Card(
-        margin: EdgeInsets.symmetric(vertical: 8),
-        elevation: 2,
-        child: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: isIncome ? Colors.green[100] : Colors.red[100],
-            child: Icon(
-              isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-              color: isIncome ? Colors.green : Colors.red,
-            ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      transaction.title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '${transaction.category} • ${formatter.format(transaction.date)}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: CupertinoColors.systemGrey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '₱${transaction.amount.toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isIncome ? CupertinoColors.activeGreen : CupertinoColors.systemRed,
+                ),
+              ),
+            ],
           ),
-          title: Text(
-            transaction.title,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          subtitle: Text(
-            '${transaction.category} • ${formatter.format(transaction.date)}',
-          ),
-          trailing: Text(
-            '₱${transaction.amount.toStringAsFixed(2)}',
-            style: TextStyle(
-              color: isIncome ? Colors.green : Colors.red,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          onTap: () {
-            // Show transaction details dialog
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return TransactionDetailsDialog(
-                  transaction: transaction,
-                  onDelete: onDelete,
-                  onUpdate: onUpdate,
-                );
-              },
-            );
-          },
         ),
       ),
     );

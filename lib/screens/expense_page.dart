@@ -1,6 +1,6 @@
 // screens/expense_page.dart
 
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../database/database_helper.dart';
 import '../models/transaction.dart';
 import '../widgets/transaction_list_item.dart';
@@ -35,12 +35,8 @@ class _ExpensePageState extends State<ExpensePage> {
   }
 
   void _showAddTransactionSheet() {
-    showModalBottomSheet(
+    showCupertinoModalPopup(
       context: context,
-      isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (context) => AddTransactionSheet(
         transactionType: 'expense',
         onTransactionAdded: _loadTransactions,
@@ -52,12 +48,33 @@ class _ExpensePageState extends State<ExpensePage> {
     try {
       await DatabaseHelper.instance.deleteTransaction(id);
       _loadTransactions();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Transaction deleted successfully')),
+      // Show a Cupertino alert instead of a Snackbar
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: Text('Success'),
+          content: Text('Transaction deleted successfully'),
+          actions: [
+            CupertinoDialogAction(
+              child: Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete transaction: $e')),
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: Text('Error'),
+          content: Text('Failed to delete transaction: $e'),
+          actions: [
+            CupertinoDialogAction(
+              child: Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
       );
     }
   }
@@ -72,25 +89,34 @@ class _ExpensePageState extends State<ExpensePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Expenses'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: _loadTransactions,
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: Text('Expenses'),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: Icon(CupertinoIcons.refresh),
+          onPressed: _loadTransactions,
+        ),
+      ),
+      child: Stack(
+        children: [
+          _isLoading 
+            ? Center(child: CupertinoActivityIndicator()) 
+            : _transactions.isEmpty 
+                ? _buildEmptyState() 
+                : _buildTransactionsList(),
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: CupertinoButton(
+              padding: EdgeInsets.all(16),
+              color: CupertinoColors.destructiveRed,
+              borderRadius: BorderRadius.circular(30),
+              child: Icon(CupertinoIcons.add, color: CupertinoColors.white),
+              onPressed: _showAddTransactionSheet,
+            ),
           ),
         ],
-      ),
-      body: _isLoading 
-        ? Center(child: CircularProgressIndicator()) 
-        : _transactions.isEmpty 
-            ? _buildEmptyState() 
-            : _buildTransactionsList(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddTransactionSheet,
-        child: Icon(Icons.add),
-        backgroundColor: Colors.red,
       ),
     );
   }
@@ -101,9 +127,9 @@ class _ExpensePageState extends State<ExpensePage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.money_off,
+            CupertinoIcons.money_dollar_circle,
             size: 80,
-            color: Colors.grey[400],
+            color: CupertinoColors.systemGrey,
           ),
           SizedBox(height: 16),
           Text(
@@ -111,14 +137,14 @@ class _ExpensePageState extends State<ExpensePage> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
+              color: CupertinoColors.systemGrey,
             ),
           ),
           SizedBox(height: 8),
           Text(
             'Add your first expense by tapping the + button',
             style: TextStyle(
-              color: Colors.grey[600],
+              color: CupertinoColors.systemGrey,
             ),
           ),
         ],
@@ -127,20 +153,31 @@ class _ExpensePageState extends State<ExpensePage> {
   }
 
   Widget _buildTransactionsList() {
-    return RefreshIndicator(
-      onRefresh: _loadTransactions,
-      child: ListView.builder(
-        padding: EdgeInsets.all(16),
-        itemCount: _transactions.length,
-        itemBuilder: (context, index) {
-          final transaction = _transactions[index];
-          return TransactionListItem(
-            transaction: transaction,
-            onDelete: () => _deleteTransaction(transaction.id!),
-            onUpdate: () => _updateTransaction(transaction),
-          );
-        },
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(
+        parent: AlwaysScrollableScrollPhysics(),
       ),
+      slivers: [
+        CupertinoSliverRefreshControl(
+          onRefresh: _loadTransactions,
+        ),
+        SliverPadding(
+          padding: EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final transaction = _transactions[index];
+                return TransactionListItem(
+                  transaction: transaction,
+                  onDelete: () => _deleteTransaction(transaction.id!),
+                  onUpdate: () => _updateTransaction(transaction),
+                );
+              },
+              childCount: _transactions.length,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

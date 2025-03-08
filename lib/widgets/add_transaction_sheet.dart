@@ -1,5 +1,4 @@
-// widgets/add_transaction_sheet.dart
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../database/database_helper.dart';
@@ -21,7 +20,6 @@ class AddTransactionSheet extends StatefulWidget {
 }
 
 class _AddTransactionSheetState extends State<AddTransactionSheet> {
-  final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
@@ -67,13 +65,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     
     final accounts = await DatabaseHelper.instance.getAllAccounts();
     
-    setState(() {
-      _accounts = accounts;
-      _isLoadingAccounts = false;
-      if (accounts.isNotEmpty) {
-        _selectedAccountId = accounts[0].id;
-      }
-    });
+    if (mounted) {
+      setState(() {
+        _accounts = accounts;
+        _isLoadingAccounts = false;
+        if (accounts.isNotEmpty) {
+          _selectedAccountId = accounts[0].id;
+        }
+      });
+    }
   }
 
   @override
@@ -85,17 +85,92 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    await showCupertinoModalPopup(
       context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(Duration(days: 1)),
+      builder: (BuildContext context) {
+        return Container(
+          height: 250,
+          color: CupertinoColors.systemBackground,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    child: Text('Cancel'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  CupertinoButton(
+                    child: Text('Done'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: _selectedDate,
+                  maximumDate: DateTime.now().add(Duration(days: 1)),
+                  minimumDate: DateTime(2020),
+                  onDateTimeChanged: (DateTime newDate) {
+                    setState(() {
+                      _selectedDate = newDate;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
-    
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
+  }
+
+  void _showError(String message) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            child: Text('OK'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getAccountIcon(String accountType) {
+    switch (accountType.toLowerCase()) {
+      case 'bank':
+        return CupertinoIcons.building_2_fill;
+      case 'e-wallet':
+      case 'ewallet':
+        return CupertinoIcons.creditcard_fill;
+      case 'cash':
+        return CupertinoIcons.money_dollar_circle_fill;
+      default:
+        return CupertinoIcons.creditcard_fill;
+    }
+  }
+
+  Color _getAccountColor(String accountType) {
+    switch (accountType.toLowerCase()) {
+      case 'bank':
+        return CupertinoColors.systemBlue;
+      case 'e-wallet':
+      case 'ewallet':
+        return CupertinoColors.systemPurple;
+      case 'cash':
+        return CupertinoColors.systemGreen;
+      default:
+        return CupertinoColors.systemIndigo;
     }
   }
 
@@ -105,13 +180,17 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     
     return Container(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
         top: 16,
         left: 16,
         right: 16,
       ),
-      child: Form(
-        key: _formKey,
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemBackground,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: SafeArea(
+        top: false,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -127,9 +206,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Icon(CupertinoIcons.xmark, color: CupertinoColors.systemGrey),
                   ),
                 ],
               ),
@@ -137,99 +216,102 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               
               // Transaction type toggle
               if (widget.transactionType.isEmpty) ...[
-                Text('Transaction Type:'),
+                Text(
+                  'Transaction Type:',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedType = 'income';
-                            _selectedCategory = _incomeCategories[0];
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: _selectedType == 'income' ? Colors.green : Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Income',
-                              style: TextStyle(
-                                color: _selectedType == 'income' ? Colors.white : Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                CupertinoSlidingSegmentedControl<String>(
+                  groupValue: _selectedType,
+                  children: {
+                    'income': Container(
+                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                      child: Text(
+                        'Income',
+                        style: TextStyle(
+                          color: _selectedType == 'income' ? CupertinoColors.white : null,
                         ),
                       ),
                     ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedType = 'expense';
-                            _selectedCategory = _expenseCategories[0];
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: _selectedType == 'expense' ? Colors.red : Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Expense',
-                              style: TextStyle(
-                                color: _selectedType == 'expense' ? Colors.white : Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                    'expense': Container(
+                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                      child: Text(
+                        'Expense',
+                        style: TextStyle(
+                          color: _selectedType == 'expense' ? CupertinoColors.white : null,
                         ),
                       ),
                     ),
-                  ],
+                  },
+                  thumbColor: _selectedType == 'income' ? CupertinoColors.activeGreen : CupertinoColors.destructiveRed,
+                  backgroundColor: CupertinoColors.systemGrey6,
+                  onValueChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedType = value;
+                        _selectedCategory = value == 'income' ? _incomeCategories[0] : _expenseCategories[0];
+                      });
+                    }
+                  },
                 ),
                 SizedBox(height: 16),
               ],
               
               // Account dropdown
-              _isLoadingAccounts
-                  ? Center(child: CircularProgressIndicator())
-                  : _accounts.isEmpty
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'No accounts found',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                            SizedBox(height: 8),
-                            ElevatedButton(
-                              onPressed: () {
-                                // You should implement a way to add accounts
-                                // You could navigate to AccountsPage or show a dialog
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Please add an account first')),
-                                );
-                              },
-                              child: Text('Add Account'),
-                            ),
-                            SizedBox(height: 16),
-                          ],
-                        )
-                      : DropdownButtonFormField<int>(
-                          decoration: InputDecoration(
-                            labelText: 'To/From Account',
-                            border: OutlineInputBorder(),
-                          ),
+              if (_isLoadingAccounts)
+                Center(child: CupertinoActivityIndicator())
+              else if (_accounts.isEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'No accounts found',
+                      style: TextStyle(color: CupertinoColors.destructiveRed),
+                    ),
+                    SizedBox(height: 8),
+                    CupertinoButton.filled(
+                      onPressed: () {
+                        // Navigate to AccountsPage or show a dialog
+                        Navigator.pop(context);
+                        _showError('Please add an account first');
+                      },
+                      child: Text('Add Account'),
+                    ),
+                    SizedBox(height: 16),
+                  ],
+                )
+              else
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Account:',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.systemGrey6,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: EdgeInsets.only(left: 12),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
                           value: _selectedAccountId,
+                          isExpanded: true,
+                          icon: Icon(CupertinoIcons.chevron_down, size: 16),
+                          style: TextStyle(
+                            color: CupertinoColors.black,
+                            fontSize: 16,
+                          ),
+                          dropdownColor: CupertinoColors.systemBackground,
+                          borderRadius: BorderRadius.circular(8),
                           items: _accounts.map((Account account) {
                             return DropdownMenuItem<int>(
                               value: account.id,
@@ -253,91 +335,130 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                               });
                             }
                           },
-                          validator: (value) {
-                            if (value == null) {
-                              return 'Please select an account';
-                            }
-                            return null;
-                          },
                         ),
+                      ),
+                    ),
+                  ],
+                ),
               SizedBox(height: 16),
               
               // Amount field
-              TextFormField(
+              Text(
+                'Amount:',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 8),
+              CupertinoTextField(
                 controller: _amountController,
-                decoration: InputDecoration(
-                  labelText: 'Amount (₱)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.attach_money),
+                placeholder: '0.00',
+                prefix: Padding(
+                  padding: EdgeInsets.only(left: 12),
+                  child: Text('₱', style: TextStyle(color: CupertinoColors.black)),
+                ),
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey6,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an amount';
-                  }
-                  if (double.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  if (double.parse(value) <= 0) {
-                    return 'Amount must be greater than zero';
-                  }
-                  return null;
-                },
               ),
               SizedBox(height: 16),
 
-              TextFormField(
-                controller: _titleController,
-                decoration: InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(),
+              // Title field
+              Text(
+                'Title:',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a title';
-                  }
-                  return null;
-                },
+              ),
+              SizedBox(height: 8),
+              CupertinoTextField(
+                controller: _titleController,
+                placeholder: 'Enter title',
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey6,
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               SizedBox(height: 16),
               
               // Category dropdown
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
+              Text(
+                'Category:',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
                 ),
-                value: _selectedCategory,
-                items: categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    setState(() {
-                      _selectedCategory = newValue;
-                    });
-                  }
-                },
+              ),
+              SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey6,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: EdgeInsets.only(left: 12),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedCategory,
+                    isExpanded: true,
+                    icon: Icon(CupertinoIcons.chevron_down, size: 16),
+                    style: TextStyle(
+                      color: CupertinoColors.black,
+                      fontSize: 16,
+                    ),
+                    dropdownColor: CupertinoColors.systemBackground,
+                    borderRadius: BorderRadius.circular(8),
+                    items: categories.map((String category) {
+                      return DropdownMenuItem<String>(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          _selectedCategory = newValue;
+                        });
+                      }
+                    },
+                  ),
+                ),
               ),
               SizedBox(height: 16),
               
               // Date picker
+              Text(
+                'Date:',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 8),
               GestureDetector(
                 onTap: () => _selectDate(context),
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(4),
+                    color: CupertinoColors.systemGrey6,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(DateFormat('MMM dd, yyyy').format(_selectedDate)),
-                      Icon(Icons.calendar_today),
+                      Text(
+                        DateFormat('MMM dd, yyyy').format(_selectedDate),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: CupertinoColors.black,
+                        ),
+                      ),
+                      Icon(CupertinoIcons.calendar, color: CupertinoColors.systemGrey),
                     ],
                   ),
                 ),
@@ -345,11 +466,21 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               SizedBox(height: 16),
               
               // Notes field
-              TextFormField(
+              Text(
+                'Notes (optional):',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 8),
+              CupertinoTextField(
                 controller: _notesController,
-                decoration: InputDecoration(
-                  labelText: 'Notes (optional)',
-                  border: OutlineInputBorder(),
+                placeholder: 'Add notes about this transaction',
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey6,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 maxLines: 3,
               ),
@@ -358,76 +489,63 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               // Submit button
               SizedBox(
                 width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _selectedType == 'income' ? Colors.green : Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
+                child: CupertinoButton.filled(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  borderRadius: BorderRadius.circular(8),
                   onPressed: () async {
-                    if (_formKey.currentState!.validate() && _selectedAccountId != null) {
-                      final transaction = Transaction(
-                        title: _titleController.text,
-                        amount: double.parse(_amountController.text),
-                        type: _selectedType,
-                        category: _selectedCategory,
-                        date: _selectedDate,
-                        notes: _notesController.text.isEmpty ? null : _notesController.text,
-                        accountId: _selectedAccountId,
-                      );
-                      
-                      await DatabaseHelper.instance.insertTransaction(transaction);
-                      widget.onTransactionAdded();
-                      Navigator.pop(context);
-                    } else if (_selectedAccountId == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Please select an account')),
-                      );
+                    if (_selectedAccountId == null) {
+                      _showError('Please select an account');
+                      return;
                     }
+
+                    if (_titleController.text.trim().isEmpty) {
+                      _showError('Please enter a title');
+                      return;
+                    }
+
+                    if (_amountController.text.trim().isEmpty) {
+                      _showError('Please enter an amount');
+                      return;
+                    }
+
+                    final amount = double.tryParse(_amountController.text);
+                    if (amount == null) {
+                      _showError('Please enter a valid amount');
+                      return;
+                    }
+
+                    if (amount <= 0) {
+                      _showError('Amount must be greater than zero');
+                      return;
+                    }
+
+                    final transaction = Transaction(
+                      title: _titleController.text.trim(),
+                      amount: amount,
+                      type: _selectedType,
+                      category: _selectedCategory,
+                      date: _selectedDate,
+                      notes: _notesController.text.isEmpty ? null : _notesController.text.trim(),
+                      accountId: _selectedAccountId,
+                    );
+                    
+                    await DatabaseHelper.instance.insertTransaction(transaction);
+                    widget.onTransactionAdded();
+                    Navigator.pop(context);
                   },
                   child: Text(
                     'Add Transaction',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 16),
             ],
           ),
         ),
       ),
     );
-  }
-  
-  IconData _getAccountIcon(String accountType) {
-    switch (accountType.toLowerCase()) {
-      case 'bank':
-        return Icons.account_balance;
-      case 'e-wallet':
-      case 'ewallet':
-        return Icons.account_balance_wallet;
-      case 'cash':
-        return Icons.money;
-      default:
-        return Icons.credit_card;
-    }
-  }
-
-  Color _getAccountColor(String accountType) {
-    switch (accountType.toLowerCase()) {
-      case 'bank':
-        return Colors.blue;
-      case 'e-wallet':
-      case 'ewallet':
-        return Colors.purple;
-      case 'cash':
-        return Colors.green;
-      default:
-        return Colors.blueGrey;
-    }
   }
 }

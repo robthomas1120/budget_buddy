@@ -1,4 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import '../database/database_helper.dart';
+import '../models/account.dart';
+import '../models/transaction.dart' as model;
 import 'dashboard_page.dart';
 import 'income_page.dart';
 import 'expense_page.dart';
@@ -12,44 +16,51 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   
-  final List<Widget> _pages = [
-    DashboardPage(),
-    IncomePage(),
-    ExpensePage(),
-    SettingsPage(),
-  ];
+  // Create a list of page widgets
+  late List<Widget> _pages;
+  
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      DashboardPage(),
+      IncomePage(),
+      ExpensePage(),
+      SettingsPage(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+    return CupertinoTabScaffold(
+      tabBar: CupertinoTabBar(
+        activeColor: CupertinoColors.activeGreen,
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
+            icon: Icon(CupertinoIcons.home),
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.arrow_downward),
+            icon: Icon(CupertinoIcons.arrow_down_circle),
             label: 'Income',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.arrow_upward),
+            icon: Icon(CupertinoIcons.arrow_up_circle),
             label: 'Expenses',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
+            icon: Icon(CupertinoIcons.settings),
             label: 'Settings',
           ),
         ],
       ),
+      tabBuilder: (context, index) {
+        return CupertinoTabView(
+          builder: (context) {
+            return _pages[index];
+          },
+        );
+      },
     );
   }
 }

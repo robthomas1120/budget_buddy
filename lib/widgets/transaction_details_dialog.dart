@@ -1,6 +1,4 @@
-// widgets/transaction_details_dialog.dart
-
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction.dart';
 import '../database/database_helper.dart';
@@ -39,14 +37,18 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
 
     if (widget.transaction.accountId != null) {
       final account = await DatabaseHelper.instance.getAccount(widget.transaction.accountId!);
-      setState(() {
-        _account = account;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _account = account;
+          _isLoading = false;
+        });
+      }
     } else {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -55,12 +57,13 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
     final transaction = widget.transaction;
     final isIncome = transaction.type == 'income';
 
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+    return Container(
+      padding: EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 32),
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemBackground,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+      child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,29 +74,37 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                 Text(
                   'Transaction Details',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Icon(CupertinoIcons.xmark, color: CupertinoColors.systemGrey),
                 ),
               ],
             ),
-            Divider(),
+            Container(
+              height: 1,
+              margin: EdgeInsets.symmetric(vertical: 12),
+              color: CupertinoColors.separator,
+            ),
             SizedBox(height: 8),
+            
+            // Transaction header
             Row(
               children: [
                 Container(
-                  padding: EdgeInsets.all(8),
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: isIncome ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    color: isIncome ? CupertinoColors.activeGreen.withOpacity(0.15) : CupertinoColors.destructiveRed.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
-                    isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                    color: isIncome ? Colors.green : Colors.red,
+                    isIncome ? CupertinoIcons.arrow_down : CupertinoIcons.arrow_up,
+                    color: isIncome ? CupertinoColors.activeGreen : CupertinoColors.destructiveRed,
+                    size: 24,
                   ),
                 ),
                 SizedBox(width: 12),
@@ -105,14 +116,13 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                         transaction.title,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 18,
                         ),
                       ),
                       Text(
                         '${transaction.category} • ${DateFormat('MMM dd, yyyy').format(transaction.date)}',
                         style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
+                          color: CupertinoColors.systemGrey,
                         ),
                       ),
                     ],
@@ -122,48 +132,105 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                   '₱${transaction.amount.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: isIncome ? Colors.green : Colors.red,
-                    fontSize: 18,
+                    fontSize: 20,
+                    color: isIncome ? CupertinoColors.activeGreen : CupertinoColors.destructiveRed,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            
+            SizedBox(height: 24),
+            
+            // Account info
             if (_isLoading)
-              Center(child: CircularProgressIndicator())
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(child: CupertinoActivityIndicator()),
+              )
             else if (_account != null)
               _buildAccountInfo(_account!),
+            
             SizedBox(height: 16),
+            
+            // Notes
             if (transaction.notes != null && transaction.notes!.isNotEmpty) ...[
               Text(
                 'Notes:',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
               ),
               SizedBox(height: 4),
-              Text(transaction.notes!),
-              SizedBox(height: 16),
-            ],
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton.icon(
-                  icon: Icon(Icons.delete, color: Colors.red),
-                  label: Text('Delete', style: TextStyle(color: Colors.red)),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    widget.onDelete();
-                  },
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey6,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                SizedBox(width: 8),
-                ElevatedButton.icon(
-                  icon: Icon(Icons.edit),
-                  label: Text('Edit'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    widget.onUpdate();
-                  },
+                child: Text(
+                  transaction.notes!,
+                  style: TextStyle(
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+            ],
+            
+            // Action buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      widget.onDelete();
+                    },
+                    child: Column(
+                      children: [
+                        Icon(
+                          CupertinoIcons.delete,
+                          color: CupertinoColors.destructiveRed,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Delete',
+                          style: TextStyle(
+                            color: CupertinoColors.destructiveRed,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      widget.onUpdate();
+                    },
+                    child: Column(
+                      children: [
+                        Icon(
+                          CupertinoIcons.pencil,
+                          color: CupertinoColors.activeBlue,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Edit',
+                          style: TextStyle(
+                            color: CupertinoColors.activeBlue,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -177,7 +244,7 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
     return Container(
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: CupertinoColors.systemGrey6,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -185,6 +252,7 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
           Icon(
             _getAccountIcon(account.type),
             color: _getAccountColor(account.type),
+            size: 24,
           ),
           SizedBox(width: 12),
           Column(
@@ -194,13 +262,14 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                 'Account:',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: CupertinoColors.systemGrey,
                 ),
               ),
               Text(
                 account.name,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
               ),
             ],
@@ -210,7 +279,7 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
             '₱${account.balance.toStringAsFixed(2)}',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: account.balance >= 0 ? Colors.green : Colors.red,
+              color: account.balance >= 0 ? CupertinoColors.activeGreen : CupertinoColors.destructiveRed,
             ),
           ),
         ],
@@ -221,28 +290,28 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
   IconData _getAccountIcon(String accountType) {
     switch (accountType.toLowerCase()) {
       case 'bank':
-        return Icons.account_balance;
+        return CupertinoIcons.building_2_fill;
       case 'e-wallet':
       case 'ewallet':
-        return Icons.account_balance_wallet;
+        return CupertinoIcons.creditcard_fill;
       case 'cash':
-        return Icons.money;
+        return CupertinoIcons.money_dollar_circle_fill;
       default:
-        return Icons.credit_card;
+        return CupertinoIcons.creditcard_fill;
     }
   }
 
   Color _getAccountColor(String accountType) {
     switch (accountType.toLowerCase()) {
       case 'bank':
-        return Colors.blue;
+        return CupertinoColors.systemBlue;
       case 'e-wallet':
       case 'ewallet':
-        return Colors.purple;
+        return CupertinoColors.systemPurple;
       case 'cash':
-        return Colors.green;
+        return CupertinoColors.systemGreen;
       default:
-        return Colors.blueGrey;
+        return CupertinoColors.systemIndigo;
     }
   }
 }

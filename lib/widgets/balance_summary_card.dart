@@ -1,5 +1,6 @@
 // widgets/balance_summary_card.dart
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,107 +23,77 @@ class BalanceSummaryCard extends StatefulWidget {
 }
 
 class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
-  bool _isBalanceVisible = false;
-  final String _balanceVisibilityKey = 'balance_visibility';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadBalanceVisibilityPreference();
-  }
-  
-  // Load saved preference for balance visibility
-  Future<void> _loadBalanceVisibilityPreference() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _isBalanceVisible = prefs.getBool(_balanceVisibilityKey) ?? false;
-    });
-  }
-  
-  // Save balance visibility preference
-  Future<void> _saveBalanceVisibilityPreference(bool isVisible) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setBool(_balanceVisibilityKey, isVisible);
-  }
-
-  // Toggle balance visibility
-  void _toggleBalanceVisibility() {
-    setState(() {
-      _isBalanceVisible = !_isBalanceVisible;
-      _saveBalanceVisibilityPreference(_isBalanceVisible);
-    });
-  }
+  bool _isBalanceVisible = true;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      color: Colors.green,
-      child: InkWell(
-        onTap: () => widget.onBalanceTap(),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Current Balance',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
+    return GestureDetector(
+      onTap: () => widget.onBalanceTap(),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: CupertinoColors.activeGreen,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: CupertinoColors.systemGrey4.withOpacity(0.3),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Current Balance',
+                  style: TextStyle(
+                    color: CupertinoColors.white,
+                    fontSize: 16,
                   ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          _isBalanceVisible ? Icons.visibility : Icons.visibility_off,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        onPressed: _toggleBalanceVisibility,
-                        padding: EdgeInsets.zero,
-                        constraints: BoxConstraints(),
-                      ),
-                      SizedBox(width: 8),
-                      Icon(
-                        Icons.trending_up,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              SizedBox(height: 8),
-              Row(
-                children: [
-                  Text(
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isBalanceVisible = !_isBalanceVisible;
+                    });
+                  },
+                  child: Icon(
                     _isBalanceVisible 
+                        ? CupertinoIcons.eye 
+                        : CupertinoIcons.eye_slash,
+                    color: CupertinoColors.white,
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(
+              children: [
+                Text(
+                  _isBalanceVisible 
                       ? '₱${widget.currentBalance.toStringAsFixed(2)}'
-                      : '₱ ------',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                      : '₱ ******',
+                  style: TextStyle(
+                    color: CupertinoColors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
                   ),
-                  SizedBox(width: 8),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ],
-              ),
-              // No income or expenses row - removed as requested
-            ],
-          ),
+                ),
+                SizedBox(width: 8),
+                Icon(
+                  CupertinoIcons.chevron_right,
+                  color: CupertinoColors.white,
+                  size: 20,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
