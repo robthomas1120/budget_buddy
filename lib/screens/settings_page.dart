@@ -1,14 +1,21 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 import '../database/database_helper.dart';
 import '../services/backup_service.dart';
- 
+import '../providers/theme_provider.dart';
+
 class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeData = themeProvider.currentThemeData;
+    
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text('Settings'),
+        backgroundColor: themeData.cardColor,
       ),
+      backgroundColor: themeData.backgroundColor,
       child: SafeArea(
         child: ListView(
           children: [
@@ -16,6 +23,9 @@ class SettingsPage extends StatelessWidget {
               context,
               CupertinoIcons.person_fill,
               'Profile',
+              color: themeData.secondaryColor,
+              textColor: themeData.textColor,
+              backgroundColor: themeData.cardColor,
               onTap: () {
                 // Navigate to profile settings
                 showCupertinoDialog(
@@ -33,11 +43,29 @@ class SettingsPage extends StatelessWidget {
                 );
               },
             ),
-            _buildDivider(),
+            _buildDivider(context, themeData),
+            
+            // Theme selection section
+            _buildListItem(
+              context,
+              CupertinoIcons.paintbrush_fill,
+              'Theme',
+              color: themeData.secondaryColor,
+              textColor: themeData.textColor,
+              backgroundColor: themeData.cardColor,
+              onTap: () {
+                _showThemeOptions(context, themeProvider);
+              },
+            ),
+            _buildDivider(context, themeData),
+            
             _buildListItem(
               context,
               CupertinoIcons.tag_fill,
               'Categories',
+              color: themeData.secondaryColor,
+              textColor: themeData.textColor,
+              backgroundColor: themeData.cardColor,
               onTap: () {
                 // Navigate to categories settings
                 showCupertinoDialog(
@@ -55,11 +83,14 @@ class SettingsPage extends StatelessWidget {
                 );
               },
             ),
-            _buildDivider(),
+            _buildDivider(context, themeData),
             _buildListItem(
               context,
               CupertinoIcons.bell_fill,
               'Notifications',
+              color: themeData.secondaryColor,
+              textColor: themeData.textColor,
+              backgroundColor: themeData.cardColor,
               onTap: () {
                 // Navigate to notification settings
                 showCupertinoDialog(
@@ -77,35 +108,43 @@ class SettingsPage extends StatelessWidget {
                 );
               },
             ),
-            _buildDivider(),
+            _buildDivider(context, themeData),
             _buildListItem(
               context,
               CupertinoIcons.arrow_clockwise,
               'Backup & Restore',
+              color: themeData.secondaryColor,
+              textColor: themeData.textColor,
+              backgroundColor: themeData.cardColor,
               onTap: () {
-                _showBackupRestoreOptions(context);
+                _showBackupRestoreOptions(context, themeData);
               },
             ),
-            _buildDivider(),
+            _buildDivider(context, themeData),
             _buildListItem(
               context,
               CupertinoIcons.square_arrow_right,
               'Export Data',
+              color: themeData.secondaryColor,
+              textColor: themeData.textColor,
+              backgroundColor: themeData.cardColor,
               onTap: () async {
-                _showExportOptions(context);
+                _showExportOptions(context, themeData);
               },
             ),
-            _buildDivider(),
+            _buildDivider(context, themeData),
             _buildListItem(
               context,
               CupertinoIcons.delete,
               'Clear All Data',
               textColor: CupertinoColors.destructiveRed,
+              color: CupertinoColors.destructiveRed,
+              backgroundColor: themeData.cardColor,
               onTap: () {
-                _showClearDataDialog(context);
+                _showClearDataDialog(context, themeData);
               },
             ),
-            _buildDivider(),
+            _buildDivider(context, themeData),
             SizedBox(height: 20),
             Center(
               child: Text(
@@ -128,23 +167,26 @@ class SettingsPage extends StatelessWidget {
     IconData icon,
     String title, {
     required VoidCallback onTap,
-    Color? textColor,
+    required Color color,
+    required Color textColor,
+    required Color backgroundColor,
   }) {
     return CupertinoButton(
       padding: EdgeInsets.zero,
       onPressed: onTap,
       child: Container(
+        color: backgroundColor,
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, color: textColor ?? CupertinoColors.activeBlue, size: 24),
+            Icon(icon, color: color, size: 24),
             SizedBox(width: 16),
             Expanded(
               child: Text(
                 title,
                 style: TextStyle(
                   fontSize: 17,
-                  color: textColor ?? CupertinoColors.black,
+                  color: textColor,
                 ),
               ),
             ),
@@ -155,7 +197,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context, AppThemeData themeData) {
     return Container(
       margin: EdgeInsets.only(left: 56),
       height: 0.5,
@@ -163,7 +205,39 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showBackupRestoreOptions(BuildContext context) {
+  void _showThemeOptions(BuildContext context, ThemeProvider themeProvider) {
+    final themeData = themeProvider.currentThemeData;
+    
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: Text('Choose Theme'),
+        message: Text('Select your preferred app theme'),
+        actions: AppTheme.values.map((theme) {
+          final isSelected = themeProvider.currentTheme == theme;
+          return CupertinoActionSheetAction(
+            onPressed: () {
+              themeProvider.setTheme(theme);
+              Navigator.pop(context);
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(themeProvider.getThemeName(theme)),
+                if (isSelected) Icon(CupertinoIcons.check_mark, color: themeData.primaryColor),
+              ],
+            ),
+          );
+        }).toList(),
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Cancel'),
+        ),
+      ),
+    );
+  }
+
+  void _showBackupRestoreOptions(BuildContext context, AppThemeData themeData) {
     showCupertinoModalPopup(
       context: context,
       builder: (bottomSheetContext) => CupertinoActionSheet(
@@ -296,7 +370,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showExportOptions(BuildContext context) {
+  void _showExportOptions(BuildContext context, AppThemeData themeData) {
     showCupertinoModalPopup(
       context: context,
       builder: (bottomSheetContext) => CupertinoActionSheet(
@@ -359,7 +433,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showClearDataDialog(BuildContext context) {
+  void _showClearDataDialog(BuildContext context, AppThemeData themeData) {
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
@@ -374,7 +448,7 @@ class SettingsPage extends StatelessWidget {
           'This will permanently delete all your transactions. This action cannot be undone.',
           style: TextStyle(
             fontSize: 13,
-            color: CupertinoColors.black.withOpacity(0.8),
+            color: themeData.textColor.withOpacity(0.8),
           ),
         ),
         actions: [

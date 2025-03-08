@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 import '../database/database_helper.dart';
 import '../models/transaction.dart';
+import '../providers/theme_provider.dart';
 import '../widgets/balance_summary_card.dart';
 import '../widgets/transaction_list_item.dart';
 import '../widgets/add_transaction_sheet.dart';
@@ -107,147 +109,153 @@ class _DashboardPageState extends State<DashboardPage> {
     // For now, we'll just reload the data
     _loadData();
   }
-@override
-Widget build(BuildContext context) {
-  return CupertinoPageScaffold(
-    navigationBar: CupertinoNavigationBar(
-      middle: Text('Finance Tracker'),
-      trailing: GestureDetector(
-        onTap: _loadData,
-        child: Icon(CupertinoIcons.refresh),
+  
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeData = themeProvider.currentThemeData;
+    
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: Text('Finance Tracker'),
+        backgroundColor: themeData.cardColor,
+        trailing: GestureDetector(
+          onTap: _loadData,
+          child: Icon(CupertinoIcons.refresh, color: themeData.primaryColor),
+        ),
       ),
-    ),
-    child: Stack(
-      children: [
-        _isLoading 
-          ? Center(child: CupertinoActivityIndicator()) 
-          : CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                CupertinoSliverRefreshControl(
-                  onRefresh: _loadData,
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        BalanceSummaryCard(
-                          currentBalance: _currentBalance,
-                          income: _totalIncome,
-                          expenses: _totalExpenses,
-                          onBalanceTap: _navigateToAccountsPage,
-                        ),
-                        SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Recent Transactions',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: CupertinoColors.black,
-                              ),
-                            ),
-                            CupertinoButton(
-                              padding: EdgeInsets.zero,
-                              onPressed: () {
-                                // Navigate to all transactions page
-                              },
-                              child: Text(
-                                'See All',
+      backgroundColor: themeData.backgroundColor,
+      child: Stack(
+        children: [
+          _isLoading 
+            ? Center(child: CupertinoActivityIndicator()) 
+            : CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  CupertinoSliverRefreshControl(
+                    onRefresh: _loadData,
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          BalanceSummaryCard(
+                            currentBalance: _currentBalance,
+                            income: _totalIncome,
+                            expenses: _totalExpenses,
+                            onBalanceTap: _navigateToAccountsPage,
+                          ),
+                          SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Recent Transactions',
                                 style: TextStyle(
-                                  color: CupertinoColors.activeBlue,
-                                  fontSize: 16,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: themeData.textColor,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        _recentTransactions.isEmpty
-                            ? Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(24.0),
-                                  child: Column(
-                                    children: [
-                                      Icon(
-                                        CupertinoIcons.doc_text,
-                                        size: 48,
-                                        color: CupertinoColors.systemGrey4,
-                                      ),
-                                      SizedBox(height: 16),
-                                      Text(
-                                        'No transactions yet',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: CupertinoColors.systemGrey,
-                                        ),
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        'Add your first transaction by tapping the + button',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: CupertinoColors.systemGrey,
-                                        ),
-                                      ),
-                                    ],
+                              CupertinoButton(
+                                padding: EdgeInsets.zero,
+                                onPressed: () {
+                                  // Navigate to all transactions page
+                                },
+                                child: Text(
+                                  'See All',
+                                  style: TextStyle(
+                                    color: themeData.secondaryColor,
+                                    fontSize: 16,
                                   ),
                                 ),
-                              )
-                            : ListView.builder(
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                itemCount: _recentTransactions.length,
-                                itemBuilder: (context, index) {
-                                  final transaction = _recentTransactions[index];
-                                  return TransactionListItem(
-                                    transaction: transaction,
-                                    onDelete: () => _deleteTransaction(transaction.id!),
-                                    onUpdate: () => _updateTransaction(transaction),
-                                  );
-                                },
                               ),
-                      ],
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          _recentTransactions.isEmpty
+                              ? Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(24.0),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          CupertinoIcons.doc_text,
+                                          size: 48,
+                                          color: CupertinoColors.systemGrey4,
+                                        ),
+                                        SizedBox(height: 16),
+                                        Text(
+                                          'No transactions yet',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: CupertinoColors.systemGrey,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          'Add your first transaction by tapping the + button',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: CupertinoColors.systemGrey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: NeverScrollableScrollPhysics(),
+                                  itemCount: _recentTransactions.length,
+                                  itemBuilder: (context, index) {
+                                    final transaction = _recentTransactions[index];
+                                    return TransactionListItem(
+                                      transaction: transaction,
+                                      onDelete: () => _deleteTransaction(transaction.id!),
+                                      onUpdate: () => _updateTransaction(transaction),
+                                    );
+                                  },
+                                ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-            
-        // Floating action button positioned at the bottom right
-        Positioned(
-          bottom: 16,
-          right: 16,
-          child: GestureDetector(
-            onTap: _showAddTransactionSheet,
-            child: Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: CupertinoColors.activeGreen,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: CupertinoColors.systemGrey.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
                   ),
                 ],
               ),
-              child: Icon(
-                CupertinoIcons.add,
-                color: CupertinoColors.white,
-                size: 30,
+              
+          // Floating action button positioned at the bottom right
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: GestureDetector(
+              onTap: _showAddTransactionSheet,
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: themeData.primaryColor,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: CupertinoColors.systemGrey.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  CupertinoIcons.add,
+                  color: CupertinoColors.white,
+                  size: 30,
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 }

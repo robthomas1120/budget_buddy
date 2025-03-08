@@ -2,7 +2,8 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class BalanceSummaryCard extends StatefulWidget {
   final double currentBalance;
@@ -27,13 +28,16 @@ class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeData = themeProvider.currentThemeData;
+    
     return GestureDetector(
       onTap: () => widget.onBalanceTap(),
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: CupertinoColors.activeGreen,
+          color: themeData.primaryColor,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(

@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../models/transaction.dart';
+import '../providers/theme_provider.dart';
 import 'transaction_details_dialog.dart';
 
 class TransactionListItem extends StatelessWidget {
@@ -17,17 +19,23 @@ class TransactionListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeData = themeProvider.currentThemeData;
+    
     final bool isIncome = transaction.type == 'income';
     final DateFormat formatter = DateFormat('MMM dd, yyyy');
+    final transactionColor = isIncome ? themeData.incomeColor : themeData.expenseColor;
 
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: CupertinoColors.white,
+        color: themeData.cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: CupertinoColors.systemGrey6,
+            color: themeData.brightness == Brightness.dark 
+                ? CupertinoColors.black.withOpacity(0.2)
+                : CupertinoColors.systemGrey6,
             blurRadius: 4,
             offset: Offset(0, 2),
           ),
@@ -55,14 +63,12 @@ class TransactionListItem extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: isIncome 
-                      ? CupertinoColors.activeGreen.withOpacity(0.15) 
-                      : CupertinoColors.systemRed.withOpacity(0.15),
+                  color: transactionColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   isIncome ? CupertinoIcons.arrow_down : CupertinoIcons.arrow_up,
-                  color: isIncome ? CupertinoColors.activeGreen : CupertinoColors.systemRed,
+                  color: transactionColor,
                   size: 24,
                 ),
               ),
@@ -76,6 +82,7 @@ class TransactionListItem extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        color: transactionColor,
                       ),
                     ),
                     SizedBox(height: 4),
@@ -94,7 +101,7 @@ class TransactionListItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: isIncome ? CupertinoColors.activeGreen : CupertinoColors.systemRed,
+                  color: transactionColor,
                 ),
               ),
             ],

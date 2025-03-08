@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../models/transaction.dart';
 import '../database/database_helper.dart';
 import '../models/account.dart';
+import '../providers/theme_provider.dart';
 
 class TransactionDetailsDialog extends StatefulWidget {
   final Transaction transaction;
@@ -54,13 +56,17 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeData = themeProvider.currentThemeData;
+    
     final transaction = widget.transaction;
     final isIncome = transaction.type == 'income';
+    final transactionColor = isIncome ? themeData.incomeColor : themeData.expenseColor;
 
     return Container(
       padding: EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 32),
       decoration: BoxDecoration(
-        color: CupertinoColors.systemBackground,
+        color: themeData.backgroundColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: SafeArea(
@@ -76,6 +82,7 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: themeData.textColor,
                   ),
                 ),
                 GestureDetector(
@@ -98,12 +105,12 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: isIncome ? CupertinoColors.activeGreen.withOpacity(0.15) : CupertinoColors.destructiveRed.withOpacity(0.15),
+                    color: transactionColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     isIncome ? CupertinoIcons.arrow_down : CupertinoIcons.arrow_up,
-                    color: isIncome ? CupertinoColors.activeGreen : CupertinoColors.destructiveRed,
+                    color: transactionColor,
                     size: 24,
                   ),
                 ),
@@ -117,6 +124,7 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
+                          color: transactionColor,
                         ),
                       ),
                       Text(
@@ -133,7 +141,7 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
-                    color: isIncome ? CupertinoColors.activeGreen : CupertinoColors.destructiveRed,
+                    color: transactionColor,
                   ),
                 ),
               ],
@@ -148,7 +156,7 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                 child: Center(child: CupertinoActivityIndicator()),
               )
             else if (_account != null)
-              _buildAccountInfo(_account!),
+              _buildAccountInfo(_account!, themeData),
             
             SizedBox(height: 16),
             
@@ -159,19 +167,23 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
+                  color: themeData.textColor,
                 ),
               ),
               SizedBox(height: 4),
               Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: CupertinoColors.systemGrey6,
+                  color: themeData.brightness == Brightness.dark 
+                      ? CupertinoColors.systemGrey6.darkColor
+                      : CupertinoColors.systemGrey6,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   transaction.notes!,
                   style: TextStyle(
                     fontSize: 15,
+                    color: themeData.textColor,
                   ),
                 ),
               ),
@@ -193,13 +205,13 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                       children: [
                         Icon(
                           CupertinoIcons.delete,
-                          color: CupertinoColors.destructiveRed,
+                          color: themeData.expenseColor,
                         ),
                         SizedBox(height: 4),
                         Text(
                           'Delete',
                           style: TextStyle(
-                            color: CupertinoColors.destructiveRed,
+                            color: themeData.expenseColor,
                             fontSize: 14,
                           ),
                         ),
@@ -218,13 +230,13 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                       children: [
                         Icon(
                           CupertinoIcons.pencil,
-                          color: CupertinoColors.activeBlue,
+                          color: themeData.secondaryColor,
                         ),
                         SizedBox(height: 4),
                         Text(
                           'Edit',
                           style: TextStyle(
-                            color: CupertinoColors.activeBlue,
+                            color: themeData.secondaryColor,
                             fontSize: 14,
                           ),
                         ),
@@ -240,11 +252,13 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
     );
   }
 
-  Widget _buildAccountInfo(Account account) {
+  Widget _buildAccountInfo(Account account, AppThemeData themeData) {
     return Container(
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: CupertinoColors.systemGrey6,
+        color: themeData.brightness == Brightness.dark 
+            ? CupertinoColors.systemGrey6.darkColor
+            : CupertinoColors.systemGrey6,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -270,6 +284,7 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
+                  color: themeData.textColor,
                 ),
               ),
             ],
@@ -279,7 +294,7 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
             '₱${account.balance.toStringAsFixed(2)}',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: account.balance >= 0 ? CupertinoColors.activeGreen : CupertinoColors.destructiveRed,
+              color: account.balance >= 0 ? themeData.incomeColor : themeData.expenseColor,
             ),
           ),
         ],

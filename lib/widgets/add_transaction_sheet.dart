@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../database/database_helper.dart';
 import '../models/transaction.dart';
 import '../models/account.dart';
+import '../providers/theme_provider.dart';
 
 class AddTransactionSheet extends StatefulWidget {
   final String transactionType;
@@ -84,26 +86,26 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> _selectDate(BuildContext context, AppThemeData themeData) async {
     await showCupertinoModalPopup(
       context: context,
       builder: (BuildContext context) {
         return Container(
           height: 250,
-          color: CupertinoColors.systemBackground,
+          color: themeData.cardColor,
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CupertinoButton(
-                    child: Text('Cancel'),
+                    child: Text('Cancel', style: TextStyle(color: themeData.secondaryColor)),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
                   ),
                   CupertinoButton(
-                    child: Text('Done'),
+                    child: Text('Done', style: TextStyle(color: themeData.secondaryColor)),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
@@ -176,7 +178,11 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeData = themeProvider.currentThemeData;
+    
     List<String> categories = _selectedType == 'income' ? _incomeCategories : _expenseCategories;
+    final typeColor = _selectedType == 'income' ? themeData.incomeColor : themeData.expenseColor;
     
     return Container(
       padding: EdgeInsets.only(
@@ -186,7 +192,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         right: 16,
       ),
       decoration: BoxDecoration(
-        color: CupertinoColors.systemBackground,
+        color: themeData.cardColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: SafeArea(
@@ -204,6 +210,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      color: themeData.textColor,
                     ),
                   ),
                   GestureDetector(
@@ -221,6 +228,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
+                    color: themeData.textColor,
                   ),
                 ),
                 SizedBox(height: 8),
@@ -232,7 +240,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       child: Text(
                         'Income',
                         style: TextStyle(
-                          color: _selectedType == 'income' ? CupertinoColors.white : null,
+                          color: _selectedType == 'income' ? CupertinoColors.white : themeData.textColor,
                         ),
                       ),
                     ),
@@ -241,13 +249,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       child: Text(
                         'Expense',
                         style: TextStyle(
-                          color: _selectedType == 'expense' ? CupertinoColors.white : null,
+                          color: _selectedType == 'expense' ? CupertinoColors.white : themeData.textColor,
                         ),
                       ),
                     ),
                   },
-                  thumbColor: _selectedType == 'income' ? CupertinoColors.activeGreen : CupertinoColors.destructiveRed,
-                  backgroundColor: CupertinoColors.systemGrey6,
+                  thumbColor: _selectedType == 'income' ? themeData.incomeColor : themeData.expenseColor,
+                  backgroundColor: themeData.brightness == Brightness.dark 
+                      ? CupertinoColors.systemGrey6.darkColor
+                      : CupertinoColors.systemGrey6,
                   onValueChanged: (value) {
                     if (value != null) {
                       setState(() {
@@ -269,7 +279,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                   children: [
                     Text(
                       'No accounts found',
-                      style: TextStyle(color: CupertinoColors.destructiveRed),
+                      style: TextStyle(color: themeData.expenseColor),
                     ),
                     SizedBox(height: 8),
                     CupertinoButton.filled(
@@ -292,12 +302,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
+                        color: themeData.textColor,
                       ),
                     ),
                     SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
-                        color: CupertinoColors.systemGrey6,
+                        color: themeData.brightness == Brightness.dark 
+                            ? CupertinoColors.systemGrey6.darkColor
+                            : CupertinoColors.systemGrey6,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       padding: EdgeInsets.only(left: 12),
@@ -307,10 +320,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                           isExpanded: true,
                           icon: Icon(CupertinoIcons.chevron_down, size: 16),
                           style: TextStyle(
-                            color: CupertinoColors.black,
+                            color: themeData.textColor,
                             fontSize: 16,
                           ),
-                          dropdownColor: CupertinoColors.systemBackground,
+                          dropdownColor: themeData.cardColor,
                           borderRadius: BorderRadius.circular(8),
                           items: _accounts.map((Account account) {
                             return DropdownMenuItem<int>(
@@ -348,6 +361,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
+                  color: themeData.textColor,
                 ),
               ),
               SizedBox(height: 8),
@@ -356,14 +370,17 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 placeholder: '0.00',
                 prefix: Padding(
                   padding: EdgeInsets.only(left: 12),
-                  child: Text('₱', style: TextStyle(color: CupertinoColors.black)),
+                  child: Text('₱', style: TextStyle(color: themeData.textColor)),
                 ),
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                 decoration: BoxDecoration(
-                  color: CupertinoColors.systemGrey6,
+                  color: themeData.brightness == Brightness.dark 
+                      ? CupertinoColors.systemGrey6.darkColor
+                      : CupertinoColors.systemGrey6,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
+                style: TextStyle(color: themeData.textColor),
               ),
               SizedBox(height: 16),
 
@@ -373,6 +390,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
+                  color: themeData.textColor,
                 ),
               ),
               SizedBox(height: 8),
@@ -381,9 +399,13 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 placeholder: 'Enter title',
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                 decoration: BoxDecoration(
-                  color: CupertinoColors.systemGrey6,
+                  color: themeData.brightness == Brightness.dark 
+                      ? CupertinoColors.systemGrey6.darkColor
+                      : CupertinoColors.systemGrey6,
                   borderRadius: BorderRadius.circular(8),
                 ),
+                style: TextStyle(color: themeData.textColor),
+                placeholderStyle: TextStyle(color: CupertinoColors.systemGrey),
               ),
               SizedBox(height: 16),
               
@@ -393,12 +415,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
+                  color: themeData.textColor,
                 ),
               ),
               SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
-                  color: CupertinoColors.systemGrey6,
+                  color: themeData.brightness == Brightness.dark 
+                      ? CupertinoColors.systemGrey6.darkColor
+                      : CupertinoColors.systemGrey6,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 padding: EdgeInsets.only(left: 12),
@@ -408,10 +433,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     isExpanded: true,
                     icon: Icon(CupertinoIcons.chevron_down, size: 16),
                     style: TextStyle(
-                      color: CupertinoColors.black,
+                      color: themeData.textColor,
                       fontSize: 16,
                     ),
-                    dropdownColor: CupertinoColors.systemBackground,
+                    dropdownColor: themeData.cardColor,
                     borderRadius: BorderRadius.circular(8),
                     items: categories.map((String category) {
                       return DropdownMenuItem<String>(
@@ -437,15 +462,18 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
+                  color: themeData.textColor,
                 ),
               ),
               SizedBox(height: 8),
               GestureDetector(
-                onTap: () => _selectDate(context),
+                onTap: () => _selectDate(context, themeData),
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   decoration: BoxDecoration(
-                    color: CupertinoColors.systemGrey6,
+                    color: themeData.brightness == Brightness.dark 
+                        ? CupertinoColors.systemGrey6.darkColor
+                        : CupertinoColors.systemGrey6,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -455,7 +483,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         DateFormat('MMM dd, yyyy').format(_selectedDate),
                         style: TextStyle(
                           fontSize: 16,
-                          color: CupertinoColors.black,
+                          color: themeData.textColor,
                         ),
                       ),
                       Icon(CupertinoIcons.calendar, color: CupertinoColors.systemGrey),
@@ -471,6 +499,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
+                  color: themeData.textColor,
                 ),
               ),
               SizedBox(height: 8),
@@ -479,19 +508,24 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 placeholder: 'Add notes about this transaction',
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                 decoration: BoxDecoration(
-                  color: CupertinoColors.systemGrey6,
+                  color: themeData.brightness == Brightness.dark 
+                      ? CupertinoColors.systemGrey6.darkColor
+                      : CupertinoColors.systemGrey6,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 maxLines: 3,
+                style: TextStyle(color: themeData.textColor),
+                placeholderStyle: TextStyle(color: CupertinoColors.systemGrey),
               ),
               SizedBox(height: 24),
               
-              // Submit button
+              // Submit button - FIXED CODE HERE
               SizedBox(
                 width: double.infinity,
-                child: CupertinoButton.filled(
+                child: CupertinoButton(  // Changed from CupertinoButton.filled
                   padding: EdgeInsets.symmetric(vertical: 14),
                   borderRadius: BorderRadius.circular(8),
+                  color: typeColor,
                   onPressed: () async {
                     if (_selectedAccountId == null) {
                       _showError('Please select an account');
@@ -538,6 +572,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: CupertinoColors.white,
                     ),
                   ),
                 ),

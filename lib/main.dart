@@ -2,8 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'database/database_helper.dart';
 import 'screens/home_page.dart';
+import 'providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,26 +19,34 @@ void main() async {
   // Initialize database
   await DatabaseHelper.instance.database;
   
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeData = themeProvider.currentThemeData;
+    
     return CupertinoApp(
       title: 'Budget Buddy',
       debugShowCheckedModeBanner: false,
       theme: CupertinoThemeData(
-        brightness: Brightness.light,
-        primaryColor: CupertinoColors.activeGreen,
-        scaffoldBackgroundColor: CupertinoColors.systemGroupedBackground,
-        barBackgroundColor: CupertinoColors.systemBackground,
+        brightness: themeData.brightness,
+        primaryColor: themeData.primaryColor,
+        scaffoldBackgroundColor: themeData.backgroundColor,
+        barBackgroundColor: themeData.cardColor,
         textTheme: CupertinoTextThemeData(
-          primaryColor: CupertinoColors.activeGreen,
+          primaryColor: themeData.primaryColor,
           textStyle: TextStyle(
             fontFamily: '.SF Pro Text',
             fontSize: 17,
-            color: CupertinoColors.black,
+            color: themeData.textColor,
           ),
         ),
       ),
