@@ -24,7 +24,7 @@ class BalanceSummaryCard extends StatefulWidget {
 }
 
 class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
-  bool _isBalanceVisible = true;
+  bool _isBalanceVisible = false;
 
   @override
   Widget build(BuildContext context) {
