@@ -5,6 +5,9 @@ import '../database/database_helper.dart';
 import '../models/transaction.dart';
 import '../widgets/transaction_list_item.dart';
 import '../widgets/add_transaction_sheet.dart';
+import '../widgets/transaction_details_dialog.dart';
+
+
 
 class IncomePage extends StatefulWidget {
   @override
@@ -34,15 +37,15 @@ class _IncomePageState extends State<IncomePage> {
     });
   }
 
-  void _showAddTransactionSheet() {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) => AddTransactionSheet(
-        transactionType: 'income',
-        onTransactionAdded: _loadTransactions,
-      ),
-    );
-  }
+void _showAddTransactionSheet() {
+  showCupertinoModalPopup(
+    context: context,
+    builder: (context) => AddTransactionSheet(
+      transactionType: 'income',
+      onTransactionAdded: _loadTransactions,
+    ),
+  );
+}
 
   Future<void> _deleteTransaction(int id) async {
     try {

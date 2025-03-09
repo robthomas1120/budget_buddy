@@ -7,6 +7,8 @@ import '../widgets/balance_summary_card.dart';
 import '../widgets/transaction_list_item.dart';
 import '../widgets/add_transaction_sheet.dart';
 import 'accounts_page.dart';
+import '../widgets/transaction_details_dialog.dart';
+
 
 class DashboardPage extends StatefulWidget {
   @override
@@ -48,14 +50,14 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  void _showAddTransactionSheet() {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) => AddTransactionSheet(
-        onTransactionAdded: _loadData,
-      ),
-    );
-  }
+ void _showAddTransactionSheet() {
+  showCupertinoModalPopup(
+    context: context,
+    builder: (context) => AddTransactionSheet(
+      onTransactionAdded: _loadData,
+    ),
+  );
+}
 
   void _navigateToAccountsPage() {
     Navigator.push(
@@ -157,8 +159,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: themeData.textColor,
-                                  // Remove any decoration that might be causing the yellow underline
-                                  decoration: TextDecoration.none,
+                                  
                                 ),
                               ),
                               CupertinoButton(

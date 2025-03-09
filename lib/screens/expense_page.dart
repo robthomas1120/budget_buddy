@@ -34,15 +34,15 @@ class _ExpensePageState extends State<ExpensePage> {
     });
   }
 
-  void _showAddTransactionSheet() {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) => AddTransactionSheet(
-        transactionType: 'expense',
-        onTransactionAdded: _loadTransactions,
-      ),
-    );
-  }
+void _showAddTransactionSheet() {
+  showCupertinoModalPopup(
+    context: context,
+    builder: (context) => AddTransactionSheet(
+      transactionType: 'expense',
+      onTransactionAdded: _loadTransactions,
+    ),
+  );
+}
 
   Future<void> _deleteTransaction(int id) async {
     try {

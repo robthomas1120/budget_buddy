@@ -18,96 +18,96 @@ class TransactionListItem extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final themeData = themeProvider.currentThemeData;
-    
-    final bool isIncome = transaction.type == 'income';
-    final DateFormat formatter = DateFormat('MMM dd, yyyy');
-    final transactionColor = isIncome ? themeData.incomeColor : themeData.expenseColor;
+Widget build(BuildContext context) {
+  final themeProvider = Provider.of<ThemeProvider>(context);
+  final themeData = themeProvider.currentThemeData;
+  
+  final bool isIncome = transaction.type == 'income';
+  final DateFormat formatter = DateFormat('MMM dd, yyyy');
+  final transactionColor = isIncome ? themeData.incomeColor : themeData.expenseColor;
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: themeData.cardColor,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: themeData.brightness == Brightness.dark 
-                ? CupertinoColors.black.withOpacity(0.2)
-                : CupertinoColors.systemGrey6,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: CupertinoButton(
-        padding: EdgeInsets.zero,
-        onPressed: () {
-          showCupertinoModalPopup(
-            context: context,
-            builder: (BuildContext context) {
-              return TransactionDetailsDialog(
-                transaction: transaction,
-                onDelete: onDelete,
-                onUpdate: onUpdate,
-              );
-            },
-          );
-        },
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: transactionColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  isIncome ? CupertinoIcons.arrow_down : CupertinoIcons.arrow_up,
-                  color: transactionColor,
-                  size: 24,
-                ),
+  return Container(
+    margin: EdgeInsets.only(bottom: 12),
+    decoration: BoxDecoration(
+      color: themeData.cardColor,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: themeData.brightness == Brightness.dark 
+              ? CupertinoColors.black.withOpacity(0.2)
+              : CupertinoColors.systemGrey6,
+          blurRadius: 4,
+          offset: Offset(0, 2),
+        ),
+      ],
+    ),
+    child: CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: () {
+        showCupertinoModalPopup(
+          context: context,
+          builder: (BuildContext context) {
+            return TransactionDetailsDialog(
+              transaction: transaction,
+              onDelete: onDelete,
+              onUpdate: onUpdate,
+            );
+          },
+        );
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: transactionColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
               ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      transaction.title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: transactionColor,
-                      ),
+              child: Icon(
+                isIncome ? CupertinoIcons.arrow_down : CupertinoIcons.arrow_up,
+                color: transactionColor,
+                size: 24,
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    transaction.title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: transactionColor,
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      '${transaction.category} • ${formatter.format(transaction.date)}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: CupertinoColors.systemGrey,
-                      ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '${transaction.category} • ${formatter.format(transaction.date)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: CupertinoColors.systemGrey,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Text(
-                '₱${transaction.amount.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: transactionColor,
-                ),
+            ),
+            Text(
+              '₱${transaction.amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: transactionColor,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
