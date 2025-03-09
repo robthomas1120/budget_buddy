@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show DefaultTextStyle, TextStyle;
 import 'package:provider/provider.dart';
 import '../database/database_helper.dart';
 import '../models/account.dart';
@@ -14,8 +15,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
-  
   // Create a list of page widgets
   late List<Widget> _pages;
   
@@ -32,35 +31,47 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoTabScaffold(
-      tabBar: CupertinoTabBar(
-        activeColor: CupertinoColors.activeGreen,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.home),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.arrow_down_circle),
-            label: 'Income',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.arrow_up_circle),
-            label: 'Expenses',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.settings),
-            label: 'Settings',
-          ),
-        ],
+    // Wrap with DefaultTextStyle to provide text styling for the entire app
+    return DefaultTextStyle(
+      style: TextStyle(
+        color: CupertinoColors.black,
+        fontSize: 16.0,
+        fontWeight: FontWeight.normal,
+        fontFamily: '.SF Pro Text', // Default iOS font
       ),
-      tabBuilder: (context, index) {
-        return CupertinoTabView(
-          builder: (context) {
-            return _pages[index];
-          },
-        );
-      },
+      child: CupertinoTabScaffold(
+        tabBar: CupertinoTabBar(
+          activeColor: CupertinoColors.activeGreen,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.home),
+              label: 'Dashboard',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.arrow_down_circle),
+              label: 'Income',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.arrow_up_circle),
+              label: 'Expenses',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.settings),
+              label: 'Settings',
+            ),
+          ],
+        ),
+        tabBuilder: (context, index) {
+          // Provide proper text styling for each tab view
+          return CupertinoTabView(
+            builder: (context) {
+              return CupertinoPageScaffold(
+                child: _pages[index],
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
