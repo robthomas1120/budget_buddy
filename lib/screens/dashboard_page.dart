@@ -157,6 +157,8 @@ class _DashboardPageState extends State<DashboardPage> {
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: themeData.textColor,
+                                  // Remove any decoration that might be causing the yellow underline
+                                  decoration: TextDecoration.none,
                                 ),
                               ),
                               CupertinoButton(

@@ -1,8 +1,12 @@
+// lib/screens/accounts_page.dart
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../database/database_helper.dart';
 import '../models/account.dart';
 import '../models/transaction.dart';
+import '../providers/theme_provider.dart';
 import '../widgets/transfer_dialog.dart';
 
 class AccountsPage extends StatefulWidget {
@@ -37,22 +41,27 @@ class _AccountsPageState extends State<AccountsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeData = themeProvider.currentThemeData;
+    
     return CupertinoPageScaffold(
+      backgroundColor: themeData.backgroundColor,
       navigationBar: CupertinoNavigationBar(
-        middle: Text('My Accounts'),
+        middle: Text('My Accounts', style: TextStyle(color: themeData.textColor)),
+        backgroundColor: themeData.cardColor,
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             _accounts.length >= 2 
               ? GestureDetector(
                   onTap: _showTransferDialog,
-                  child: Icon(CupertinoIcons.arrow_right_arrow_left),
+                  child: Icon(CupertinoIcons.arrow_right_arrow_left, color: themeData.primaryColor),
                 )
               : SizedBox.shrink(),
             SizedBox(width: 20),
             GestureDetector(
               onTap: () => _showAddAccountDialog(),
-              child: Icon(CupertinoIcons.add),
+              child: Icon(CupertinoIcons.add, color: themeData.primaryColor),
             ),
           ],
         ),
@@ -60,12 +69,12 @@ class _AccountsPageState extends State<AccountsPage> {
       child: _isLoading 
         ? Center(child: CupertinoActivityIndicator())
         : _accounts.isEmpty 
-          ? _buildEmptyState()
-          : _buildAccountsList(),
+          ? _buildEmptyState(themeData)
+          : _buildAccountsList(themeData),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppThemeData themeData) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -73,7 +82,9 @@ class _AccountsPageState extends State<AccountsPage> {
           Icon(
             CupertinoIcons.creditcard,
             size: 80,
-            color: CupertinoColors.systemGrey4,
+            color: themeData.brightness == Brightness.dark
+                ? CupertinoColors.systemGrey
+                : CupertinoColors.systemGrey4,
           ),
           SizedBox(height: 16),
           Text(
@@ -81,14 +92,14 @@ class _AccountsPageState extends State<AccountsPage> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: CupertinoColors.systemGrey,
+              color: themeData.textColor,
             ),
           ),
           SizedBox(height: 8),
           Text(
             'Add an account to track your money',
             style: TextStyle(
-              color: CupertinoColors.systemGrey,
+              color: themeData.textColor.withOpacity(0.7),
             ),
           ),
           SizedBox(height: 24),
@@ -102,7 +113,7 @@ class _AccountsPageState extends State<AccountsPage> {
     );
   }
 
-  Widget _buildAccountsList() {
+  Widget _buildAccountsList(AppThemeData themeData) {
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -118,11 +129,13 @@ class _AccountsPageState extends State<AccountsPage> {
                 return Container(
                   margin: EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: CupertinoColors.white,
+                    color: themeData.cardColor,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: CupertinoColors.systemGrey5,
+                        color: themeData.brightness == Brightness.dark 
+                            ? Colors.black.withOpacity(0.2)
+                            : CupertinoColors.systemGrey5,
                         blurRadius: 5,
                         offset: Offset(0, 2),
                       ),
@@ -130,7 +143,7 @@ class _AccountsPageState extends State<AccountsPage> {
                   ),
                   child: CupertinoButton(
                     padding: EdgeInsets.zero,
-                    onPressed: () => _showAccountDetails(account),
+                    onPressed: () => _showAccountDetails(account, themeData),
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Row(
@@ -157,14 +170,16 @@ class _AccountsPageState extends State<AccountsPage> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: CupertinoColors.black,
+                                  color: themeData.textColor,
                                 ),
                               ),
                               Text(
                                 account.type,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: CupertinoColors.systemGrey,
+                                  color: themeData.brightness == Brightness.dark
+                                      ? CupertinoColors.systemGrey
+                                      : CupertinoColors.systemGrey,
                                 ),
                               ),
                             ],
@@ -178,14 +193,16 @@ class _AccountsPageState extends State<AccountsPage> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: account.balance >= 0 ? CupertinoColors.activeGreen : CupertinoColors.destructiveRed,
+                                  color: account.balance >= 0 ? themeData.incomeColor : themeData.expenseColor,
                                 ),
                               ),
                               Text(
                                 'Current Balance',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: CupertinoColors.systemGrey,
+                                  color: themeData.brightness == Brightness.dark
+                                      ? CupertinoColors.systemGrey
+                                      : CupertinoColors.systemGrey,
                                 ),
                               ),
                             ],
@@ -232,13 +249,13 @@ class _AccountsPageState extends State<AccountsPage> {
     }
   }
 
-  void _showAccountDetails(Account account) {
+  void _showAccountDetails(Account account, AppThemeData themeData) {
     showCupertinoModalPopup(
       context: context,
       builder: (context) => Container(
         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         decoration: BoxDecoration(
-          color: CupertinoColors.systemGrey6,
+          color: themeData.cardColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: SafeArea(
@@ -252,6 +269,7 @@ class _AccountsPageState extends State<AccountsPage> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: themeData.textColor,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -260,7 +278,7 @@ class _AccountsPageState extends State<AccountsPage> {
                 'Type: ${account.type}',
                 style: TextStyle(
                   fontSize: 16,
-                  color: CupertinoColors.systemGrey,
+                  color: themeData.textColor.withOpacity(0.7),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -270,7 +288,7 @@ class _AccountsPageState extends State<AccountsPage> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: account.balance >= 0 ? CupertinoColors.activeGreen : CupertinoColors.destructiveRed,
+                  color: account.balance >= 0 ? themeData.incomeColor : themeData.expenseColor,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -281,22 +299,22 @@ class _AccountsPageState extends State<AccountsPage> {
                   CupertinoButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      _showEditAccountDialog(account);
+                      _showEditAccountDialog(account, themeData);
                     },
-                    child: Text('Edit', style: TextStyle(color: CupertinoColors.activeBlue)),
+                    child: Text('Edit', style: TextStyle(color: themeData.secondaryColor)),
                     padding: EdgeInsets.zero,
                   ),
                   CupertinoButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      _confirmDeleteAccount(account);
+                      _confirmDeleteAccount(account, themeData);
                     },
-                    child: Text('Delete', style: TextStyle(color: CupertinoColors.destructiveRed)),
+                    child: Text('Delete', style: TextStyle(color: themeData.expenseColor)),
                     padding: EdgeInsets.zero,
                   ),
                   CupertinoButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text('Close'),
+                    child: Text('Close', style: TextStyle(color: themeData.textColor)),
                     padding: EdgeInsets.zero,
                   ),
                 ],
@@ -309,6 +327,9 @@ class _AccountsPageState extends State<AccountsPage> {
   }
 
   void _showTransferDialog() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final themeData = themeProvider.currentThemeData;
+    
     if (_accounts.length < 2) {
       showCupertinoDialog(
         context: context,
@@ -336,6 +357,9 @@ class _AccountsPageState extends State<AccountsPage> {
   }
 
   void _showAddAccountDialog() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final themeData = themeProvider.currentThemeData;
+    
     final _nameController = TextEditingController();
     final _balanceController = TextEditingController();
     String _selectedType = 'Bank';
@@ -347,7 +371,7 @@ class _AccountsPageState extends State<AccountsPage> {
         builder: (context, setState) => Container(
           padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: CupertinoColors.systemGrey6,
+            color: themeData.cardColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
           child: SafeArea(
@@ -361,6 +385,7 @@ class _AccountsPageState extends State<AccountsPage> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: themeData.textColor,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -369,18 +394,30 @@ class _AccountsPageState extends State<AccountsPage> {
                   controller: _nameController,
                   placeholder: 'Account Name',
                   padding: EdgeInsets.all(12),
+                  style: TextStyle(color: themeData.textColor),
+                  placeholderStyle: TextStyle(color: themeData.brightness == Brightness.dark
+                      ? CupertinoColors.systemGrey
+                      : CupertinoColors.systemGrey),
                   decoration: BoxDecoration(
-                    color: CupertinoColors.white,
+                    color: themeData.brightness == Brightness.dark
+                        ? Color(0xFF2C2C2E) // Darker gray
+                        : CupertinoColors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: CupertinoColors.systemGrey5),
+                    border: Border.all(color: themeData.brightness == Brightness.dark
+                        ? CupertinoColors.systemGrey.withOpacity(0.5)
+                        : CupertinoColors.systemGrey5),
                   ),
                 ),
                 SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: CupertinoColors.white,
+                    color: themeData.brightness == Brightness.dark
+                        ? Color(0xFF2C2C2E) // Darker gray
+                        : CupertinoColors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: CupertinoColors.systemGrey5),
+                    border: Border.all(color: themeData.brightness == Brightness.dark
+                        ? CupertinoColors.systemGrey.withOpacity(0.5)
+                        : CupertinoColors.systemGrey5),
                   ),
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   child: Column(
@@ -390,7 +427,9 @@ class _AccountsPageState extends State<AccountsPage> {
                         'Account Type',
                         style: TextStyle(
                           fontSize: 12,
-                          color: CupertinoColors.systemGrey,
+                          color: themeData.brightness == Brightness.dark
+                              ? CupertinoColors.systemGrey
+                              : CupertinoColors.systemGrey,
                         ),
                       ),
                       SizedBox(height: 4),
@@ -398,8 +437,19 @@ class _AccountsPageState extends State<AccountsPage> {
                         groupValue: _selectedType,
                         children: {
                           for (String type in _types)
-                            type: Text(type),
+                            type: Text(
+                              type,
+                              style: TextStyle(
+                                color: themeData.textColor,
+                              ),
+                            ),
                         },
+                        backgroundColor: themeData.brightness == Brightness.dark
+                            ? Color(0xFF1C1C1E) // Dark background
+                            : CupertinoColors.systemGrey6,
+                        thumbColor: themeData.brightness == Brightness.dark
+                            ? Color(0xFF3A3A3C) // Slightly lighter than background
+                            : CupertinoColors.white,
                         onValueChanged: (value) {
                           if (value != null) {
                             setState(() {
@@ -417,10 +467,18 @@ class _AccountsPageState extends State<AccountsPage> {
                   placeholder: 'Initial Balance (₱)',
                   padding: EdgeInsets.all(12),
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  style: TextStyle(color: themeData.textColor),
+                  placeholderStyle: TextStyle(color: themeData.brightness == Brightness.dark
+                      ? CupertinoColors.systemGrey
+                      : CupertinoColors.systemGrey),
                   decoration: BoxDecoration(
-                    color: CupertinoColors.white,
+                    color: themeData.brightness == Brightness.dark
+                        ? Color(0xFF2C2C2E) // Darker gray
+                        : CupertinoColors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: CupertinoColors.systemGrey5),
+                    border: Border.all(color: themeData.brightness == Brightness.dark
+                        ? CupertinoColors.systemGrey.withOpacity(0.5)
+                        : CupertinoColors.systemGrey5),
                   ),
                 ),
                 SizedBox(height: 24),
@@ -429,23 +487,23 @@ class _AccountsPageState extends State<AccountsPage> {
                   children: [
                     CupertinoButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text('Cancel'),
+                      child: Text('Cancel', style: TextStyle(color: themeData.secondaryColor)),
                     ),
                     CupertinoButton.filled(
                       onPressed: () async {
                         if (_nameController.text.trim().isEmpty) {
-                          _showError('Please enter an account name');
+                          _showError('Please enter an account name', themeData);
                           return;
                         }
 
                         if (_balanceController.text.trim().isEmpty) {
-                          _showError('Please enter an initial balance');
+                          _showError('Please enter an initial balance', themeData);
                           return;
                         }
 
                         final balance = double.tryParse(_balanceController.text);
                         if (balance == null) {
-                          _showError('Please enter a valid balance');
+                          _showError('Please enter a valid balance', themeData);
                           return;
                         }
 
@@ -471,7 +529,7 @@ class _AccountsPageState extends State<AccountsPage> {
     );
   }
 
-  void _showEditAccountDialog(Account account) {
+  void _showEditAccountDialog(Account account, AppThemeData themeData) {
     final _nameController = TextEditingController(text: account.name);
     final _balanceController = TextEditingController(text: account.balance.toString());
     String _selectedType = account.type;
@@ -483,7 +541,7 @@ class _AccountsPageState extends State<AccountsPage> {
         builder: (context, setState) => Container(
           padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: CupertinoColors.systemGrey6,
+            color: themeData.cardColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
           child: SafeArea(
@@ -497,6 +555,7 @@ class _AccountsPageState extends State<AccountsPage> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: themeData.textColor,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -505,18 +564,30 @@ class _AccountsPageState extends State<AccountsPage> {
                   controller: _nameController,
                   placeholder: 'Account Name',
                   padding: EdgeInsets.all(12),
+                  style: TextStyle(color: themeData.textColor),
+                  placeholderStyle: TextStyle(color: themeData.brightness == Brightness.dark
+                      ? CupertinoColors.systemGrey
+                      : CupertinoColors.systemGrey),
                   decoration: BoxDecoration(
-                    color: CupertinoColors.white,
+                    color: themeData.brightness == Brightness.dark
+                        ? Color(0xFF2C2C2E) // Darker gray
+                        : CupertinoColors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: CupertinoColors.systemGrey5),
+                    border: Border.all(color: themeData.brightness == Brightness.dark
+                        ? CupertinoColors.systemGrey.withOpacity(0.5)
+                        : CupertinoColors.systemGrey5),
                   ),
                 ),
                 SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: CupertinoColors.white,
+                    color: themeData.brightness == Brightness.dark
+                        ? Color(0xFF2C2C2E) // Darker gray
+                        : CupertinoColors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: CupertinoColors.systemGrey5),
+                    border: Border.all(color: themeData.brightness == Brightness.dark
+                        ? CupertinoColors.systemGrey.withOpacity(0.5)
+                        : CupertinoColors.systemGrey5),
                   ),
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   child: Column(
@@ -526,7 +597,9 @@ class _AccountsPageState extends State<AccountsPage> {
                         'Account Type',
                         style: TextStyle(
                           fontSize: 12,
-                          color: CupertinoColors.systemGrey,
+                          color: themeData.brightness == Brightness.dark
+                              ? CupertinoColors.systemGrey
+                              : CupertinoColors.systemGrey,
                         ),
                       ),
                       SizedBox(height: 4),
@@ -534,8 +607,19 @@ class _AccountsPageState extends State<AccountsPage> {
                         groupValue: _types.contains(_selectedType) ? _selectedType : 'Other',
                         children: {
                           for (String type in _types)
-                            type: Text(type),
+                            type: Text(
+                              type,
+                              style: TextStyle(
+                                color: themeData.textColor,
+                              ),
+                            ),
                         },
+                        backgroundColor: themeData.brightness == Brightness.dark
+                            ? Color(0xFF1C1C1E) // Dark background
+                            : CupertinoColors.systemGrey6,
+                        thumbColor: themeData.brightness == Brightness.dark
+                            ? Color(0xFF3A3A3C) // Slightly lighter than background
+                            : CupertinoColors.white,
                         onValueChanged: (value) {
                           if (value != null) {
                             setState(() {
@@ -556,10 +640,18 @@ class _AccountsPageState extends State<AccountsPage> {
                       placeholder: 'Balance (₱)',
                       padding: EdgeInsets.all(12),
                       keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      style: TextStyle(color: themeData.textColor),
+                      placeholderStyle: TextStyle(color: themeData.brightness == Brightness.dark
+                          ? CupertinoColors.systemGrey
+                          : CupertinoColors.systemGrey),
                       decoration: BoxDecoration(
-                        color: CupertinoColors.white,
+                        color: themeData.brightness == Brightness.dark
+                            ? Color(0xFF2C2C2E) // Darker gray
+                            : CupertinoColors.white,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: CupertinoColors.systemGrey5),
+                        border: Border.all(color: themeData.brightness == Brightness.dark
+                            ? CupertinoColors.systemGrey.withOpacity(0.5)
+                            : CupertinoColors.systemGrey5),
                       ),
                     ),
                     SizedBox(height: 4),
@@ -567,7 +659,7 @@ class _AccountsPageState extends State<AccountsPage> {
                       'Editing balance directly might not match transaction history',
                       style: TextStyle(
                         fontSize: 12,
-                        color: CupertinoColors.systemGrey,
+                        color: themeData.textColor.withOpacity(0.6),
                       ),
                     ),
                   ],
@@ -578,23 +670,23 @@ class _AccountsPageState extends State<AccountsPage> {
                   children: [
                     CupertinoButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text('Cancel'),
+                      child: Text('Cancel', style: TextStyle(color: themeData.secondaryColor)),
                     ),
                     CupertinoButton.filled(
                       onPressed: () async {
                         if (_nameController.text.trim().isEmpty) {
-                          _showError('Please enter an account name');
+                          _showError('Please enter an account name', themeData);
                           return;
                         }
 
                         if (_balanceController.text.trim().isEmpty) {
-                          _showError('Please enter a balance');
+                          _showError('Please enter a balance', themeData);
                           return;
                         }
 
                         final balance = double.tryParse(_balanceController.text);
                         if (balance == null) {
-                          _showError('Please enter a valid balance');
+                          _showError('Please enter a valid balance', themeData);
                           return;
                         }
 
@@ -620,7 +712,7 @@ class _AccountsPageState extends State<AccountsPage> {
     );
   }
 
-  void _confirmDeleteAccount(Account account) {
+  void _confirmDeleteAccount(Account account, AppThemeData themeData) {
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
@@ -643,7 +735,7 @@ class _AccountsPageState extends State<AccountsPage> {
                 _loadAccounts();
               } catch (e) {
                 Navigator.pop(context);
-                _showError('Cannot delete account with linked transactions');
+                _showError('Cannot delete account with linked transactions', themeData);
               }
             },
             child: Text('Delete'),
@@ -653,7 +745,7 @@ class _AccountsPageState extends State<AccountsPage> {
     );
   }
 
-  void _showError(String message) {
+  void _showError(String message, AppThemeData themeData) {
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(

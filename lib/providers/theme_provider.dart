@@ -37,7 +37,7 @@ class AppThemeData {
 class ThemeProvider extends ChangeNotifier {
   static const String themePreferenceKey = 'app_theme';
   
-  AppTheme _currentTheme = AppTheme.light;
+  AppTheme _currentTheme = AppTheme.dark; // Default to dark theme
 
   AppTheme get currentTheme => _currentTheme;
 
@@ -63,8 +63,8 @@ class ThemeProvider extends ChangeNotifier {
       primaryColor: Color(0xFF30D158), // Dark mode green
       secondaryColor: Color(0xFF0A84FF), // Dark mode blue
       accentColor: Color(0xFF5E5CE6), // Dark mode indigo
-      backgroundColor: Color(0xFF1C1C1E), // Dark background
-      cardColor: Color(0xFF2C2C2E), // Dark cards
+      backgroundColor: Color(0xFF1C1C1E), // True black background
+      cardColor: Color(0xFF2C2C2E), // Dark gray cards
       textColor: CupertinoColors.white,
       incomeColor: Color(0xFF30D158), // Dark mode green
       expenseColor: Color(0xFFFF453A), // Dark mode red
@@ -75,12 +75,12 @@ class ThemeProvider extends ChangeNotifier {
       primaryColor: Color(0xFFFF6B8B), // Pink theme primary
       secondaryColor: Color(0xFFFF9EB1), // Light pink
       accentColor: Color(0xFFFFB5C5), // Lighter pink
-      backgroundColor: Color(0xFFFFF0F5), // Light pink background
-      cardColor: CupertinoColors.white,
-      textColor: Color(0xFF4A4A4A), // Dark gray for contrast
+      backgroundColor: Color(0xFF1C1C1E), // Dark background with pink accents
+      cardColor: Color(0xFF2C2C2E), // Dark cards
+      textColor: CupertinoColors.white, // White text on dark background
       incomeColor: Color(0xFFFF6B8B), // Income pink
-      expenseColor: Color(0xFFFF3B30), // Keep expense as red for clarity
-      brightness: Brightness.light,
+      expenseColor: Color(0xFFFF3B30), // Expense red
+      brightness: Brightness.dark, // Pink theme is also dark mode
     ),
   };
 
@@ -99,8 +99,8 @@ class ThemeProvider extends ChangeNotifier {
         );
         notifyListeners();
       } catch (e) {
-        // If theme name is invalid, default to light
-        _currentTheme = AppTheme.light;
+        // If theme name is invalid, default to dark
+        _currentTheme = AppTheme.dark;
       }
     }
   }
