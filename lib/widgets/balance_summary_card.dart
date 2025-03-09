@@ -5,15 +5,11 @@ import '../providers/theme_provider.dart';
 
 class BalanceSummaryCard extends StatefulWidget {
   final double currentBalance;
-  final double income;
-  final double expenses;
   final VoidCallback onBalanceTap;
 
   const BalanceSummaryCard({
     Key? key,
     required this.currentBalance,
-    required this.income,
-    required this.expenses,
     required this.onBalanceTap,
   }) : super(key: key);
 
@@ -97,94 +93,6 @@ class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
                     CupertinoIcons.chevron_right,
                     color: CupertinoColors.white,
                     size: 20,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              
-              // Income and expense summary
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  // Income summary
-                  Column(
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: CupertinoColors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              CupertinoIcons.arrow_down,
-                              color: CupertinoColors.white,
-                              size: 16,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Income',
-                            style: TextStyle(
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '₱${widget.income.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  // Divider
-                  Container(
-                    height: 40,
-                    width: 1,
-                    color: CupertinoColors.white.withOpacity(0.3),
-                  ),
-                  
-                  // Expense summary
-                  Column(
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: CupertinoColors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              CupertinoIcons.arrow_up,
-                              color: CupertinoColors.white,
-                              size: 16,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Expenses',
-                            style: TextStyle(
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '₱${widget.expenses.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),

@@ -284,72 +284,75 @@ class _TransferDialogState extends State<TransferDialog> {
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: themeData.brightness == Brightness.dark
-            ? Color(0xFF2C2C2E) // Darker gray
-            : CupertinoColors.systemGrey6,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      padding: EdgeInsets.only(left: 12),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: currentValue,
-          isExpanded: true,
-          icon: Icon(CupertinoIcons.chevron_down, size: 16, color: themeData.textColor),
-          style: TextStyle(
-            color: themeData.textColor,
-            fontSize: 16,
-          ),
-          dropdownColor: themeData.cardColor,
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          color: themeData.brightness == Brightness.dark
+              ? Color(0xFF2C2C2E) // Darker gray
+              : CupertinoColors.systemGrey6,
           borderRadius: BorderRadius.circular(8),
-          items: availableAccounts.map((Account account) {
-            return DropdownMenuItem<int>(
-              value: account.id,
-              child: Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: _getAccountColor(account.type),
-                      shape: BoxShape.circle,
+        ),
+        padding: EdgeInsets.only(left: 12),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<int>(
+            value: currentValue,
+            isExpanded: true,
+            icon: Icon(CupertinoIcons.chevron_down, size: 16, color: themeData.textColor),
+            style: TextStyle(
+              color: themeData.textColor,
+              fontSize: 16,
+            ),
+            dropdownColor: themeData.cardColor,
+            borderRadius: BorderRadius.circular(8),
+            items: availableAccounts.map((Account account) {
+              return DropdownMenuItem<int>(
+                value: account.id,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: _getAccountColor(account.type),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _getAccountIcon(account.type),
+                        color: CupertinoColors.white,
+                        size: 16,
+                      ),
                     ),
-                    child: Icon(
-                      _getAccountIcon(account.type),
-                      color: CupertinoColors.white,
-                      size: 16,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          account.name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
-                            color: themeData.textColor,
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            account.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                              color: themeData.textColor,
+                            ),
                           ),
-                        ),
-                        Text(
-                          '₱${account.balance.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: CupertinoColors.systemGrey,
-                            fontSize: 14,
+                          Text(
+                            '₱${account.balance.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              color: CupertinoColors.systemGrey,
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-          onChanged: onChanged,
+                  ],
+                ),
+              );
+            }).toList(),
+            onChanged: onChanged,
+          ),
         ),
       ),
     );

@@ -147,10 +147,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            BalanceSummaryCard(
+                             BalanceSummaryCard(
                               currentBalance: _currentBalance,
-                              income: _totalIncome,
-                              expenses: _totalExpenses,
                               onBalanceTap: _navigateToAccountsPage,
                             ),
                             SizedBox(height: 24),
