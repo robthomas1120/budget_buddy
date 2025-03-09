@@ -126,6 +126,79 @@ class _AddBudgetSheetState extends State<AddBudgetSheet> {
       ),
     );
   }
+  
+  void _showCategoryPicker(BuildContext context, AppThemeData themeData) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 250,
+          color: themeData.cardColor,
+          child: Column(
+            children: [
+              Container(
+                height: 50,
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: themeData.brightness == Brightness.dark 
+                    ? Color(0xFF1C1C1E) 
+                    : CupertinoColors.systemGrey6,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: themeData.brightness == Brightness.dark
+                        ? Colors.black
+                        : CupertinoColors.systemGrey5,
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      child: Text('Cancel'),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      child: Text('Done'),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: CupertinoPicker(
+                  backgroundColor: themeData.cardColor,
+                  itemExtent: 32.0,
+                  scrollController: FixedExtentScrollController(
+                    initialItem: _categories.indexOf(_selectedCategory),
+                  ),
+                  onSelectedItemChanged: (int index) {
+                    setState(() {
+                      _selectedCategory = _categories[index];
+                    });
+                  },
+                  children: _categories.map((String category) {
+                    return Center(
+                      child: Text(
+                        category,
+                        style: TextStyle(
+                          color: themeData.textColor,
+                          fontSize: 16,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,38 +285,257 @@ class _AddBudgetSheetState extends State<AddBudgetSheet> {
                 : CupertinoColors.systemGrey6,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: DefaultTextStyle(
-            style: TextStyle(color: themeData.textColor),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedCategory,
-                isExpanded: true,
-                icon: Icon(CupertinoIcons.chevron_down, size: 16, color: themeData.textColor),
-                style: TextStyle(
-                  color: themeData.textColor,
-                  fontSize: 16,
+          child: GestureDetector(
+            onTap: () {
+              _showCategoryPicker(context, themeData);
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _selectedCategory,
+                  style: TextStyle(
+                    color: themeData.textColor,
+                    fontSize: 16,
+                  ),
                 ),
-                dropdownColor: themeData.cardColor,
-                borderRadius: BorderRadius.circular(8),
-                items: _categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(
-                      category,
-                      style: TextStyle(color: themeData.textColor),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (String? value) {
-                  if (value != null) {
-                    setState(() => _selectedCategory = value);
-                  }
-                },
-              ),
+                Icon(CupertinoIcons.chevron_down, size: 16, color: themeData.textColor),
+              ],
             ),
           ),
         ),
       ],
     );
-  } 
+  }
+
+  Widget _buildAmountField(AppThemeData themeData) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Budget Amount:',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: themeData.textColor,
+          ),
+        ),
+        SizedBox(height: 8),
+        CupertinoTextField(
+          controller: _amountController,
+          placeholder: '0.00',
+          prefix: Padding(
+            padding: EdgeInsets.only(left: 12),
+            child: Text('₱', style: TextStyle(color: themeData.textColor)),
+          ),
+          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            color: themeData.brightness == Brightness.dark 
+                ? CupertinoColors.systemGrey6.darkColor
+                : CupertinoColors.systemGrey6,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          style: TextStyle(color: themeData.textColor),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPeriodSelector(AppThemeData themeData) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Budget Period:',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: themeData.textColor,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: themeData.brightness == Brightness.dark 
+                ? CupertinoColors.systemGrey6.darkColor
+                : CupertinoColors.systemGrey6,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: CupertinoSlidingSegmentedControl<String>(
+            groupValue: _selectedPeriod,
+            children: {
+              'weekly': Text('Weekly', style: TextStyle(color: themeData.textColor)),
+              'monthly': Text('Monthly', style: TextStyle(color: themeData.textColor)),
+            },
+            onValueChanged: (String? value) {
+              if (value != null) {
+                setState(() => _selectedPeriod = value);
+              }
+            },
+            backgroundColor: themeData.brightness == Brightness.dark 
+                ? Color(0xFF1C1C1E) // Dark background
+                : CupertinoColors.systemGrey6,
+            thumbColor: themeData.brightness == Brightness.dark 
+                ? Color(0xFF3A3A3C) // Slightly lighter than background
+                : CupertinoColors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAccountSelector(AppThemeData themeData) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Include Accounts (optional):',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: themeData.textColor,
+          ),
+        ),
+        Text(
+          'Leave empty to include all accounts',
+          style: TextStyle(
+            fontSize: 12,
+            color: themeData.textColor.withOpacity(0.6),
+          ),
+        ),
+        SizedBox(height: 8),
+        if (_accounts.isEmpty)
+          Text(
+            'No accounts found',
+            style: TextStyle(
+              fontSize: 14,
+              color: themeData.textColor.withOpacity(0.7),
+            ),
+          )
+        else
+          Container(
+            height: 100,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _accounts.length,
+              itemBuilder: (context, index) {
+                final account = _accounts[index];
+                final isSelected = _selectedAccountIds.contains(account.id);
+                
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      if (isSelected) {
+                        _selectedAccountIds.remove(account.id);
+                      } else if (account.id != null) {
+                        _selectedAccountIds.add(account.id!);
+                      }
+                    });
+                  },
+                  child: Container(
+                    width: 100,
+                    margin: EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected 
+                          ? themeData.primaryColor.withOpacity(0.1)
+                          : themeData.brightness == Brightness.dark
+                              ? CupertinoColors.systemGrey6.darkColor
+                              : CupertinoColors.systemGrey6,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected 
+                            ? themeData.primaryColor
+                            : themeData.brightness == Brightness.dark
+                                ? CupertinoColors.systemGrey.withOpacity(0.3)
+                                : CupertinoColors.systemGrey4,
+                      ),
+                    ),
+                    padding: EdgeInsets.all(12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _getAccountIcon(account.type),
+                          color: isSelected
+                              ? themeData.primaryColor
+                              : _getAccountColor(account.type),
+                          size: 24,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          account.name,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: themeData.textColor,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSubmitButton(AppThemeData themeData) {
+    return SizedBox(
+      width: double.infinity,
+      child: CupertinoButton(
+        padding: EdgeInsets.symmetric(vertical: 14),
+        borderRadius: BorderRadius.circular(8),
+        color: themeData.primaryColor,
+        onPressed: () => _createBudget(
+          _selectedCategory,
+          _amountController.text,
+          _selectedPeriod,
+          _selectedAccountIds,
+        ),
+        child: Text(
+          'Create Budget',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: CupertinoColors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getAccountIcon(String accountType) {
+    switch (accountType.toLowerCase()) {
+      case 'bank':
+        return CupertinoIcons.building_2_fill;
+      case 'e-wallet':
+      case 'ewallet':
+        return CupertinoIcons.creditcard_fill;
+      case 'cash':
+        return CupertinoIcons.money_dollar_circle_fill;
+      default:
+        return CupertinoIcons.creditcard_fill;
+    }
+  }
+
+  Color _getAccountColor(String accountType) {
+    switch (accountType.toLowerCase()) {
+      case 'bank':
+        return CupertinoColors.systemBlue;
+      case 'e-wallet':
+      case 'ewallet':
+        return CupertinoColors.systemPurple;
+      case 'cash':
+        return CupertinoColors.systemGreen;
+      default:
+        return CupertinoColors.systemIndigo;
+    }
+  }
 }

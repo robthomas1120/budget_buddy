@@ -25,21 +25,25 @@ class _BudgetPageState extends State<BudgetPage> {
     super.initState();
     _loadBudgets();
   }
+  
+Future<void> _loadBudgets() async {
+  setState(() {
+    _isLoading = true;
+  });
 
-  Future<void> _loadBudgets() async {
+  // First recalculate all active budgets to ensure accurate data
+  await DatabaseHelper.instance.recalculateAllActiveBudgets();
+  
+  // Then fetch the updated budgets
+  final budgets = await DatabaseHelper.instance.getAllBudgets();
+  
+  if (mounted) {
     setState(() {
-      _isLoading = true;
+      _budgets = budgets;
+      _isLoading = false;
     });
-
-    final budgets = await DatabaseHelper.instance.getAllBudgets();
-    
-    if (mounted) {
-      setState(() {
-        _budgets = budgets;
-        _isLoading = false;
-      });
-    }
   }
+}
 
   @override
   Widget build(BuildContext context) {

@@ -189,28 +189,54 @@ class DatabaseHelper {
             
             // Update any active budgets that match this transaction's category
             final now = DateTime.now().millisecondsSinceEpoch;
+            
+            // Debug log - uncomment for troubleshooting
+            // print('Transaction created: ${transaction.title} - ${transaction.category} - ${transaction.amount}');
+            
             final activeBudgets = await txn.query(
               'budgets',
               where: 'category = ? AND start_date <= ? AND end_date >= ?',
               whereArgs: [transaction.category, now, now],
             );
             
+            // Debug log - uncomment for troubleshooting
+            // print('Found active budgets: ${activeBudgets.length}');
+            
             for (var budgetMap in activeBudgets) {
               final budget = Budget.fromMap(budgetMap);
               
               // Check if this transaction's account is included in the budget
               bool shouldInclude = false;
+              
+              // If no specific accounts are set, include all accounts
               if (budget.accountIds == null || budget.accountIds!.isEmpty) {
-                // If no specific accounts are set, include all accounts
                 shouldInclude = true;
-              } else if (transaction.accountId != null && 
-                        budget.accountIds!.contains(transaction.accountId)) {
-                // Include only if the transaction's account is in the budget's accounts
+                // Debug log - uncomment for troubleshooting
+                // print('Budget includes all accounts');
+              } 
+              // Include only if the transaction's account is in the budget's accounts
+              else if (transaction.accountId != null && 
+                       budget.accountIds!.contains(transaction.accountId)) {
                 shouldInclude = true;
+                // Debug log - uncomment for troubleshooting
+                // print('Budget includes account ${transaction.accountId}');
               }
               
               if (shouldInclude) {
-                final newSpent = budget.spent + transaction.amount;
+                // Get current spent amount to ensure we're working with latest data
+                final currentBudgetData = await txn.query(
+                  'budgets',
+                  columns: ['spent'],
+                  where: 'id = ?',
+                  whereArgs: [budget.id],
+                );
+                
+                final currentSpent = currentBudgetData.first['spent'] as double;
+                final newSpent = currentSpent + transaction.amount;
+                
+                // Debug log - uncomment for troubleshooting
+                // print('Updating budget ${budget.id}: current spent: $currentSpent, new spent: $newSpent');
+                
                 await txn.update(
                   'budgets',
                   {'spent': newSpent},
@@ -783,30 +809,55 @@ class DatabaseHelper {
   }
 
   // Recalculate budget spending based on transactions
-  Future<int> recalculateBudgetSpending(int budgetId) async {
+  Future<void> recalculateAllActiveBudgets() async {
     final db = await instance.database;
-    final budgetData = await getBudget(budgetId);
     
-    if (budgetData == null) {
-      return 0;
-    }
-    
-    // Get all relevant transactions for this budget period
-    final transactions = await getTransactionsForBudgetPeriod(budgetData);
-    
-    // Calculate the total amount spent
-    double totalSpent = 0.0;
-    for (var transaction in transactions) {
-      totalSpent += transaction.amount;
-    }
-    
-    // Update the budget with the calculated amount
-    return await db.update(
+    // Get all active budgets
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final activeBudgets = await db.query(
       'budgets',
-      {'spent': totalSpent},
-      where: 'id = ?',
-      whereArgs: [budgetId],
+      where: 'start_date <= ? AND end_date >= ?',
+      whereArgs: [now, now],
     );
+    
+    for (var budgetMap in activeBudgets) {
+      final budget = Budget.fromMap(budgetMap);
+      
+      // Get all relevant transactions for this budget period and category
+      String whereClause = 'type = ? AND category = ? AND date >= ? AND date <= ?';
+      List<dynamic> whereArgs = [
+        'expense', 
+        budget.category, 
+        budget.startDate.millisecondsSinceEpoch, 
+        budget.endDate.millisecondsSinceEpoch
+      ];
+      
+      // If the budget is for specific accounts, add that to the query
+      if (budget.accountIds != null && budget.accountIds!.isNotEmpty) {
+        final accountPlaceholders = budget.accountIds!.map((_) => '?').join(',');
+        whereClause += ' AND account_id IN ($accountPlaceholders)';
+        whereArgs.addAll(budget.accountIds!);
+      }
+      
+      // Calculate total spent from transactions
+      final expenseResult = await db.rawQuery(
+        'SELECT SUM(amount) as total FROM transactions WHERE $whereClause',
+        whereArgs,
+      );
+      
+      double totalSpent = 0.0;
+      if (expenseResult.isNotEmpty && expenseResult.first['total'] != null) {
+        totalSpent = (expenseResult.first['total'] as num).toDouble();
+      }
+      
+      // Update budget with calculated amount
+      await db.update(
+        'budgets',
+        {'spent': totalSpent},
+        where: 'id = ?',
+        whereArgs: [budget.id],
+      );
+    }
   }
 
   // Close database

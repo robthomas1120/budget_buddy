@@ -1,8 +1,11 @@
 // lib/screens/dashboard_page.dart
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../database/database_helper.dart';
 import '../models/transaction.dart';
+import '../models/budget.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/balance_summary_card.dart';
 import '../widgets/transaction_list_item.dart';
@@ -19,6 +22,7 @@ class _DashboardPageState extends State<DashboardPage> {
   double _totalIncome = 0.0;
   double _totalExpenses = 0.0;
   List<Transaction> _recentTransactions = [];
+  List<Budget> _activeBudgets = [];
   bool _isLoading = true;
 
   @override
@@ -36,6 +40,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final income = await DatabaseHelper.instance.getTotalIncome();
     final expenses = await DatabaseHelper.instance.getTotalExpense();
     final recentTransactions = await DatabaseHelper.instance.getRecentTransactions(5);
+    final activeBudgets = await DatabaseHelper.instance.getActiveBudgets();
 
     if (mounted) {
       setState(() {
@@ -43,6 +48,7 @@ class _DashboardPageState extends State<DashboardPage> {
         _totalIncome = income;
         _totalExpenses = expenses;
         _recentTransactions = recentTransactions;
+        _activeBudgets = activeBudgets;
         _isLoading = false;
       });
     }
@@ -147,11 +153,16 @@ class _DashboardPageState extends State<DashboardPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                             BalanceSummaryCard(
+                            BalanceSummaryCard(
                               currentBalance: _currentBalance,
                               onBalanceTap: _navigateToAccountsPage,
                             ),
                             SizedBox(height: 24),
+                            
+                            // Budget summary section
+                            _buildBudgetSummary(themeData),
+                            
+                            // Recent transactions section
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -263,4 +274,275 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
+
+  // Add this widget to your dashboard_page.dart file
+
+Widget _buildBudgetSummary(AppThemeData themeData) {
+  if (_activeBudgets.isEmpty) {
+    return SizedBox.shrink(); // Don't show anything if no active budgets
+  }
+  
+  // Sort budgets by remaining percentage (low to high)
+  _activeBudgets.sort((a, b) => (a.spent / a.amount).compareTo(b.spent / b.amount));
+  
+  // Take top 3 budgets with highest percentage used
+  final topBudgets = _activeBudgets.length > 3 
+      ? _activeBudgets.sublist(_activeBudgets.length - 3) 
+      : _activeBudgets;
+      
+  // Calculate total budget and spent for the period
+  double totalBudget = 0;
+  double totalSpent = 0;
+  for (var budget in _activeBudgets) {
+    totalBudget += budget.amount;
+    totalSpent += budget.spent;
+  }
+  
+  final overallProgress = totalBudget > 0 ? (totalSpent / totalBudget).clamp(0.0, 1.0) : 0.0;
+  final overallColor = overallProgress > 0.9 
+      ? themeData.expenseColor 
+      : overallProgress > 0.7 
+          ? CupertinoColors.systemOrange 
+          : themeData.primaryColor;
+  
+  return Container(
+    margin: EdgeInsets.only(bottom: 24),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Active Budgets',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: themeData.textColor,
+              ),
+            ),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              child: Text(
+                'View All',
+                style: TextStyle(
+                  color: themeData.secondaryColor,
+                  fontSize: 16,
+                ),
+              ),
+              onPressed: () {
+                // Navigate to the Budgets tab (index 3)
+                final CupertinoTabController? tabController = 
+                    context.findAncestorWidgetOfExactType<CupertinoTabScaffold>()?.controller;
+                if (tabController != null) {
+                  tabController.index = 3;
+                }
+              },
+            ),
+          ],
+        ),
+        
+        // Overall budget progress card
+        Container(
+          margin: EdgeInsets.symmetric(vertical: 16),
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: themeData.cardColor,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: themeData.brightness == Brightness.dark 
+                    ? Colors.black.withOpacity(0.2)
+                    : CupertinoColors.systemGrey6,
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Overall Budget',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 17,
+                      color: themeData.textColor,
+                    ),
+                  ),
+                  Text(
+                    '${(overallProgress * 100).toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 17,
+                      color: overallColor,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12),
+              Stack(
+                children: [
+                  Container(
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: themeData.brightness == Brightness.dark
+                          ? CupertinoColors.systemGrey.withOpacity(0.2)
+                          : CupertinoColors.systemGrey5,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                  Container(
+                    height: 10,
+                    width: MediaQuery.of(context).size.width * 0.85 * overallProgress,
+                    decoration: BoxDecoration(
+                      color: overallColor,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Spent: ₱${totalSpent.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: themeData.textColor.withOpacity(0.8),
+                    ),
+                  ),
+                  Text(
+                    'Total: ₱${totalBudget.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: themeData.textColor.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+              if (totalSpent > totalBudget)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    'Over budget by ₱${(totalSpent - totalBudget).toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: themeData.expenseColor,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        
+        // Individual budget items
+        Column(
+          children: topBudgets.reversed.map((budget) {
+            // Calculate progress
+            final progress = budget.progress.clamp(0.0, 1.0);
+            
+            // Determine status color
+            Color statusColor = themeData.primaryColor;
+            if (progress > 0.9) {
+              statusColor = themeData.expenseColor;
+            } else if (progress > 0.7) {
+              statusColor = CupertinoColors.systemOrange;
+            }
+            
+            return Container(
+              margin: EdgeInsets.only(bottom: 12),
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: themeData.cardColor,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: themeData.brightness == Brightness.dark 
+                        ? Colors.black.withOpacity(0.1)
+                        : CupertinoColors.systemGrey6,
+                    blurRadius: 2,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        budget.category,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: themeData.textColor,
+                        ),
+                      ),
+                      Text(
+                        '${(progress * 100).toStringAsFixed(1)}%',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: statusColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '₱${budget.spent.toStringAsFixed(2)} / ₱${budget.amount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: themeData.textColor.withOpacity(0.8),
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Stack(
+                    children: [
+                      Container(
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: themeData.brightness == Brightness.dark
+                              ? CupertinoColors.systemGrey.withOpacity(0.2)
+                              : CupertinoColors.systemGrey5,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      Container(
+                        height: 8,
+                        width: MediaQuery.of(context).size.width * 0.8 * progress,
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    budget.isOverBudget 
+                        ? 'Over budget by ₱${(budget.spent - budget.amount).toStringAsFixed(2)}'
+                        : '₱${budget.remaining.toStringAsFixed(2)} remaining',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: budget.isOverBudget ? themeData.expenseColor : themeData.primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    ),
+  );
+}
 }
