@@ -25,17 +25,30 @@ class _BudgetPageState extends State<BudgetPage> {
     super.initState();
     _loadBudgets();
   }
-  
+
 Future<void> _loadBudgets() async {
   setState(() {
     _isLoading = true;
   });
 
+  print('DEBUG: Starting to load budgets');
+  
   // First recalculate all active budgets to ensure accurate data
   await DatabaseHelper.instance.recalculateAllActiveBudgets();
+  print('DEBUG: Recalculated all active budgets');
   
   // Then fetch the updated budgets
   final budgets = await DatabaseHelper.instance.getAllBudgets();
+  print('DEBUG: Loaded ${budgets.length} budgets from database');
+  
+  // Debug print each budget's details
+  for (var budget in budgets) {
+    print('DEBUG: Budget ID: ${budget.id}, Category: ${budget.category}');
+    print('DEBUG: Amount: ${budget.amount}, Spent: ${budget.spent}');
+    print('DEBUG: Period: ${budget.period}, Active: ${budget.isActive}');
+    print('DEBUG: Account IDs: ${budget.accountIds}');
+    print('-----');
+  }
   
   if (mounted) {
     setState(() {

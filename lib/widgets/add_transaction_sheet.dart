@@ -61,6 +61,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     _selectedType = widget.transactionType.isEmpty ? 'income' : widget.transactionType;
     _selectedCategory = _selectedType == 'income' ? _incomeCategories[0] : _expenseCategories[0];
     _loadAccounts();
+    print('DEBUG: AddTransactionSheet initialized with type: $_selectedType, category: $_selectedCategory');
   }
 
   Future<void> _loadAccounts() async {
@@ -68,7 +69,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       _isLoadingAccounts = true;
     });
     
+    print('DEBUG: Loading accounts from database');
     final accounts = await DatabaseHelper.instance.getAllAccounts();
+    print('DEBUG: Loaded ${accounts.length} accounts from database');
     
     if (mounted) {
       setState(() {
@@ -77,6 +80,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         if (accounts.isNotEmpty) {
           _selectedAccountId = accounts[0].id;
           _selectedAccount = accounts[0];
+          print('DEBUG: Selected first account: ${_selectedAccount?.name}, ID: $_selectedAccountId');
+        } else {
+          print('DEBUG: No accounts found');
         }
       });
     }
@@ -125,6 +131,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                   onDateTimeChanged: (DateTime newDate) {
                     setState(() {
                       _selectedDate = newDate;
+                      print('DEBUG: Date selected: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}');
                     });
                   },
                 ),
@@ -137,6 +144,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   }
 
   void _showError(String message) {
+    print('DEBUG: Showing error: $message');
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
@@ -271,6 +279,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         setState(() {
                           _selectedType = value;
                           _selectedCategory = value == 'income' ? _incomeCategories[0] : _expenseCategories[0];
+                          print('DEBUG: Transaction type changed to $_selectedType, category set to $_selectedCategory');
                         });
                       }
                     },
@@ -356,6 +365,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                 setState(() {
                                   _selectedAccount = newValue;
                                   _selectedAccountId = newValue.id;
+                                  print('DEBUG: Selected account changed to: ${newValue.name}, ID: ${newValue.id}');
                                 });
                               }
                             },
@@ -462,6 +472,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         if (newValue != null) {
                           setState(() {
                             _selectedCategory = newValue;
+                            print('DEBUG: Selected category changed to: $_selectedCategory');
                           });
                         }
                       },
@@ -546,6 +557,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         return;
                       }
 
+                      // Add the print statements here
+                      print('DEBUG: Creating new transaction:');
+                      print('DEBUG: Title: ${_titleController.text.trim()}');
+                      print('DEBUG: Amount: ${_amountController.text}');
+                      print('DEBUG: Type: $_selectedType');
+                      print('DEBUG: Category: $_selectedCategory');
+                      print('DEBUG: Account ID: $_selectedAccountId');
+                      print('DEBUG: Date: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}');
+                      
                       if (_titleController.text.trim().isEmpty) {
                         _showError('Please enter a title');
                         return;
@@ -577,7 +597,19 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         accountId: _selectedAccountId,
                       );
                       
-                      await DatabaseHelper.instance.insertTransaction(transaction);
+                      print('DEBUG: About to insert transaction into database');
+                      print('DEBUG: Transaction details: ${transaction.title}, ${transaction.amount}, ${transaction.type}, ${transaction.category}');
+                      
+                      try {
+                        final id = await DatabaseHelper.instance.insertTransaction(transaction);
+                        print('DEBUG: Transaction inserted successfully with ID: $id');
+                      } catch (e) {
+                        print('DEBUG: Error inserting transaction: $e');
+                        _showError('Error creating transaction: $e');
+                        return;
+                      }
+                      
+                      print('DEBUG: Transaction creation complete, calling onTransactionAdded');
                       widget.onTransactionAdded();
                       Navigator.pop(context);
                     },
