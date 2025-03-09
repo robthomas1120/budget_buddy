@@ -1,4 +1,5 @@
-// lib/screens/home_page.dart
+// Update lib/screens/home_page.dart to include the new budget page
+
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
@@ -6,6 +7,7 @@ import 'dashboard_page.dart';
 import 'income_page.dart';
 import 'expense_page.dart';
 import 'settings_page.dart';
+import 'budget_page.dart'; // Add this import
 
 class HomePage extends StatefulWidget {
   @override
@@ -23,6 +25,7 @@ class _HomePageState extends State<HomePage> {
       DashboardPage(),
       IncomePage(),
       ExpensePage(),
+      BudgetPage(), // Add the budget page
       SettingsPage(),
     ];
   }
@@ -57,6 +60,10 @@ class _HomePageState extends State<HomePage> {
             BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.arrow_up_circle),
               label: 'Expenses',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.money_dollar_circle), // Budget icon
+              label: 'Budget',
             ),
             BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.settings),
