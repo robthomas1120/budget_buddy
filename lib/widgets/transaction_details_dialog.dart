@@ -1,3 +1,4 @@
+// lib/widgets/transaction_details_dialog.dart
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -63,15 +64,12 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
     final isIncome = transaction.type == 'income';
     final transactionColor = isIncome ? themeData.incomeColor : themeData.expenseColor;
 
-    // Define a default text style based on the theme
-    final defaultTextStyle = TextStyle(
-      color: themeData.textColor,
-      fontFamily: '.SF Pro Text',
-      fontSize: 14,
-    );
-
     return DefaultTextStyle(
-      style: defaultTextStyle,
+      style: TextStyle(
+        color: themeData.textColor,
+        fontFamily: '.SF Pro Text',
+        fontSize: 14,
+      ),
       child: Container(
         padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 32),
         decoration: BoxDecoration(
@@ -88,14 +86,15 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                 children: [
                   Text(
                     'Transaction Details',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      color: themeData.textColor,
                     ),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child: const Icon(CupertinoIcons.xmark, color: CupertinoColors.systemGrey),
+                    child: Icon(CupertinoIcons.xmark, color: CupertinoColors.systemGrey),
                   ),
                 ],
               ),
@@ -170,11 +169,12 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
               
               // Notes
               if (transaction.notes != null && transaction.notes!.isNotEmpty) ...[
-                const Text(
+                Text(
                   'Notes:',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
+                    color: themeData.textColor,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -188,8 +188,9 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
                   ),
                   child: Text(
                     transaction.notes!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
+                      color: themeData.textColor,
                     ),
                   ),
                 ),
@@ -260,53 +261,51 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
   }
 
   Widget _buildAccountInfo(Account account, AppThemeData themeData) {
-    return DefaultTextStyle(
-      style: TextStyle(color: themeData.textColor),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: themeData.brightness == Brightness.dark 
-              ? CupertinoColors.systemGrey6.darkColor
-              : CupertinoColors.systemGrey6,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              _getAccountIcon(account.type),
-              color: _getAccountColor(account.type),
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Account:',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: CupertinoColors.systemGrey,
-                  ),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: themeData.brightness == Brightness.dark 
+            ? CupertinoColors.systemGrey6.darkColor
+            : CupertinoColors.systemGrey6,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _getAccountIcon(account.type),
+            color: _getAccountColor(account.type),
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Account:',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: CupertinoColors.systemGrey,
                 ),
-                Text(
-                  account.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            Text(
-              '₱${account.balance.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: account.balance >= 0 ? themeData.incomeColor : themeData.expenseColor,
               ),
+              Text(
+                account.name,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: themeData.textColor,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Text(
+            '₱${account.balance.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: account.balance >= 0 ? themeData.incomeColor : themeData.expenseColor,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

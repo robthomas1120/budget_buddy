@@ -1,7 +1,10 @@
+// lib/widgets/transfer_dialog.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../models/account.dart';
 import '../services/transfer_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class TransferDialog extends StatefulWidget {
   final List<Account> accounts;
@@ -43,192 +46,218 @@ class _TransferDialogState extends State<TransferDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        top: 16,
-        left: 16,
-        right: 16,
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeData = themeProvider.currentThemeData;
+    
+    return DefaultTextStyle(
+      style: TextStyle(
+        color: themeData.textColor,
+        fontFamily: '.SF Pro Text',
+        fontSize: 16,
       ),
-      decoration: BoxDecoration(
-        color: CupertinoColors.systemBackground,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Transfer Money',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+      child: Container(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          top: 16,
+          left: 16,
+          right: 16,
+        ),
+        decoration: BoxDecoration(
+          color: themeData.cardColor,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Transfer Money',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: themeData.textColor,
+                      ),
                     ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Icon(CupertinoIcons.xmark, color: CupertinoColors.systemGrey),
+                    ),
+                  ],
+                ),
+                Divider(height: 24, color: themeData.brightness == Brightness.dark ? 
+                    CupertinoColors.systemGrey6.darkColor : CupertinoColors.systemGrey6),
+                
+                // From Account
+                Text(
+                  'From Account:',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: themeData.textColor,
                   ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(CupertinoIcons.xmark, color: CupertinoColors.systemGrey),
+                ),
+                SizedBox(height: 8),
+                _buildAccountSelector(
+                  currentValue: _fromAccountId,
+                  onChanged: (value) {
+                    setState(() {
+                      _fromAccountId = value;
+                      if (_toAccountId == value) {
+                        _toAccountId = widget.accounts.firstWhere((account) => account.id != value).id;
+                      }
+                      _errorMessage = null;
+                    });
+                  },
+                  excludeId: _toAccountId,
+                  themeData: themeData,
+                ),
+                SizedBox(height: 16),
+                
+                // To Account
+                Text(
+                  'To Account:',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: themeData.textColor,
                   ),
-                ],
-              ),
-              Divider(height: 24),
-              
-              // From Account
-              Text(
-                'From Account:',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
                 ),
-              ),
-              SizedBox(height: 8),
-              _buildAccountSelector(
-                currentValue: _fromAccountId,
-                onChanged: (value) {
-                  setState(() {
-                    _fromAccountId = value;
-                    if (_toAccountId == value) {
-                      _toAccountId = widget.accounts.firstWhere((account) => account.id != value).id;
-                    }
-                    _errorMessage = null;
-                  });
-                },
-                excludeId: _toAccountId,
-              ),
-              SizedBox(height: 16),
-              
-              // To Account
-              Text(
-                'To Account:',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                SizedBox(height: 8),
+                _buildAccountSelector(
+                  currentValue: _toAccountId,
+                  onChanged: (value) {
+                    setState(() {
+                      _toAccountId = value;
+                      if (_fromAccountId == value) {
+                        _fromAccountId = widget.accounts.firstWhere((account) => account.id != value).id;
+                      }
+                      _errorMessage = null;
+                    });
+                  },
+                  excludeId: _fromAccountId,
+                  themeData: themeData,
                 ),
-              ),
-              SizedBox(height: 8),
-              _buildAccountSelector(
-                currentValue: _toAccountId,
-                onChanged: (value) {
-                  setState(() {
-                    _toAccountId = value;
-                    if (_fromAccountId == value) {
-                      _fromAccountId = widget.accounts.firstWhere((account) => account.id != value).id;
-                    }
-                    _errorMessage = null;
-                  });
-                },
-                excludeId: _fromAccountId,
-              ),
-              SizedBox(height: 16),
-              
-              // Amount Field
-              Text(
-                'Amount:',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                SizedBox(height: 16),
+                
+                // Amount Field
+                Text(
+                  'Amount:',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: themeData.textColor,
+                  ),
                 ),
-              ),
-              SizedBox(height: 8),
-              CupertinoTextField(
-                controller: _amountController,
-                placeholder: '0.00',
-                prefix: Padding(
-                  padding: EdgeInsets.only(left: 12),
-                  child: Text('₱', style: TextStyle(color: CupertinoColors.black)),
-                ),
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                decoration: BoxDecoration(
-                  color: CupertinoColors.systemGrey6,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                onChanged: (_) => setState(() => _errorMessage = null),
-              ),
-              SizedBox(height: 16),
-              
-              // Notes Field
-              Text(
-                'Notes (optional):',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: 8),
-              CupertinoTextField(
-                controller: _notesController,
-                placeholder: 'Add notes about this transfer',
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                decoration: BoxDecoration(
-                  color: CupertinoColors.systemGrey6,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                maxLines: 2,
-              ),
-              SizedBox(height: 16),
-              
-              // Error message if any
-              if (_errorMessage != null)
-                Container(
-                  padding: EdgeInsets.all(10),
+                SizedBox(height: 8),
+                CupertinoTextField(
+                  controller: _amountController,
+                  placeholder: '0.00',
+                  prefix: Padding(
+                    padding: EdgeInsets.only(left: 12),
+                    child: Text('₱', style: TextStyle(color: themeData.textColor)),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                   decoration: BoxDecoration(
-                    color: CupertinoColors.destructiveRed.withOpacity(0.1),
+                    color: themeData.brightness == Brightness.dark
+                        ? Color(0xFF2C2C2E) // Darker gray
+                        : CupertinoColors.systemGrey6,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        CupertinoIcons.exclamationmark_triangle_fill,
-                        color: CupertinoColors.destructiveRed,
-                        size: 16,
-                      ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(
-                            color: CupertinoColors.destructiveRed,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  style: TextStyle(color: themeData.textColor),
+                  onChanged: (_) => setState(() => _errorMessage = null),
+                ),
+                SizedBox(height: 16),
+                
+                // Notes Field
+                Text(
+                  'Notes (optional):',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: themeData.textColor,
                   ),
                 ),
-              
-              SizedBox(height: 24),
-              
-              // Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: CupertinoButton(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      onPressed: () => Navigator.pop(context),
-                      child: Text('Cancel'),
-                      color: CupertinoColors.systemGrey6,
+                SizedBox(height: 8),
+                CupertinoTextField(
+                  controller: _notesController,
+                  placeholder: 'Add notes about this transfer',
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: themeData.brightness == Brightness.dark
+                        ? Color(0xFF2C2C2E) // Darker gray
+                        : CupertinoColors.systemGrey6,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  maxLines: 2,
+                  style: TextStyle(color: themeData.textColor),
+                ),
+                SizedBox(height: 16),
+                
+                // Error message if any
+                if (_errorMessage != null)
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: CupertinoColors.destructiveRed.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          CupertinoIcons.exclamationmark_triangle_fill,
+                          color: CupertinoColors.destructiveRed,
+                          size: 16,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(
+                              color: CupertinoColors.destructiveRed,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: CupertinoButton.filled(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      onPressed: _isProcessing ? null : _processTransfer,
-                      child: _isProcessing
-                          ? CupertinoActivityIndicator(color: CupertinoColors.white)
-                          : Text('Transfer'),
+                
+                SizedBox(height: 24),
+                
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: CupertinoButton(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('Cancel'),
+                        color: themeData.brightness == Brightness.dark
+                            ? Color(0xFF2C2C2E) // Darker gray
+                            : CupertinoColors.systemGrey6,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: CupertinoButton.filled(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        onPressed: _isProcessing ? null : () => _processTransfer(themeData),
+                        child: _isProcessing
+                            ? CupertinoActivityIndicator(color: CupertinoColors.white)
+                            : Text('Transfer'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -238,7 +267,8 @@ class _TransferDialogState extends State<TransferDialog> {
   Widget _buildAccountSelector({
     required int? currentValue,
     required Function(int?) onChanged,
-    int? excludeId,
+    required int? excludeId,
+    required AppThemeData themeData,
   }) {
     // Filter accounts to exclude the one selected in the other dropdown
     final availableAccounts = widget.accounts
@@ -256,7 +286,9 @@ class _TransferDialogState extends State<TransferDialog> {
 
     return Container(
       decoration: BoxDecoration(
-        color: CupertinoColors.systemGrey6,
+        color: themeData.brightness == Brightness.dark
+            ? Color(0xFF2C2C2E) // Darker gray
+            : CupertinoColors.systemGrey6,
         borderRadius: BorderRadius.circular(8),
       ),
       padding: EdgeInsets.only(left: 12),
@@ -264,12 +296,12 @@ class _TransferDialogState extends State<TransferDialog> {
         child: DropdownButton<int>(
           value: currentValue,
           isExpanded: true,
-          icon: Icon(CupertinoIcons.chevron_down, size: 16),
+          icon: Icon(CupertinoIcons.chevron_down, size: 16, color: themeData.textColor),
           style: TextStyle(
-            color: CupertinoColors.black,
+            color: themeData.textColor,
             fontSize: 16,
           ),
-          dropdownColor: CupertinoColors.systemBackground,
+          dropdownColor: themeData.cardColor,
           borderRadius: BorderRadius.circular(8),
           items: availableAccounts.map((Account account) {
             return DropdownMenuItem<int>(
@@ -300,6 +332,7 @@ class _TransferDialogState extends State<TransferDialog> {
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
                             fontSize: 16,
+                            color: themeData.textColor,
                           ),
                         ),
                         Text(
@@ -322,7 +355,7 @@ class _TransferDialogState extends State<TransferDialog> {
     );
   }
 
-  void _processTransfer() async {
+  void _processTransfer(AppThemeData themeData) async {
     // Validate inputs
     if (_fromAccountId == null) {
       setState(() => _errorMessage = 'Please select a source account');

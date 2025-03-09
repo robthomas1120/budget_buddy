@@ -1,3 +1,4 @@
+// lib/screens/settings_page.dart
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../database/database_helper.dart';
@@ -14,7 +15,14 @@ class SettingsPage extends StatelessWidget {
     
     // Define default text style for the page
     final defaultTextStyle = TextStyle(
-      color: themeData.textColor,
+      color: themeData.textColor, // This will be dark in light mode, white in dark mode
+      fontFamily: '.SF Pro Text',
+      fontSize: 17,
+    );
+    
+    // Define menu item text style - NOT green
+    final menuItemTextStyle = TextStyle(
+      color: themeData.textColor, // Using textColor instead of primaryColor
       fontFamily: '.SF Pro Text',
       fontSize: 17,
     );
@@ -34,9 +42,10 @@ class SettingsPage extends StatelessWidget {
                 context,
                 CupertinoIcons.person_fill,
                 'Profile',
-                color: themeData.secondaryColor,
-                textColor: themeData.textColor,
+                color: CupertinoColors.systemBlue,
+                textColor: themeData.textColor, // Not green
                 backgroundColor: themeData.cardColor,
+                textStyle: menuItemTextStyle,
                 onTap: () {
                   // Navigate to profile settings
                   showCupertinoDialog(
@@ -56,9 +65,10 @@ class SettingsPage extends StatelessWidget {
                 context,
                 CupertinoIcons.paintbrush_fill,
                 'Theme',
-                color: themeData.secondaryColor,
-                textColor: themeData.textColor,
+                color: CupertinoColors.systemBlue,
+                textColor: themeData.textColor, // Not green
                 backgroundColor: themeData.cardColor,
+                textStyle: menuItemTextStyle,
                 onTap: () {
                   _showThemeOptions(context, themeProvider);
                 },
@@ -69,9 +79,10 @@ class SettingsPage extends StatelessWidget {
                 context,
                 CupertinoIcons.tag_fill,
                 'Categories',
-                color: themeData.secondaryColor,
-                textColor: themeData.textColor,
+                color: CupertinoColors.systemBlue,
+                textColor: themeData.textColor, // Not green
                 backgroundColor: themeData.cardColor,
+                textStyle: menuItemTextStyle,
                 onTap: () {
                   // Navigate to categories settings
                   showCupertinoDialog(
@@ -89,9 +100,10 @@ class SettingsPage extends StatelessWidget {
                 context,
                 CupertinoIcons.bell_fill,
                 'Notifications',
-                color: themeData.secondaryColor,
-                textColor: themeData.textColor,
+                color: CupertinoColors.systemBlue,
+                textColor: themeData.textColor, // Not green
                 backgroundColor: themeData.cardColor,
+                textStyle: menuItemTextStyle,
                 onTap: () {
                   // Navigate to notification settings
                   showCupertinoDialog(
@@ -109,9 +121,10 @@ class SettingsPage extends StatelessWidget {
                 context,
                 CupertinoIcons.arrow_clockwise,
                 'Backup & Restore',
-                color: themeData.secondaryColor,
-                textColor: themeData.textColor,
+                color: CupertinoColors.systemBlue,
+                textColor: themeData.textColor, // Not green
                 backgroundColor: themeData.cardColor,
+                textStyle: menuItemTextStyle,
                 onTap: () {
                   _showBackupRestoreOptions(context, themeData);
                 },
@@ -121,9 +134,10 @@ class SettingsPage extends StatelessWidget {
                 context,
                 CupertinoIcons.square_arrow_right,
                 'Export Data',
-                color: themeData.secondaryColor,
-                textColor: themeData.textColor,
+                color: CupertinoColors.systemBlue,
+                textColor: themeData.textColor, // Not green
                 backgroundColor: themeData.cardColor,
+                textStyle: menuItemTextStyle,
                 onTap: () async {
                   _showExportOptions(context, themeData);
                 },
@@ -133,9 +147,10 @@ class SettingsPage extends StatelessWidget {
                 context,
                 CupertinoIcons.delete,
                 'Clear All Data',
-                textColor: CupertinoColors.destructiveRed,
+                textColor: CupertinoColors.destructiveRed, // Keep this red for emphasis
                 color: CupertinoColors.destructiveRed,
                 backgroundColor: themeData.cardColor,
+                textStyle: null, // Will use the color specified in textColor
                 onTap: () {
                   _showClearDataDialog(context, themeData);
                 },
@@ -180,30 +195,29 @@ class SettingsPage extends StatelessWidget {
     required Color color,
     required Color textColor,
     required Color backgroundColor,
+    TextStyle? textStyle,
   }) {
-    return DefaultTextStyle(
-      style: TextStyle(color: textColor),
-      child: CupertinoButton(
-        padding: EdgeInsets.zero,
-        onPressed: onTap,
-        child: Container(
-          color: backgroundColor,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 24),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 17,
-                  ),
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: onTap,
+      child: Container(
+        color: backgroundColor,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: textStyle ?? TextStyle(
+                  fontSize: 17,
+                  color: textColor, // Using passed in textColor
                 ),
               ),
-              const Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 18),
-            ],
-          ),
+            ),
+            const Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 18),
+          ],
         ),
       ),
     );
@@ -217,44 +231,57 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showThemeOptions(BuildContext context, ThemeProvider themeProvider) {
-    final themeData = themeProvider.currentThemeData;
-    
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) => DefaultTextStyle(
-        style: const TextStyle(
-          color: CupertinoColors.black,
-          fontFamily: '.SF Pro Text',
-        ),
-        child: CupertinoActionSheet(
-          title: const Text('Choose Theme'),
-          message: const Text('Select your preferred app theme'),
-          actions: AppTheme.values.map((theme) {
-            final isSelected = themeProvider.currentTheme == theme;
-            return CupertinoActionSheetAction(
-              onPressed: () {
-                themeProvider.setTheme(theme);
-                Navigator.pop(context);
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(themeProvider.getThemeName(theme)),
-                  if (isSelected) Icon(CupertinoIcons.check_mark, color: themeData.primaryColor),
-                ],
-              ),
-            );
-          }).toList(),
-          cancelButton: CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+// Update just the _showThemeOptions method in settings_page.dart
+void _showThemeOptions(BuildContext context, ThemeProvider themeProvider) {
+  final themeData = themeProvider.currentThemeData;
+  
+  showCupertinoModalPopup(
+    context: context,
+    builder: (context) => DefaultTextStyle(
+      style: const TextStyle(
+        color: CupertinoColors.black,
+        fontFamily: '.SF Pro Text',
+      ),
+      child: CupertinoActionSheet(
+        title: const Text('Choose Theme'),
+        message: const Text('Select your preferred app theme'),
+        actions: AppTheme.values.map((theme) {
+          final isSelected = themeProvider.currentTheme == theme;
+          // Define the text color for theme options - use black for light mode sheets
+          final textColor = CupertinoColors.black;
+          
+          return CupertinoActionSheetAction(
+            onPressed: () {
+              themeProvider.setTheme(theme);
+              Navigator.pop(context);
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  themeProvider.getThemeName(theme),
+                  style: TextStyle(color: textColor), // Use black text color
+                ),
+                if (isSelected) 
+                  Icon(
+                    CupertinoIcons.check_mark, 
+                    color: themeData.primaryColor,
+                  ),
+              ],
+            ),
+          );
+        }).toList(),
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(color: CupertinoColors.systemBlue), // Standard iOS cancel button color
           ),
         ),
       ),
-    );
-  }
-
+    ),
+  );
+}
   void _showBackupRestoreOptions(BuildContext context, AppThemeData themeData) {
     showCupertinoModalPopup(
       context: context,

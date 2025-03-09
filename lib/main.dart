@@ -1,5 +1,4 @@
 // lib/main.dart
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -35,6 +34,14 @@ class MyApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final themeData = themeProvider.currentThemeData;
     
+    // Define a base text style for the entire app
+    final baseTextStyle = TextStyle(
+      color: themeData.textColor,
+      fontFamily: '.SF Pro Text', // iOS default font
+      fontSize: 16.0,
+      fontWeight: FontWeight.normal,
+    );
+    
     // Apply system overlay style based on theme brightness
     SystemChrome.setSystemUIOverlayStyle(
       themeData.brightness == Brightness.dark
@@ -50,62 +57,65 @@ class MyApp extends StatelessWidget {
             ),
     );
     
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Budget Buddy',
-      theme: ThemeData(
-        brightness: themeData.brightness,
-        primaryColor: themeData.primaryColor,
-        scaffoldBackgroundColor: themeData.backgroundColor,
-        cardColor: themeData.cardColor,
-        textTheme: TextTheme(
-          bodyMedium: TextStyle(
-            color: themeData.textColor,
-          ),
-        ),
-        // Apply the theme to Cupertino widgets
-        cupertinoOverrideTheme: CupertinoThemeData(
+    return DefaultTextStyle(
+      style: baseTextStyle,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Budget Buddy',
+        theme: ThemeData(
           brightness: themeData.brightness,
           primaryColor: themeData.primaryColor,
           scaffoldBackgroundColor: themeData.backgroundColor,
-          barBackgroundColor: themeData.cardColor,
-          textTheme: CupertinoTextThemeData(
-            primaryColor: themeData.primaryColor,
-            textStyle: TextStyle(
-              fontFamily: '.SF Pro Text',
-              fontSize: 17,
+          cardColor: themeData.cardColor,
+          textTheme: TextTheme(
+            bodyMedium: TextStyle(
               color: themeData.textColor,
             ),
           ),
-        ),
-      ),
-      home: CupertinoTheme(
-        data: CupertinoThemeData(
-          brightness: themeData.brightness,
-          primaryColor: themeData.primaryColor,
-          scaffoldBackgroundColor: themeData.backgroundColor,
-          barBackgroundColor: themeData.cardColor,
-          textTheme: CupertinoTextThemeData(
+          // Apply the theme to Cupertino widgets
+          cupertinoOverrideTheme: CupertinoThemeData(
+            brightness: themeData.brightness,
             primaryColor: themeData.primaryColor,
-            textStyle: TextStyle(
-              fontFamily: '.SF Pro Text',
-              fontSize: 17,
-              color: themeData.textColor,
+            scaffoldBackgroundColor: themeData.backgroundColor,
+            barBackgroundColor: themeData.cardColor,
+            textTheme: CupertinoTextThemeData(
+              primaryColor: themeData.primaryColor,
+              textStyle: TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 17,
+                color: themeData.textColor,
+              ),
             ),
           ),
         ),
-        child: HomePage(),
+        home: CupertinoTheme(
+          data: CupertinoThemeData(
+            brightness: themeData.brightness,
+            primaryColor: themeData.primaryColor,
+            scaffoldBackgroundColor: themeData.backgroundColor,
+            barBackgroundColor: themeData.cardColor,
+            textTheme: CupertinoTextThemeData(
+              primaryColor: themeData.primaryColor,
+              textStyle: TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 17,
+                color: themeData.textColor,
+              ),
+            ),
+          ),
+          child: HomePage(),
+        ),
+        localizationsDelegates: [
+          DefaultCupertinoLocalizations.delegate,
+          DefaultMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: [
+          const Locale('en', ''),
+        ],
       ),
-      localizationsDelegates: [
-        DefaultCupertinoLocalizations.delegate,
-        DefaultMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: [
-        const Locale('en', ''),
-      ],
     );
   }
 }

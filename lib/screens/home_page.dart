@@ -1,9 +1,7 @@
+// lib/screens/home_page.dart
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show DefaultTextStyle, TextStyle;
 import 'package:provider/provider.dart';
-import '../database/database_helper.dart';
-import '../models/account.dart';
-import '../models/transaction.dart' as model;
+import '../providers/theme_provider.dart';
 import 'dashboard_page.dart';
 import 'income_page.dart';
 import 'expense_page.dart';
@@ -31,17 +29,22 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Wrap with DefaultTextStyle to provide text styling for the entire app
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeData = themeProvider.currentThemeData;
+    
+    // Define a base text style for the home page
+    final baseTextStyle = TextStyle(
+      color: themeData.textColor,
+      fontFamily: '.SF Pro Text',
+      fontSize: 16.0,
+      fontWeight: FontWeight.normal,
+    );
+    
     return DefaultTextStyle(
-      style: TextStyle(
-        color: CupertinoColors.black,
-        fontSize: 16.0,
-        fontWeight: FontWeight.normal,
-        fontFamily: '.SF Pro Text', // Default iOS font
-      ),
+      style: baseTextStyle,
       child: CupertinoTabScaffold(
         tabBar: CupertinoTabBar(
-          activeColor: CupertinoColors.activeGreen,
+          activeColor: themeData.primaryColor,
           items: [
             BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.home),
@@ -65,7 +68,8 @@ class _HomePageState extends State<HomePage> {
           // Provide proper text styling for each tab view
           return CupertinoTabView(
             builder: (context) {
-              return CupertinoPageScaffold(
+              return DefaultTextStyle(
+                style: baseTextStyle,
                 child: _pages[index],
               );
             },

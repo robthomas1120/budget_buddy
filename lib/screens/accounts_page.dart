@@ -249,10 +249,16 @@ class _AccountsPageState extends State<AccountsPage> {
     }
   }
 
-  void _showAccountDetails(Account account, AppThemeData themeData) {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) => Container(
+void _showAccountDetails(Account account, AppThemeData themeData) {
+  showCupertinoModalPopup(
+    context: context,
+    builder: (context) => DefaultTextStyle(
+      style: TextStyle(
+        color: themeData.textColor,
+        fontFamily: '.SF Pro Text',
+        fontSize: 16,
+      ),
+      child: Container(
         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         decoration: BoxDecoration(
           color: themeData.cardColor,
@@ -323,8 +329,9 @@ class _AccountsPageState extends State<AccountsPage> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showTransferDialog() {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
@@ -356,18 +363,24 @@ class _AccountsPageState extends State<AccountsPage> {
     );
   }
 
-  void _showAddAccountDialog() {
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    final themeData = themeProvider.currentThemeData;
-    
-    final _nameController = TextEditingController();
-    final _balanceController = TextEditingController();
-    String _selectedType = 'Bank';
-    final _types = ['Bank', 'E-Wallet', 'Cash', 'Other'];
-    
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) => StatefulBuilder(
+void _showAddAccountDialog() {
+  final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+  final themeData = themeProvider.currentThemeData;
+  
+  final _nameController = TextEditingController();
+  final _balanceController = TextEditingController();
+  String _selectedType = 'Bank';
+  final _types = ['Bank', 'E-Wallet', 'Cash', 'Other'];
+  
+  showCupertinoModalPopup(
+    context: context,
+    builder: (context) => DefaultTextStyle(
+      style: TextStyle(
+        color: themeData.textColor,
+        fontFamily: '.SF Pro Text',
+        fontSize: 16,
+      ),
+      child: StatefulBuilder(
         builder: (context, setState) => Container(
           padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -390,6 +403,15 @@ class _AccountsPageState extends State<AccountsPage> {
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 16),
+                Text(
+                  'Account Name',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: themeData.textColor,
+                  ),
+                ),
+                SizedBox(height: 8),
                 CupertinoTextField(
                   controller: _nameController,
                   placeholder: 'Account Name',
@@ -409,6 +431,15 @@ class _AccountsPageState extends State<AccountsPage> {
                   ),
                 ),
                 SizedBox(height: 16),
+                Text(
+                  'Account Type',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: themeData.textColor,
+                  ),
+                ),
+                SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
                     color: themeData.brightness == Brightness.dark
@@ -420,48 +451,42 @@ class _AccountsPageState extends State<AccountsPage> {
                         : CupertinoColors.systemGrey5),
                   ),
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Account Type',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: themeData.brightness == Brightness.dark
-                              ? CupertinoColors.systemGrey
-                              : CupertinoColors.systemGrey,
+                  child: CupertinoSlidingSegmentedControl<String>(
+                    groupValue: _selectedType,
+                    children: {
+                      for (String type in _types)
+                        type: Text(
+                          type,
+                          style: TextStyle(
+                            color: themeData.textColor,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4),
-                      CupertinoSlidingSegmentedControl<String>(
-                        groupValue: _selectedType,
-                        children: {
-                          for (String type in _types)
-                            type: Text(
-                              type,
-                              style: TextStyle(
-                                color: themeData.textColor,
-                              ),
-                            ),
-                        },
-                        backgroundColor: themeData.brightness == Brightness.dark
-                            ? Color(0xFF1C1C1E) // Dark background
-                            : CupertinoColors.systemGrey6,
-                        thumbColor: themeData.brightness == Brightness.dark
-                            ? Color(0xFF3A3A3C) // Slightly lighter than background
-                            : CupertinoColors.white,
-                        onValueChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedType = value;
-                            });
-                          }
-                        },
-                      ),
-                    ],
+                    },
+                    backgroundColor: themeData.brightness == Brightness.dark
+                        ? Color(0xFF1C1C1E) // Dark background
+                        : CupertinoColors.systemGrey6,
+                    thumbColor: themeData.brightness == Brightness.dark
+                        ? Color(0xFF3A3A3C) // Slightly lighter than background
+                        : CupertinoColors.white,
+                    onValueChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _selectedType = value;
+                        });
+                      }
+                    },
                   ),
                 ),
                 SizedBox(height: 16),
+                Text(
+                  'Initial Balance (₱)',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: themeData.textColor,
+                  ),
+                ),
+                SizedBox(height: 8),
                 CupertinoTextField(
                   controller: _balanceController,
                   placeholder: 'Initial Balance (₱)',
@@ -526,8 +551,9 @@ class _AccountsPageState extends State<AccountsPage> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showEditAccountDialog(Account account, AppThemeData themeData) {
     final _nameController = TextEditingController(text: account.name);

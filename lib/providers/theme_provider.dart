@@ -124,7 +124,7 @@ class ThemeProvider extends ChangeNotifier {
       case AppTheme.dark:
         return 'Dark Mode';
       case AppTheme.pink:
-        return 'Pink Mode';
+        return 'Dark Pink Mode';
       default:
         return 'Unknown';
     }

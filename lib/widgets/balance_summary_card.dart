@@ -1,3 +1,4 @@
+// lib/widgets/balance_summary_card.dart
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
@@ -28,15 +29,15 @@ class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final themeData = themeProvider.currentThemeData;
     
-    // Define a default text style
-    const defaultTextStyle = TextStyle(
+    // Define a card-specific text style
+    final cardTextStyle = TextStyle(
       color: CupertinoColors.white,
       fontFamily: '.SF Pro Text',
       fontSize: 14,
     );
     
     return DefaultTextStyle(
-      style: defaultTextStyle,
+      style: cardTextStyle,
       child: GestureDetector(
         onTap: widget.onBalanceTap,
         child: Container(
