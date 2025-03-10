@@ -205,40 +205,46 @@ class _AddBudgetSheetState extends State<AddBudgetSheet> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final themeData = themeProvider.currentThemeData;
 
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        top: 16,
-        left: 16,
-        right: 16,
+    return DefaultTextStyle(
+      style: TextStyle(
+        color: themeData.textColor,
+        fontSize: 14.0,
       ),
-      decoration: BoxDecoration(
-        color: themeData.cardColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: _isLoading
-            ? Center(child: CupertinoActivityIndicator())
-            : SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(themeData),
-                    SizedBox(height: 16),
-                    _buildCategorySelector(themeData),
-                    SizedBox(height: 16),
-                    _buildAmountField(themeData),
-                    SizedBox(height: 16),
-                    _buildPeriodSelector(themeData),
-                    SizedBox(height: 16),
-                    _buildAccountSelector(themeData),
-                    SizedBox(height: 24),
-                    _buildSubmitButton(themeData),
-                  ],
+      child: Container(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          top: 16,
+          left: 16,
+          right: 16,
+        ),
+        decoration: BoxDecoration(
+          color: themeData.cardColor,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: _isLoading
+              ? Center(child: CupertinoActivityIndicator())
+              : SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(themeData),
+                      SizedBox(height: 16),
+                      _buildCategorySelector(themeData),
+                      SizedBox(height: 16),
+                      _buildAmountField(themeData),
+                      SizedBox(height: 16),
+                      _buildPeriodSelector(themeData),
+                      SizedBox(height: 16),
+                      _buildAccountSelector(themeData),
+                      SizedBox(height: 24),
+                      _buildSubmitButton(themeData),
+                    ],
+                  ),
                 ),
-              ),
+        ),
       ),
     );
   }
