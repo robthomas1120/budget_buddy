@@ -27,11 +27,24 @@ class BudgetDetailSheet extends StatefulWidget {
 class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
   List<Account> _associatedAccounts = [];
   bool _isLoading = true;
+  late String _selectedCategory; // Will be initialized in initState
+  late List<String> _categories; // Will be initialized in initState
 
   @override
   void initState() {
     super.initState();
     _loadAssociatedAccounts();
+    
+    // Define standard categories
+    _categories = ["All", "Food", "Transportation", "Entertainment", "Utilities", "Shopping", "Education", "Others"];
+    
+    // Add the budget's category if it's not already in the list
+    if (!_categories.contains(widget.budget.category)) {
+      _categories.add(widget.budget.category);
+    }
+    
+    // Set initial category based on budget
+    _selectedCategory = widget.budget.category;
   }
 
   Future<void> _loadAssociatedAccounts() async {
@@ -195,24 +208,20 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
               ),
             ),
             SizedBox(width: 8),
+            // Replaced with a non-dropdown UI element since this seems to be causing layout issues
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: budget.isOverBudget 
-                    ? themeData.expenseColor.withOpacity(0.1)
-                    : themeData.primaryColor.withOpacity(0.1),
+                color: themeData.primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.transparent),  // Clear any borders
               ),
               child: Text(
-                budget.isOverBudget ? 'Over Budget' : 'Within Budget',
+                widget.budget.category,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: budget.isOverBudget 
-                      ? themeData.expenseColor
-                      : themeData.primaryColor,
-                  decoration: TextDecoration.none,  // Explicitly remove decoration
+                  color: themeData.primaryColor,
+                  decoration: TextDecoration.none,
                 ),
               ),
             ),

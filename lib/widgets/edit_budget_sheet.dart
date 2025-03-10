@@ -2,6 +2,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../database/database_helper.dart';
 import '../models/budget.dart';
@@ -23,24 +24,35 @@ class EditBudgetSheet extends StatefulWidget {
 }
 
 class _EditBudgetSheetState extends State<EditBudgetSheet> {
+  final _formKey = GlobalKey<FormState>();
   late TextEditingController _amountController;
   late String _selectedCategory;
+  late String _selectedPeriod;
   List<Account> _accounts = [];
-  late List<int> _selectedAccountIds;
+  List<int> _selectedAccountIds = [];
   bool _isLoading = true;
-  
+
+  // Define your categories
   final List<String> _categories = [
-    'Food', 'Transportation', 'Entertainment', 'Housing', 
-    'Shopping', 'Utilities', 'Healthcare', 'Education', 'Other'
+    "Food", "Transportation", "Entertainment", "Utilities", 
+    "Shopping", "Education", "Others"
   ];
+  
+  final List<String> _periods = ["weekly", "monthly"];
 
   @override
   void initState() {
     super.initState();
     _amountController = TextEditingController(text: widget.budget.amount.toString());
     _selectedCategory = widget.budget.category;
+    _selectedPeriod = widget.budget.period;
     _selectedAccountIds = widget.budget.accountIds ?? [];
     _loadAccounts();
+    
+    // Make sure the category from the budget is in our list
+    if (!_categories.contains(_selectedCategory)) {
+      _categories.add(_selectedCategory);
+    }
   }
 
   @override
@@ -63,136 +75,84 @@ class _EditBudgetSheetState extends State<EditBudgetSheet> {
   }
 
   Future<void> _updateBudget() async {
-    // Validate inputs
-    if (_amountController.text.isEmpty) {
-      _showError('Please enter a budget amount');
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-    final amount = double.tryParse(_amountController.text);
-    if (amount == null || amount <= 0) {
-      _showError('Please enter a valid amount greater than zero');
-      return;
-    }
-
-    // Create updated budget object
-    final updatedBudget = widget.budget.copyWith(
+    final updatedBudget = Budget(
+      id: widget.budget.id,
       category: _selectedCategory,
-      amount: amount,
+      amount: double.parse(_amountController.text),
+      period: _selectedPeriod,
+      spent: widget.budget.spent,
+      startDate: widget.budget.startDate,
+      endDate: widget.budget.endDate,
       accountIds: _selectedAccountIds.isEmpty ? null : _selectedAccountIds,
     );
 
-    // Save to database
     await DatabaseHelper.instance.updateBudget(updatedBudget);
-    
-    // Notify caller and close sheet
-    Navigator.pop(context);
     widget.onBudgetUpdated();
-  }
-
-  void _showError(String message) {
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text('Error'),
-        content: Text(message),
-        actions: [
-          CupertinoDialogAction(
-            child: Text('OK'),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-    );
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final themeData = themeProvider.currentThemeData;
+    
+    return Material(  // Add Material widget here
+      color: Colors.transparent,
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: themeData.cardColor,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: _isLoading 
+            ? Center(child: CupertinoActivityIndicator()) 
+            : _buildForm(themeData),
+        ),
+      ),
+    );
+  }
 
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        top: 16,
-        left: 16,
-        right: 16,
-      ),
-      decoration: BoxDecoration(
-        color: themeData.cardColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: _isLoading
-            ? Center(child: CupertinoActivityIndicator())
-            : SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(themeData),
-                    SizedBox(height: 16),
-                    _buildCategorySelector(themeData),
-                    SizedBox(height: 16),
-                    _buildAmountField(themeData),
-                    SizedBox(height: 16),
-                    _buildPeriodInfo(themeData),
-                    SizedBox(height: 16),
-                    _buildAccountSelector(themeData),
-                    SizedBox(height: 24),
-                    _buildSubmitButton(themeData),
-                  ],
+  Widget _buildForm(AppThemeData themeData) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Edit Budget',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: themeData.textColor,
                 ),
               ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(AppThemeData themeData) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'Edit Budget',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: themeData.textColor,
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Icon(CupertinoIcons.xmark_circle, color: CupertinoColors.systemGrey),
+              ),
+            ],
           ),
-        ),
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Icon(CupertinoIcons.xmark, color: themeData.brightness == Brightness.dark 
-              ? CupertinoColors.systemGrey : CupertinoColors.systemGrey),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategorySelector(AppThemeData themeData) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Category:',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: themeData.textColor,
-          ),
-        ),
-        SizedBox(height: 8),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: themeData.brightness == Brightness.dark 
-                ? CupertinoColors.systemGrey6.darkColor
-                : CupertinoColors.systemGrey6,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DefaultTextStyle(
-            style: TextStyle(color: themeData.textColor),
+          SizedBox(height: 20),
+          
+          // Category Dropdown
+          Text('Category', style: TextStyle(color: themeData.textColor)),
+          SizedBox(height: 8),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+            decoration: BoxDecoration(
+              color: themeData.brightness == Brightness.dark 
+                  ? CupertinoColors.systemGrey6.darkColor
+                  : CupertinoColors.systemGrey6,
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _selectedCategory,
@@ -223,208 +183,170 @@ class _EditBudgetSheetState extends State<EditBudgetSheet> {
               ),
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAmountField(AppThemeData themeData) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Budget Amount:',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: themeData.textColor,
+          SizedBox(height: 16),
+          
+          // Amount Input
+          Text('Amount', style: TextStyle(color: themeData.textColor)),
+          SizedBox(height: 8),
+          TextFormField(
+            controller: _amountController,
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              fillColor: themeData.brightness == Brightness.dark 
+                  ? CupertinoColors.systemGrey6.darkColor
+                  : CupertinoColors.systemGrey6,
+              filled: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              prefixText: '₱ ',
+              prefixStyle: TextStyle(color: themeData.textColor),
+            ),
+            style: TextStyle(color: themeData.textColor),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter an amount';
+              }
+              if (double.tryParse(value) == null) {
+                return 'Please enter a valid number';
+              }
+              if (double.parse(value) <= 0) {
+                return 'Amount must be greater than zero';
+              }
+              return null;
+            },
           ),
-        ),
-        SizedBox(height: 8),
-        CupertinoTextField(
-          controller: _amountController,
-          placeholder: '0.00',
-          prefix: Padding(
-            padding: EdgeInsets.only(left: 12),
-            child: Text('₱', style: TextStyle(color: themeData.textColor)),
-          ),
-          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          decoration: BoxDecoration(
-            color: themeData.brightness == Brightness.dark 
-                ? CupertinoColors.systemGrey6.darkColor
-                : CupertinoColors.systemGrey6,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          keyboardType: TextInputType.numberWithOptions(decimal: true),
-          style: TextStyle(color: themeData.textColor),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPeriodInfo(AppThemeData themeData) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Budget Period:',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: themeData.textColor,
-          ),
-        ),
-        SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: themeData.brightness == Brightness.dark 
-                ? CupertinoColors.systemGrey6.darkColor
-                : CupertinoColors.systemGrey6,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.budget.period == 'weekly' ? 'Weekly Budget' : 'Monthly Budget',
+          SizedBox(height: 16),
+          
+          // Period Dropdown
+          Text('Period', style: TextStyle(color: themeData.textColor)),
+          SizedBox(height: 8),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+            decoration: BoxDecoration(
+              color: themeData.brightness == Brightness.dark 
+                  ? CupertinoColors.systemGrey6.darkColor
+                  : CupertinoColors.systemGrey6,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedPeriod,
+                isExpanded: true,
+                icon: Icon(CupertinoIcons.chevron_down, size: 16, color: themeData.textColor),
                 style: TextStyle(
                   color: themeData.textColor,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
                 ),
+                dropdownColor: themeData.cardColor,
+                borderRadius: BorderRadius.circular(8),
+                items: _periods.map((String period) {
+                  return DropdownMenuItem<String>(
+                    value: period,
+                    child: Text(
+                      period.capitalize(),
+                      style: TextStyle(color: themeData.textColor),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedPeriod = newValue;
+                    });
+                  }
+                },
               ),
-              SizedBox(height: 4),
-              Text(
-                'Period cannot be changed',
-                style: TextStyle(
-                  color: themeData.textColor.withOpacity(0.6),
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAccountSelector(AppThemeData themeData) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Include Accounts (optional):',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: themeData.textColor,
-          ),
-        ),
-        Text(
-          'Leave empty to include all accounts',
-          style: TextStyle(
-            fontSize: 12,
-            color: themeData.textColor.withOpacity(0.6),
-          ),
-        ),
-        SizedBox(height: 8),
-        if (_accounts.isEmpty)
-          Text(
-            'No accounts found',
-            style: TextStyle(
-              fontSize: 14,
-              color: themeData.textColor.withOpacity(0.7),
             ),
-          )
-        else
+          ),
+          SizedBox(height: 16),
+          
+          // Accounts Selection
+          Text('Include Accounts', style: TextStyle(color: themeData.textColor)),
+          SizedBox(height: 8),
           Container(
-            height: 100,
+            height: 150,
+            decoration: BoxDecoration(
+              color: themeData.brightness == Brightness.dark 
+                  ? CupertinoColors.systemGrey6.darkColor
+                  : CupertinoColors.systemGrey6,
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: ListView.builder(
-              scrollDirection: Axis.horizontal,
               itemCount: _accounts.length,
+              padding: EdgeInsets.all(8),
               itemBuilder: (context, index) {
                 final account = _accounts[index];
                 final isSelected = _selectedAccountIds.contains(account.id);
                 
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      if (isSelected) {
-                        _selectedAccountIds.remove(account.id);
-                      } else if (account.id != null) {
-                        _selectedAccountIds.add(account.id!);
-                      }
-                    });
-                  },
-                  child: Container(
-                    width: 100,
-                    margin: EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected 
-                          ? themeData.primaryColor.withOpacity(0.1)
-                          : themeData.brightness == Brightness.dark
-                              ? CupertinoColors.systemGrey6.darkColor
-                              : CupertinoColors.systemGrey6,
+                return Container(
+                  margin: EdgeInsets.only(bottom: 8),
+                  child: Material( // Add Material widget here for inkwell
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          if (isSelected) {
+                            _selectedAccountIds.remove(account.id);
+                          } else {
+                            _selectedAccountIds.add(account.id!);
+                          }
+                        });
+                      },
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isSelected 
-                            ? themeData.primaryColor
-                            : themeData.brightness == Brightness.dark
-                                ? CupertinoColors.systemGrey.withOpacity(0.3)
-                                : CupertinoColors.systemGrey4,
+                      child: Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _getAccountIcon(account.type),
+                              color: _getAccountColor(account.type),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                account.name,
+                                style: TextStyle(color: themeData.textColor),
+                              ),
+                            ),
+                            Icon(
+                              isSelected 
+                                  ? CupertinoIcons.checkmark_circle_fill
+                                  : CupertinoIcons.circle,
+                              color: isSelected
+                                  ? themeData.primaryColor
+                                  : CupertinoColors.systemGrey,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    padding: EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _getAccountIcon(account.type),
-                          color: isSelected
-                              ? themeData.primaryColor
-                              : _getAccountColor(account.type),
-                          size: 24,
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          account.name,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: themeData.textColor,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
                     ),
                   ),
                 );
               },
             ),
           ),
-      ],
-    );
-  }
-
-  Widget _buildSubmitButton(AppThemeData themeData) {
-    return SizedBox(
-      width: double.infinity,
-      child: CupertinoButton(
-        padding: EdgeInsets.symmetric(vertical: 14),
-        borderRadius: BorderRadius.circular(8),
-        color: themeData.primaryColor,
-        onPressed: _updateBudget,
-        child: Text(
-          'Save Changes',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: CupertinoColors.white,
+          SizedBox(height: 24),
+          
+          // Action Buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: () => Navigator.pop(context),
+                child: Text('Cancel'),
+              ),
+              SizedBox(width: 16),
+              CupertinoButton.filled(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                onPressed: _updateBudget,
+                child: Text('Save Changes'),
+              ),
+            ],
           ),
-        ),
+        ],
       ),
     );
   }
@@ -455,5 +377,12 @@ class _EditBudgetSheetState extends State<EditBudgetSheet> {
       default:
         return CupertinoColors.systemIndigo;
     }
+  }
+}
+
+// Extension to capitalize the first letter of a string
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${this.substring(1)}";
   }
 }
