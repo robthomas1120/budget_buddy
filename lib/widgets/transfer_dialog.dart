@@ -359,8 +359,12 @@ class _TransferDialogState extends State<TransferDialog> {
   }
 
   void _processTransfer(AppThemeData themeData) async {
+      print('DEBUG: [TransferDialog] Starting transfer process');
+
     // Validate inputs
     if (_fromAccountId == null) {
+          print('DEBUG: [TransferDialog] Missing source account');
+
       setState(() => _errorMessage = 'Please select a source account');
       return;
     }
@@ -389,7 +393,11 @@ class _TransferDialogState extends State<TransferDialog> {
     
     // Check if source account has sufficient balance
     final sourceAccount = widget.accounts.firstWhere((a) => a.id == _fromAccountId);
+      print('DEBUG: [TransferDialog] Source account: ${sourceAccount.name}, Balance: ${sourceAccount.balance}, Amount: $amount');
+
     if (sourceAccount.balance < amount) {
+          print('DEBUG: [TransferDialog] Insufficient balance: ${sourceAccount.balance} < $amount');
+
       setState(() => _errorMessage = 'Insufficient balance in ${sourceAccount.name}');
       return;
     }
@@ -398,6 +406,8 @@ class _TransferDialogState extends State<TransferDialog> {
     setState(() {
       _isProcessing = true;
       _errorMessage = null;
+          print('DEBUG: [TransferDialog] Processing transfer from ${_fromAccountId} to ${_toAccountId} of amount $amount');
+
     });
     
     // Perform the transfer
@@ -407,12 +417,15 @@ class _TransferDialogState extends State<TransferDialog> {
       amount: amount,
       notes: _notesController.text.trim().isNotEmpty ? _notesController.text.trim() : null,
     );
-    
+      print('DEBUG: [TransferDialog] Transfer result: ${success ? "Success" : "Failed"}');
+
     if (!mounted) return;
     
     if (success) {
       widget.onTransferComplete();
       Navigator.pop(context);
+          print('DEBUG: [TransferDialog] Transfer completed successfully');
+
       
       showCupertinoDialog(
         context: context,

@@ -20,6 +20,30 @@ class SavingsGoal {
     required this.targetDate,
     this.accountId,
   });
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'reason': reason,
+      'target_amount': targetAmount,
+      'current_amount': currentAmount,
+      'start_date': startDate.millisecondsSinceEpoch,
+      'target_date': targetDate.millisecondsSinceEpoch,
+      'account_id': accountId,
+    };
+  }
+    factory SavingsGoal.fromMap(Map<String, dynamic> map) {
+    return SavingsGoal(
+      id: map['id'],
+      name: map['name'],
+      reason: map['reason'] ?? '',
+      targetAmount: map['target_amount'],
+      currentAmount: map['current_amount'] ?? 0.0,
+      startDate: DateTime.fromMillisecondsSinceEpoch(map['start_date']),
+      targetDate: DateTime.fromMillisecondsSinceEpoch(map['target_date']),
+      accountId: map['account_id'],
+    );
+  }
 
   // Calculate days remaining
   int get daysRemaining {

@@ -253,6 +253,8 @@ class SavingsGoalDetailsSheet extends StatelessWidget {
   }
 
   void _showAddFundsSheet(BuildContext context, SavingsGoal goal, AppThemeData themeData) {
+      print('DEBUG: [SavingsGoalDetailsSheet] Opening add funds sheet for ${goal.name}');
+
     final TextEditingController amountController = TextEditingController();
     
     showCupertinoModalPopup(
@@ -338,9 +340,15 @@ class SavingsGoalDetailsSheet extends StatelessWidget {
                       onPressed: () {
                         final amount = double.tryParse(amountController.text);
                         if (amount == null || amount <= 0) {
+                                print('DEBUG: [SavingsGoalDetailsSheet] Invalid amount entered: ${amountController.text}');
+
                           SavingsHelper.showError(context, 'Please enter a valid amount');
                           return;
                         }
+
+                        print('DEBUG: [SavingsGoalDetailsSheet] Adding $amount to goal ${goal.name}');
+    print('DEBUG: [SavingsGoalDetailsSheet] Before: ${goal.currentAmount}, After: ${goal.currentAmount + amount}');
+
                         
                         // Create updated goal with new amount
                         final updatedGoal = goal.copyWith(
@@ -349,6 +357,8 @@ class SavingsGoalDetailsSheet extends StatelessWidget {
                         
                         // Call the callback with the updated goal
                         onGoalUpdated(updatedGoal);
+                            print('DEBUG: [SavingsGoalDetailsSheet] Goal updated successfully');
+
                         Navigator.pop(context); // Close the add funds sheet
                         Navigator.pop(context); // Close the details sheet
                       },

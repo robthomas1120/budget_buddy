@@ -6,6 +6,8 @@ import 'package:sqflite/sqflite.dart';
 import '../models/transaction.dart' as model;
 import '../models/account.dart';
 import '../models/budget.dart';
+import '../models/savings_goal.dart';
+
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -56,6 +58,21 @@ class DatabaseHelper {
       )
     ''');
 
+      await db.execute('''
+    CREATE TABLE savings_goals(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      reason TEXT,
+      target_amount REAL NOT NULL,
+      current_amount REAL NOT NULL DEFAULT 0.0,
+      start_date INTEGER NOT NULL,
+      target_date INTEGER NOT NULL,
+      account_id INTEGER,
+      FOREIGN KEY (account_id) REFERENCES accounts (id)
+    )
+  ''');
+
+
     // Create budgets table
     await db.execute('''
       CREATE TABLE budgets(
@@ -78,6 +95,52 @@ class DatabaseHelper {
       'balance': 0.0,
     });
   }
+
+Future<int> deleteSavingsGoal(int id) async {
+  final db = await instance.database;
+  return await db.delete(
+    'savings_goals',
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+}
+
+Future<int> updateSavingsGoal(SavingsGoal goal) async {
+  final db = await instance.database;
+  return await db.update(
+    'savings_goals',
+    goal.toMap(),
+    where: 'id = ?',
+    whereArgs: [goal.id],
+  );
+}
+
+Future<List<SavingsGoal>> getAllSavingsGoals() async {
+  final db = await instance.database;
+  final result = await db.query('savings_goals', orderBy: 'target_date ASC');
+  return result.map((map) => SavingsGoal.fromMap(map)).toList();
+}
+
+Future<SavingsGoal?> getSavingsGoal(int id) async {
+  final db = await instance.database;
+  final maps = await db.query(
+    'savings_goals',
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+
+  if (maps.isNotEmpty) {
+    print('DEBUG: [DatabaseHelper] Retrieved savings goal: ${maps.first['name']}');
+    return SavingsGoal.fromMap(maps.first);
+  }
+  return null;
+}
+
+  Future<int> insertSavingsGoal(SavingsGoal goal) async {
+  final db = await instance.database;
+  print('DEBUG: [DatabaseHelper] Inserting savings goal: ${goal.name}');
+  return await db.insert('savings_goals', goal.toMap());
+}
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {

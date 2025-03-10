@@ -55,6 +55,30 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     'Other',
   ];
 
+  void _processTransactionForSavingsGoals(Transaction transaction) async {
+  if (transaction.type == 'income') {
+    print('DEBUG: [AddTransactionSheet] Checking if transaction contributes to savings goals');
+    
+    // Get all savings goals
+    final savingsGoals = await DatabaseHelper.instance.getAllSavingsGoals();
+    
+    // Check if transaction title matches any goal name
+    for (var goal in savingsGoals) {
+      if (transaction.title.toLowerCase().contains(goal.name.toLowerCase())) {
+        print('DEBUG: [AddTransactionSheet] Transaction matches savings goal: ${goal.name}');
+        
+        // Update the goal with the transaction amount
+        final updatedGoal = goal.copyWith(
+          currentAmount: goal.currentAmount + transaction.amount,
+        );
+        
+        await DatabaseHelper.instance.updateSavingsGoal(updatedGoal);
+        print('DEBUG: [AddTransactionSheet] Updated savings goal ${goal.name} with amount ${transaction.amount}');
+      }
+    }
+  }
+}
+
   @override
   void initState() {
     super.initState();

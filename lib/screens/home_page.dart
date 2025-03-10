@@ -6,7 +6,8 @@ import '../providers/theme_provider.dart';
 import 'dashboard_page.dart';
 import 'income_page.dart';
 import 'expense_page.dart';
-import 'savings_page.dart'; // Import the new savings page
+import 'budget_page.dart';
+import 'savings_page.dart';
 import 'settings_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -18,6 +19,7 @@ class _HomePageState extends State<HomePage> {
   // Create a list of page widgets
   late List<Widget> _pages;
   final _tabController = CupertinoTabController(initialIndex: 0);
+  final _savingsPageKey = GlobalKey<SavingsPageState>();
   
   @override
   void initState() {
@@ -28,8 +30,13 @@ class _HomePageState extends State<HomePage> {
       ),
       IncomePage(),
       ExpensePage(),
-      SavingsPage(), // Add the savings page instead of the budget page
-      // Note: Settings page removed from tab bar
+      BudgetPage(),
+      SavingsPage(
+        key: _savingsPageKey,
+        onRefresh: () {
+          print('DEBUG: [HomePage] Refreshing SavingsPage from HomePage');
+        },
+      ),
     ];
   }
 
@@ -79,12 +86,25 @@ class _HomePageState extends State<HomePage> {
               label: 'Expenses',
             ),
             BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.chart_bar_fill),
+              label: 'Budget',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.money_dollar_circle), 
               label: 'Savings',
             ),
           ],
         ),
         tabBuilder: (context, index) {
+          // When the tab changes, trigger a refresh for the savings page
+          if (_tabController.index == index && index == 4) {
+            // Delay the refresh slightly to ensure the tab has rendered
+            Future.delayed(Duration(milliseconds: 100), () {
+              // Use the properly initialized GlobalKey
+              _savingsPageKey.currentState?.refreshData();
+            });
+          }
+          
           // Provide proper text styling for each tab view
           return CupertinoTabView(
             builder: (context) {

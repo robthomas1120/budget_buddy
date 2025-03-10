@@ -28,13 +28,20 @@ class _AccountsPageState extends State<AccountsPage> {
     setState(() {
       _isLoading = true;
     });
-
+      print('DEBUG: [AccountsPage] Starting to load accounts');
     final accounts = await DatabaseHelper.instance.getAllAccounts();
-    
+      print('DEBUG: [AccountsPage] Loaded ${accounts.length} accounts');
+
+    for (var account in accounts) {
+    print('DEBUG: [AccountsPage] Account ${account.id}: ${account.name} - Type: ${account.type}, Balance: ${account.balance}');
+  }
+
     if (mounted) {
       setState(() {
         _accounts = accounts;
         _isLoading = false;
+              print('DEBUG: [AccountsPage] State updated with account data');
+
       });
     }
   }
@@ -334,6 +341,8 @@ void _showAccountDetails(Account account, AppThemeData themeData) {
 }
 
   void _showTransferDialog() {
+      print('DEBUG: [AccountsPage] Showing transfer dialog');
+
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final themeData = themeProvider.currentThemeData;
     
@@ -364,6 +373,8 @@ void _showAccountDetails(Account account, AppThemeData themeData) {
   }
 
 void _showAddAccountDialog() {
+    print('DEBUG: [AccountsPage] Opening add account dialog');
+
   final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
   final themeData = themeProvider.currentThemeData;
   
@@ -516,6 +527,7 @@ void _showAddAccountDialog() {
                     ),
                     CupertinoButton.filled(
                       onPressed: () async {
+                            print('DEBUG: [AccountsPage] Validating new account data');
                         if (_nameController.text.trim().isEmpty) {
                           _showError('Please enter an account name', themeData);
                           return;
@@ -531,14 +543,18 @@ void _showAddAccountDialog() {
                           _showError('Please enter a valid balance', themeData);
                           return;
                         }
+    print('DEBUG: [AccountsPage] Creating new account: Name=${_nameController.text.trim()}, Type=${_selectedType}, Balance=${_balanceController.text}');
 
                         final account = Account(
                           name: _nameController.text.trim(),
                           type: _selectedType,
                           balance: balance,
                         );
+    print('DEBUG: [AccountsPage] Inserting account into database');
 
                         await DatabaseHelper.instance.insertAccount(account);
+          print('DEBUG: [AccountsPage] Account inserted successfully');
+                  
                         Navigator.pop(context);
                         _loadAccounts();
                       },
@@ -556,6 +572,8 @@ void _showAddAccountDialog() {
 }
 
   void _showEditAccountDialog(Account account, AppThemeData themeData) {
+      print('DEBUG: [AccountsPage] Opening edit dialog for account ${account.id}: ${account.name}');
+
     final _nameController = TextEditingController(text: account.name);
     final _balanceController = TextEditingController(text: account.balance.toString());
     String _selectedType = account.type;
@@ -715,6 +733,8 @@ void _showAddAccountDialog() {
                           _showError('Please enter a valid balance', themeData);
                           return;
                         }
+print('DEBUG: [AccountsPage] Updating account ${account.id}');
+    print('DEBUG: [AccountsPage] New values - Name: ${_nameController.text.trim()}, Type: ${_selectedType}, Balance: ${_balanceController.text}');
 
                         final updatedAccount = account.copyWith(
                           name: _nameController.text.trim(),
@@ -723,6 +743,8 @@ void _showAddAccountDialog() {
                         );
 
                         await DatabaseHelper.instance.updateAccount(updatedAccount);
+                            print('DEBUG: [AccountsPage] Account updated successfully');
+
                         Navigator.pop(context);
                         _loadAccounts();
                       },
@@ -739,6 +761,8 @@ void _showAddAccountDialog() {
   }
 
   void _confirmDeleteAccount(Account account, AppThemeData themeData) {
+      print('DEBUG: [AccountsPage] Showing delete confirmation for account ${account.id}: ${account.name}');
+
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
@@ -755,11 +779,19 @@ void _showAddAccountDialog() {
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () async {
+                  print('DEBUG: [AccountsPage] Validating edited account data');
+
               try {
+                      print('DEBUG: [AccountsPage] Attempting to delete account ${account.id}');
+
                 await DatabaseHelper.instance.deleteAccount(account.id!);
+                      print('DEBUG: [AccountsPage] Account deleted successfully');
+
                 Navigator.pop(context);
                 _loadAccounts();
               } catch (e) {
+                      print('DEBUG: [AccountsPage] Error deleting account: $e');
+
                 Navigator.pop(context);
                 _showError('Cannot delete account with linked transactions', themeData);
               }
