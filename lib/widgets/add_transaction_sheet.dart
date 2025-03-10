@@ -557,7 +557,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         return;
                       }
 
-                      // Add the print statements here
+                      // Add debug statements
                       print('DEBUG: Creating new transaction:');
                       print('DEBUG: Title: ${_titleController.text.trim()}');
                       print('DEBUG: Amount: ${_amountController.text}');
@@ -598,7 +598,6 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       );
                       
                       print('DEBUG: About to insert transaction into database');
-                      print('DEBUG: Transaction details: ${transaction.title}, ${transaction.amount}, ${transaction.type}, ${transaction.category}');
                       
                       try {
                         final id = await DatabaseHelper.instance.insertTransaction(transaction);

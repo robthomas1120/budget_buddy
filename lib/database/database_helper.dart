@@ -162,37 +162,48 @@ class DatabaseHelper {
 Future<int> insertTransaction(model.Transaction transaction) async {
   final db = await instance.database;
   
+  print('DEBUG: [DatabaseHelper] Starting insertTransaction');
+  print('DEBUG: [DatabaseHelper] Transaction details:');
+  print('DEBUG: [DatabaseHelper] - Title: ${transaction.title}');
+  print('DEBUG: [DatabaseHelper] - Type: ${transaction.type}');
+  print('DEBUG: [DatabaseHelper] - Amount: ${transaction.amount}');
+  print('DEBUG: [DatabaseHelper] - Category: ${transaction.category}');
+  print('DEBUG: [DatabaseHelper] - Account ID: ${transaction.accountId}');
+  print('DEBUG: [DatabaseHelper] - Date: ${transaction.date}');
+  
   // Start a transaction to ensure data consistency
   return await db.transaction((txn) async {
     // Insert the transaction record
     final transactionId = await txn.insert('transactions', transaction.toMap());
+    print('DEBUG: [DatabaseHelper] Inserted transaction with ID: $transactionId');
     
     // If accountId is provided, update the account balance
     if (transaction.accountId != null) {
       // Get the current account balance
       final accountResult = await txn.query(
         'accounts',
-        columns: ['balance'],
+        columns: ['balance', 'name'],
         where: 'id = ?',
         whereArgs: [transaction.accountId],
       );
       
       if (accountResult.isNotEmpty) {
+        String accountName = accountResult.first['name'] as String;
         double currentBalance = accountResult.first['balance'] as double;
         double newBalance = currentBalance;
         
         // Add or subtract based on transaction type
         if (transaction.type == 'income') {
           newBalance += transaction.amount;
+          print('DEBUG: [DatabaseHelper] Updating account "$accountName" balance: $currentBalance + ${transaction.amount} = $newBalance');
         } else if (transaction.type == 'expense') {
           newBalance -= transaction.amount;
+          print('DEBUG: [DatabaseHelper] Updating account "$accountName" balance: $currentBalance - ${transaction.amount} = $newBalance');
           
           // Update any active budgets that include this account
-          // Removed the category condition - now budgets update based only on account
           final now = DateTime.now().millisecondsSinceEpoch;
           
-          // Debug log
-          print('DEBUG: Starting to insert transaction: ${transaction.title} - ${transaction.type} - ${transaction.category} - ${transaction.amount}');
+          print('DEBUG: [DatabaseHelper] Checking active budgets for updates');
           
           final activeBudgets = await txn.query(
             'budgets',
@@ -200,8 +211,7 @@ Future<int> insertTransaction(model.Transaction transaction) async {
             whereArgs: [now, now],
           );
           
-          // Debug log
-          print('DEBUG: Found ${activeBudgets.length} active budgets');
+          print('DEBUG: [DatabaseHelper] Found ${activeBudgets.length} active budgets');
           
           for (var budgetMap in activeBudgets) {
             final budget = Budget.fromMap(budgetMap);
@@ -212,29 +222,29 @@ Future<int> insertTransaction(model.Transaction transaction) async {
             // If no specific accounts are set, include all accounts
             if (budget.accountIds == null || budget.accountIds!.isEmpty) {
               shouldInclude = true;
-              print('DEBUG: Budget ${budget.id} includes all accounts');
+              print('DEBUG: [DatabaseHelper] Budget ${budget.id} includes all accounts');
             } 
             // Include only if the transaction's account is in the budget's accounts
             else if (transaction.accountId != null && 
                      budget.accountIds!.contains(transaction.accountId)) {
               shouldInclude = true;
-              print('DEBUG: Budget ${budget.id} includes account ${transaction.accountId}');
+              print('DEBUG: [DatabaseHelper] Budget ${budget.id} includes account ${transaction.accountId}');
             }
             
             if (shouldInclude) {
               // Get current spent amount to ensure we're working with latest data
               final currentBudgetData = await txn.query(
                 'budgets',
-                columns: ['spent'],
+                columns: ['spent', 'category'],
                 where: 'id = ?',
                 whereArgs: [budget.id],
               );
               
               final currentSpent = currentBudgetData.first['spent'] as double;
+              final category = currentBudgetData.first['category'] as String;
               final newSpent = currentSpent + transaction.amount;
               
-              // Debug log
-              print('DEBUG: Updating budget ${budget.id}: current spent: $currentSpent, new spent: $newSpent');
+              print('DEBUG: [DatabaseHelper] Updating budget ${budget.id} (${category}): current spent: $currentSpent, new spent: $newSpent');
               
               await txn.update(
                 'budgets',
@@ -242,24 +252,47 @@ Future<int> insertTransaction(model.Transaction transaction) async {
                 where: 'id = ?',
                 whereArgs: [budget.id],
               );
+              
+              print('DEBUG: [DatabaseHelper] Budget ${budget.id} updated successfully');
+            } else {
+              print('DEBUG: [DatabaseHelper] Budget ${budget.id} does not include account ${transaction.accountId}, not updating');
             }
           }
         }
         
         // Update the account balance
-        await txn.update(
+        final updateResult = await txn.update(
           'accounts',
           {'balance': newBalance},
           where: 'id = ?',
           whereArgs: [transaction.accountId],
         );
+        
+        print('DEBUG: [DatabaseHelper] Account balance update result: $updateResult rows affected');
+        
+        // Verify the update was successful
+        final updatedAccount = await txn.query(
+          'accounts',
+          columns: ['balance'],
+          where: 'id = ?',
+          whereArgs: [transaction.accountId],
+        );
+        
+        if (updatedAccount.isNotEmpty) {
+          double updatedBalance = updatedAccount.first['balance'] as double;
+          print('DEBUG: [DatabaseHelper] Verified new account balance: $updatedBalance');
+        }
+      } else {
+        print('DEBUG: [DatabaseHelper] Account with ID ${transaction.accountId} not found');
       }
+    } else {
+      print('DEBUG: [DatabaseHelper] No account ID provided with transaction');
     }
     
+    print('DEBUG: [DatabaseHelper] Transaction processing complete, returning ID: $transactionId');
     return transactionId;
   });
 }
-
 
   // Read transactions
   Future<model.Transaction?> getTransaction(int id) async {
@@ -620,10 +653,21 @@ Future<void> _adjustBudgetsForTransaction(
   }
   
   Future<List<Account>> getAllAccounts() async {
-    final db = await instance.database;
-    final result = await db.query('accounts', orderBy: 'name ASC');
-    return result.map((map) => Account.fromMap(map)).toList();
+  final db = await instance.database;
+  print('DEBUG: [DatabaseHelper] Getting all accounts');
+  
+  final result = await db.query('accounts', orderBy: 'name ASC');
+  
+  final accounts = result.map((map) => Account.fromMap(map)).toList();
+  print('DEBUG: [DatabaseHelper] Retrieved ${accounts.length} accounts');
+  
+  // Log the balance of each account
+  for (var account in accounts) {
+    print('DEBUG: [DatabaseHelper] Account ${account.id}: ${account.name} - Balance: ${account.balance}');
   }
+  
+  return accounts;
+}
   
   // Update account
   Future<int> updateAccount(Account account) async {
@@ -657,16 +701,22 @@ Future<void> _adjustBudgetsForTransaction(
   }
   
   // Get total balance across all accounts
-  Future<double> getTotalBalance() async {
-    final db = await instance.database;
-    final result = await db.rawQuery(
-      'SELECT SUM(balance) as total FROM accounts',
-    );
-    
-    return result.isNotEmpty && result.first['total'] != null
-        ? (result.first['total'] as num).toDouble()
-        : 0.0;
-  }
+ Future<double> getTotalBalance() async {
+  final db = await instance.database;
+  print('DEBUG: [DatabaseHelper] Getting total balance across all accounts');
+  
+  final result = await db.rawQuery(
+    'SELECT SUM(balance) as total FROM accounts',
+  );
+  
+  double total = result.isNotEmpty && result.first['total'] != null
+      ? (result.first['total'] as num).toDouble()
+      : 0.0;
+      
+  print('DEBUG: [DatabaseHelper] Total balance: $total');
+  return total;
+}
+
 
   // CRUD Operations for Budgets
   

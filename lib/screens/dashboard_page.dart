@@ -34,6 +34,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
+    print('DEBUG: [DashboardPage] Initializing dashboard page');
     _loadData();
   }
 
@@ -42,43 +43,74 @@ class _DashboardPageState extends State<DashboardPage> {
       _isLoading = true;
     });
 
-    final totalBalance = await DatabaseHelper.instance.getTotalBalance();
-    final income = await DatabaseHelper.instance.getTotalIncome();
-    final expenses = await DatabaseHelper.instance.getTotalExpense();
-    final recentTransactions = await DatabaseHelper.instance.getRecentTransactions(5);
-    final activeBudgets = await DatabaseHelper.instance.getActiveBudgets();
+    print('DEBUG: [DashboardPage] Starting to load dashboard data');
 
-    if (mounted) {
-      setState(() {
-        _currentBalance = totalBalance;
-        _totalIncome = income;
-        _totalExpenses = expenses;
-        _recentTransactions = recentTransactions;
-        _activeBudgets = activeBudgets;
-        _isLoading = false;
-      });
+    try {
+      final totalBalance = await DatabaseHelper.instance.getTotalBalance();
+      print('DEBUG: [DashboardPage] Loaded total balance: $totalBalance');
+      
+      final income = await DatabaseHelper.instance.getTotalIncome();
+      print('DEBUG: [DashboardPage] Loaded total income: $income');
+      
+      final expenses = await DatabaseHelper.instance.getTotalExpense();
+      print('DEBUG: [DashboardPage] Loaded total expenses: $expenses');
+      
+      final recentTransactions = await DatabaseHelper.instance.getRecentTransactions(5);
+      print('DEBUG: [DashboardPage] Loaded ${recentTransactions.length} recent transactions');
+      
+      final activeBudgets = await DatabaseHelper.instance.getActiveBudgets();
+      print('DEBUG: [DashboardPage] Loaded ${activeBudgets.length} active budgets');
+
+      if (mounted) {
+        setState(() {
+          _currentBalance = totalBalance;
+          _totalIncome = income;
+          _totalExpenses = expenses;
+          _recentTransactions = recentTransactions;
+          _activeBudgets = activeBudgets;
+          _isLoading = false;
+          print('DEBUG: [DashboardPage] State updated with new data');
+        });
+      }
+    } catch (e) {
+      print('DEBUG: [DashboardPage] Error loading data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _showAddTransactionSheet() {
+    print('DEBUG: [DashboardPage] Showing add transaction sheet');
     showCupertinoModalPopup(
       context: context,
       builder: (context) => AddTransactionSheet(
-        onTransactionAdded: _loadData,
+        onTransactionAdded: () {
+          print('DEBUG: [DashboardPage] Transaction added callback triggered');
+          _loadData();
+        },
       ),
     );
   }
 
   void _navigateToAccountsPage() {
+    print('DEBUG: [DashboardPage] Navigating to accounts page');
     Navigator.push(
       context,
       CupertinoPageRoute(builder: (context) => AccountsPage()),
-    ).then((_) => _loadData());
+    ).then((_) {
+      print('DEBUG: [DashboardPage] Returned from accounts page, reloading data');
+      _loadData();
+    });
   }
 
   Future<void> _deleteTransaction(int id) async {
+    print('DEBUG: [DashboardPage] Deleting transaction with ID: $id');
     try {
       await DatabaseHelper.instance.deleteTransaction(id);
+      print('DEBUG: [DashboardPage] Transaction deleted successfully');
       _loadData();
       
       if (mounted) {
@@ -97,6 +129,7 @@ class _DashboardPageState extends State<DashboardPage> {
         );
       }
     } catch (e) {
+      print('DEBUG: [DashboardPage] Error deleting transaction: $e');
       if (mounted) {
         showCupertinoDialog(
           context: context,
@@ -116,6 +149,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _updateTransaction(Transaction transaction) {
+    print('DEBUG: [DashboardPage] Updating transaction: ${transaction.id}');
     _loadData();
   }
   
@@ -142,7 +176,10 @@ class _DashboardPageState extends State<DashboardPage> {
             child: Icon(CupertinoIcons.settings, color: themeData.primaryColor),
           ),
           trailing: GestureDetector(
-            onTap: _loadData,
+            onTap: () {
+              print('DEBUG: [DashboardPage] Refresh button pressed');
+              _loadData();
+            },
             child: Icon(CupertinoIcons.refresh, color: themeData.primaryColor),
           ),
         ),
@@ -286,7 +323,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildBudgetSummary(AppThemeData themeData) {
-    // Existing implementation - keeping the same functionality
+    print('DEBUG: [DashboardPage] Building budget summary with ${_activeBudgets.length} active budgets');
     if (_activeBudgets.isEmpty) {
       return SizedBox.shrink(); // Don't show anything if no active budgets
     }
@@ -305,16 +342,18 @@ class _DashboardPageState extends State<DashboardPage> {
     for (var budget in _activeBudgets) {
       totalBudget += budget.amount;
       totalSpent += budget.spent;
+      print('DEBUG: [DashboardPage] Budget ${budget.id}: ${budget.category} - Amount: ${budget.amount}, Spent: ${budget.spent}');
     }
     
     final overallProgress = totalBudget > 0 ? (totalSpent / totalBudget).clamp(0.0, 1.0) : 0.0;
+    print('DEBUG: [DashboardPage] Overall budget progress: $overallProgress (${totalSpent}/${totalBudget})');
+    
     final overallColor = overallProgress > 0.9 
         ? themeData.expenseColor 
         : overallProgress > 0.7 
             ? CupertinoColors.systemOrange 
             : themeData.primaryColor;
     
-    // Rest of the existing implementation...
     return Container(
       margin: EdgeInsets.only(bottom: 24),
       child: Column(
@@ -341,14 +380,19 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 onPressed: () {
-                  // Navigate to the Budgets page
-                  // This code would need to be updated since Budget tab is being replaced
+                  // Navigate to the Budgets tab (index 3)
+                  final CupertinoTabController? tabController = 
+                      context.findAncestorWidgetOfExactType<CupertinoTabScaffold>()?.controller;
+                  if (tabController != null) {
+                    print('DEBUG: [DashboardPage] Navigating to budgets tab');
+                    tabController.index = 3;
+                  }
                 },
               ),
             ],
           ),
           
-          // Continue with the existing implementation...
+          // Overall budget progress card
           Container(
             margin: EdgeInsets.symmetric(vertical: 16),
             padding: EdgeInsets.all(16),
@@ -447,9 +491,10 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
           
-          // Individual budget items (keeping same implementation)
+          // Individual budget items
           Column(
             children: topBudgets.reversed.map((budget) {
+              print('DEBUG: [DashboardPage] Rendering budget card for ${budget.category}');
               final progress = budget.progress.clamp(0.0, 1.0);
               Color statusColor = themeData.primaryColor;
               if (progress > 0.9) {
