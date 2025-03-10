@@ -123,15 +123,21 @@ class _AddBudgetSheetState extends State<AddBudgetSheet> {
   void _showError(String message) {
     showCupertinoDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text('Error'),
-        content: Text(message),
-        actions: [
-          CupertinoDialogAction(
-            child: Text('OK'),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
+      builder: (context) => DefaultTextStyle(
+        style: TextStyle(
+          color: CupertinoColors.black,
+          fontSize: 14.0,
+        ),
+        child: CupertinoAlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: [
+            CupertinoDialogAction(
+              child: Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
       ),
     );
   }
