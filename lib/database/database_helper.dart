@@ -817,8 +817,9 @@ Future<List<model.Transaction>> getTransactionsForBudgetPeriod(Budget budget) as
   }
   
   // Delete account
-  Future<int> deleteAccount(int id) async {
+  Future<int> deleteAccount(int id, {bool deleteLinkedTransactions = false}) async {
     final db = await instance.database;
+    
     // First check if there are any transactions linked to this account
     final transCount = Sqflite.firstIntValue(await db.rawQuery(
       'SELECT COUNT(*) FROM transactions WHERE account_id = ?',
@@ -826,7 +827,61 @@ Future<List<model.Transaction>> getTransactionsForBudgetPeriod(Budget budget) as
     ));
     
     if (transCount != null && transCount > 0) {
-      throw Exception('Cannot delete account with linked transactions');
+      if (deleteLinkedTransactions) {
+        // Delete linked transactions if requested
+        await db.delete(
+          'transactions',
+          where: 'account_id = ?',
+          whereArgs: [id],
+        );
+        print('DEBUG: [DatabaseHelper] Deleted $transCount transactions linked to account $id');
+      } else {
+        throw Exception('Cannot delete account with linked transactions');
+      }
+    }
+    
+    // Check if there are any savings goals linked to this account
+    final goalsCount = Sqflite.firstIntValue(await db.rawQuery(
+      'SELECT COUNT(*) FROM savings_goals WHERE account_id = ?',
+      [id],
+    ));
+    
+    if (goalsCount != null && goalsCount > 0) {
+      // Unlink the savings goals from this account
+      await db.update(
+        'savings_goals',
+        {'account_id': null},
+        where: 'account_id = ?',
+        whereArgs: [id],
+      );
+      print('DEBUG: [DatabaseHelper] Unlinked $goalsCount savings goals from account $id');
+    }
+    
+    // Check if there are any budgets linked to this account
+    final budgetsWithAccount = await db.query(
+      'budgets',
+      where: 'account_ids LIKE ?',
+      whereArgs: ['%$id%'],
+    );
+    
+    if (budgetsWithAccount.isNotEmpty) {
+      print('DEBUG: [DatabaseHelper] Found ${budgetsWithAccount.length} budgets linked to account $id');
+      
+      // Update each budget to remove this account ID
+      for (var budgetMap in budgetsWithAccount) {
+        final budget = Budget.fromMap(budgetMap);
+        if (budget.accountIds != null && budget.accountIds!.contains(id)) {
+          final updatedAccountIds = budget.accountIds!.where((accId) => accId != id).toList();
+          
+          await db.update(
+            'budgets',
+            {'account_ids': updatedAccountIds.isEmpty ? null : updatedAccountIds.join(',')},
+            where: 'id = ?',
+            whereArgs: [budget.id],
+          );
+          print('DEBUG: [DatabaseHelper] Removed account $id from budget ${budget.id}');
+        }
+      }
     }
     
     return await db.delete(

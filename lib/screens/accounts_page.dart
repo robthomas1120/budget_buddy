@@ -772,40 +772,45 @@ print('DEBUG: [AccountsPage] Updating account ${account.id}');
 
     showCupertinoDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text('Delete Account?'),
-        content: Text(
-          'Are you sure you want to delete "${account.name}"? This action cannot be undone.'
+      builder: (context) => DefaultTextStyle(
+        style: TextStyle(
+          color: themeData.textColor,
+          fontSize: 14.0,
         ),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+        child: CupertinoAlertDialog(
+          title: Text('Delete Account?'),
+          content: Text(
+            'Are you sure you want to delete "${account.name}"? This action cannot be undone. If this account has linked transactions, they will also be deleted.'
           ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () async {
-                  print('DEBUG: [AccountsPage] Validating edited account data');
+          actions: [
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            CupertinoDialogAction(
+              isDestructiveAction: true,
+              onPressed: () async {
+                print('DEBUG: [AccountsPage] Validating edited account data');
 
-              try {
-                      print('DEBUG: [AccountsPage] Attempting to delete account ${account.id}');
+                try {
+                  print('DEBUG: [AccountsPage] Attempting to delete account ${account.id}');
+                  // Pass true to deleteLinkedTransactions parameter
+                  await DatabaseHelper.instance.deleteAccount(account.id!, deleteLinkedTransactions: true);
+                  print('DEBUG: [AccountsPage] Account deleted successfully');
 
-                await DatabaseHelper.instance.deleteAccount(account.id!);
-                      print('DEBUG: [AccountsPage] Account deleted successfully');
-
-                Navigator.pop(context);
-                _loadAccounts();
-              } catch (e) {
-                      print('DEBUG: [AccountsPage] Error deleting account: $e');
-
-                Navigator.pop(context);
-                _showError('Cannot delete account with linked transactions', themeData);
-              }
-            },
-            child: Text('Delete'),
-          ),
-        ],
+                  Navigator.pop(context);
+                  _loadAccounts();
+                } catch (e) {
+                  print('DEBUG: [AccountsPage] Error deleting account: $e');
+                  Navigator.pop(context);
+                  _showError('Error deleting account: ${e.toString()}', themeData);
+                }
+              },
+              child: Text('Delete'),
+            ),
+          ],
+        ),
       ),
     );
   }
