@@ -102,12 +102,16 @@ class SavingsGoalCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(5),
                     ),
                   ),
-                  Container(
-                    height: 10,
-                    width: MediaQuery.of(context).size.width * 0.8 * progress,
-                    decoration: BoxDecoration(
-                      color: themeData.primaryColor,
-                      borderRadius: BorderRadius.circular(5),
+                  FractionallySizedBox(
+                    widthFactor: progress,
+                    child: Container(
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: progress >= 1.0 
+                            ? CupertinoColors.systemGreen 
+                            : themeData.primaryColor,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
                     ),
                   ),
                 ],

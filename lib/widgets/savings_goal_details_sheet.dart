@@ -39,163 +39,169 @@ class SavingsGoalDetailsSheet extends StatelessWidget {
       accountName = account.name;
     }
     
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: themeData.cardColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    return DefaultTextStyle(
+      style: TextStyle(
+        color: themeData.textColor,
+        fontSize: 14.0,
       ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Savings Goal Details',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: themeData.textColor,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Icon(CupertinoIcons.xmark_circle, color: CupertinoColors.systemGrey),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: themeData.brightness == Brightness.dark
-                    ? Color(0xFF2C2C2E) // Darker gray
-                    : CupertinoColors.systemGrey6,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: themeData.cardColor,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    goal.name,
+                    'Savings Goal Details',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: themeData.textColor,
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    goal.reason,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: themeData.textColor.withOpacity(0.7),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  _detailRow('Target Amount', '₱${goal.targetAmount.toStringAsFixed(2)}', themeData),
-                  _detailRow('Current Amount', '₱${goal.currentAmount.toStringAsFixed(2)}', themeData),
-                  _detailRow('Remaining', '₱${(goal.targetAmount - goal.currentAmount).toStringAsFixed(2)}', themeData),
-                  _detailRow('Account', accountName, themeData),
-                  SizedBox(height: 16),
-                  Stack(
-                    children: [
-                      Container(
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: themeData.brightness == Brightness.dark
-                              ? CupertinoColors.systemGrey.withOpacity(0.2)
-                              : CupertinoColors.systemGrey5,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                      ),
-                      Container(
-                        height: 10,
-                        width: (MediaQuery.of(context).size.width - 64) * progress,
-                        decoration: BoxDecoration(
-                          color: themeData.primaryColor,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    '${(progress * 100).toStringAsFixed(1)}% Complete',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: themeData.primaryColor,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 16),
-                  _detailRow('Start Date', DateFormat('MMM dd, yyyy').format(goal.startDate), themeData),
-                  _detailRow('Target Date', DateFormat('MMM dd, yyyy').format(goal.targetDate), themeData),
-                  _detailRow('Days Remaining', '${goal.daysRemaining} days', themeData),
-                  SizedBox(height: 16),
-                  Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: themeData.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Savings Recommendations:',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: themeData.primaryColor,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        _recommendationRow('Daily', '₱${goal.dailySavingsNeeded.toStringAsFixed(2)}', themeData),
-                        _recommendationRow('Weekly', '₱${goal.weeklySavingsNeeded.toStringAsFixed(2)}', themeData),
-                        _recommendationRow('Monthly', '₱${goal.monthlySavingsNeeded.toStringAsFixed(2)}', themeData),
-                      ],
-                    ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Icon(CupertinoIcons.xmark_circle, color: CupertinoColors.systemGrey),
                   ),
                 ],
               ),
-            ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: () {
-                    // Functionality to add money to the savings goal
-                    _showAddFundsSheet(context, goal, themeData);
-                  },
-                  child: Text('Add Funds', style: TextStyle(color: themeData.primaryColor)),
+              SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: themeData.brightness == Brightness.dark
+                      ? Color(0xFF2C2C2E) // Darker gray
+                      : CupertinoColors.systemGrey6,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: () {
-                    // Functionality to edit the savings goal
-                    _showEditSavingsGoalSheet(context, goal, accounts, themeData);
-                  },
-                  child: Text('Edit Goal'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      goal.name,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: themeData.textColor,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      goal.reason,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: themeData.textColor.withOpacity(0.7),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    _detailRow('Target Amount', '₱${goal.targetAmount.toStringAsFixed(2)}', themeData),
+                    _detailRow('Current Amount', '₱${goal.currentAmount.toStringAsFixed(2)}', themeData),
+                    _detailRow('Remaining', '₱${(goal.targetAmount - goal.currentAmount).toStringAsFixed(2)}', themeData),
+                    _detailRow('Account', accountName, themeData),
+                    SizedBox(height: 16),
+                    Stack(
+                      children: [
+                        Container(
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: themeData.brightness == Brightness.dark
+                                ? CupertinoColors.systemGrey.withOpacity(0.2)
+                                : CupertinoColors.systemGrey5,
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                        Container(
+                          height: 10,
+                          width: (MediaQuery.of(context).size.width - 64) * progress,
+                          decoration: BoxDecoration(
+                            color: themeData.primaryColor,
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      '${(progress * 100).toStringAsFixed(1)}% Complete',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: themeData.primaryColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 16),
+                    _detailRow('Start Date', DateFormat('MMM dd, yyyy').format(goal.startDate), themeData),
+                    _detailRow('Target Date', DateFormat('MMM dd, yyyy').format(goal.targetDate), themeData),
+                    _detailRow('Days Remaining', '${goal.daysRemaining} days', themeData),
+                    SizedBox(height: 16),
+                    Container(
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: themeData.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Savings Recommendations:',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: themeData.primaryColor,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          _recommendationRow('Daily', '₱${goal.dailySavingsNeeded.toStringAsFixed(2)}', themeData),
+                          _recommendationRow('Weekly', '₱${goal.weeklySavingsNeeded.toStringAsFixed(2)}', themeData),
+                          _recommendationRow('Monthly', '₱${goal.monthlySavingsNeeded.toStringAsFixed(2)}', themeData),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: () {
-                    // Functionality to delete the savings goal
-                    _confirmDeleteSavingsGoal(context, goal, themeData);
-                  },
-                  child: Text('Delete', style: TextStyle(color: themeData.expenseColor)),
-                ),
-              ],
-            ),
-          ],
+              ),
+              SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      // Functionality to add money to the savings goal
+                      _showAddFundsSheet(context, goal, themeData);
+                    },
+                    child: Text('Add Funds', style: TextStyle(color: themeData.primaryColor)),
+                  ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      // Functionality to edit the savings goal
+                      _showEditSavingsGoalSheet(context, goal, accounts, themeData);
+                    },
+                    child: Text('Edit Goal'),
+                  ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      // Functionality to delete the savings goal
+                      _confirmDeleteSavingsGoal(context, goal, themeData);
+                    },
+                    child: Text('Delete', style: TextStyle(color: themeData.expenseColor)),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -253,121 +259,126 @@ class SavingsGoalDetailsSheet extends StatelessWidget {
   }
 
   void _showAddFundsSheet(BuildContext context, SavingsGoal goal, AppThemeData themeData) {
-      print('DEBUG: [SavingsGoalDetailsSheet] Opening add funds sheet for ${goal.name}');
+    print('DEBUG: [SavingsGoalDetailsSheet] Opening add funds sheet for ${goal.name}');
 
     final TextEditingController amountController = TextEditingController();
     
     showCupertinoModalPopup(
       context: context,
-      builder: (context) => Container(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          top: 16,
-          left: 16,
-          right: 16,
+      builder: (context) => DefaultTextStyle(
+        style: TextStyle(
+          color: themeData.textColor,
+          fontSize: 14.0,
         ),
-        decoration: BoxDecoration(
-          color: themeData.cardColor,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Add Funds to ${goal.name}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: themeData.textColor,
+        child: Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            top: 16,
+            left: 16,
+            right: 16,
+          ),
+          decoration: BoxDecoration(
+            color: themeData.cardColor,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Add Funds to ${goal.name}',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: themeData.textColor,
+                      ),
                     ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(CupertinoIcons.xmark, color: CupertinoColors.systemGrey),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Amount to Add:',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: themeData.textColor,
-                ),
-              ),
-              SizedBox(height: 8),
-              CupertinoTextField(
-                controller: amountController,
-                placeholder: '0.00',
-                prefix: Padding(
-                  padding: EdgeInsets.only(left: 12),
-                  child: Text('₱', style: TextStyle(color: themeData.textColor)),
-                ),
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                decoration: BoxDecoration(
-                  color: themeData.brightness == Brightness.dark
-                      ? Color(0xFF2C2C2E) // Darker gray
-                      : CupertinoColors.systemGrey6,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                style: TextStyle(color: themeData.textColor),
-              ),
-              SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: CupertinoButton(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      onPressed: () => Navigator.pop(context),
-                      child: Text('Cancel'),
-                      color: themeData.brightness == Brightness.dark
-                          ? Color(0xFF2C2C2E) // Darker gray
-                          : CupertinoColors.systemGrey6,
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Icon(CupertinoIcons.xmark, color: CupertinoColors.systemGrey),
                     ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Amount to Add:',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: themeData.textColor,
                   ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: CupertinoButton.filled(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      onPressed: () {
-                        final amount = double.tryParse(amountController.text);
-                        if (amount == null || amount <= 0) {
-                                print('DEBUG: [SavingsGoalDetailsSheet] Invalid amount entered: ${amountController.text}');
-
-                          SavingsHelper.showError(context, 'Please enter a valid amount');
-                          return;
-                        }
-
-                        print('DEBUG: [SavingsGoalDetailsSheet] Adding $amount to goal ${goal.name}');
-    print('DEBUG: [SavingsGoalDetailsSheet] Before: ${goal.currentAmount}, After: ${goal.currentAmount + amount}');
-
-                        
-                        // Create updated goal with new amount
-                        final updatedGoal = goal.copyWith(
-                          currentAmount: goal.currentAmount + amount,
-                        );
-                        
-                        // Call the callback with the updated goal
-                        onGoalUpdated(updatedGoal);
-                            print('DEBUG: [SavingsGoalDetailsSheet] Goal updated successfully');
-
-                        Navigator.pop(context); // Close the add funds sheet
-                        Navigator.pop(context); // Close the details sheet
-                      },
-                      child: Text('Add Funds'),
+                ),
+                SizedBox(height: 8),
+                CupertinoTextField(
+                  controller: amountController,
+                  placeholder: '0.00',
+                  prefix: Padding(
+                    padding: EdgeInsets.only(left: 12),
+                    child: Text('₱', style: TextStyle(color: themeData.textColor)),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: themeData.brightness == Brightness.dark
+                        ? Color(0xFF2C2C2E) // Darker gray
+                        : CupertinoColors.systemGrey6,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  style: TextStyle(color: themeData.textColor),
+                ),
+                SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: CupertinoButton(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('Cancel'),
+                        color: themeData.brightness == Brightness.dark
+                            ? Color(0xFF2C2C2E) // Darker gray
+                            : CupertinoColors.systemGrey6,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: CupertinoButton.filled(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        onPressed: () {
+                          final amount = double.tryParse(amountController.text);
+                          if (amount == null || amount <= 0) {
+                            print('DEBUG: [SavingsGoalDetailsSheet] Invalid amount entered: ${amountController.text}');
+
+                            SavingsHelper.showError(context, 'Please enter a valid amount');
+                            return;
+                          }
+
+                          print('DEBUG: [SavingsGoalDetailsSheet] Adding $amount to goal ${goal.name}');
+                          print('DEBUG: [SavingsGoalDetailsSheet] Before: ${goal.currentAmount}, After: ${goal.currentAmount + amount}');
+
+                          // Create updated goal with new amount
+                          final updatedGoal = goal.copyWith(
+                            currentAmount: goal.currentAmount + amount,
+                          );
+                          
+                          // Call the callback with the updated goal
+                          onGoalUpdated(updatedGoal);
+                          print('DEBUG: [SavingsGoalDetailsSheet] Goal updated successfully');
+
+                          Navigator.pop(context); // Close the add funds sheet
+                          Navigator.pop(context); // Close the details sheet
+                        },
+                        child: Text('Add Funds'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -388,209 +399,71 @@ class SavingsGoalDetailsSheet extends StatelessWidget {
     DateTime targetDate = goal.targetDate;
     Account? selectedAccount;
     
-    if (goal.accountId != null && accounts.isNotEmpty) {
-      selectedAccount = accounts.firstWhere(
-        (acc) => acc.id == goal.accountId,
-        orElse: () => accounts.first,
-      );
-    } else if (accounts.isNotEmpty) {
+    // Make sure we have a valid selectedAccount that exists in the accounts list
+    if (accounts.isEmpty) {
+      // No accounts available, don't show account selection
+      selectedAccount = null;
+    } else if (goal.accountId != null) {
+      // Try to find the account by ID
+      try {
+        selectedAccount = accounts.firstWhere((acc) => acc.id == goal.accountId);
+      } catch (e) {
+        // If not found, use the first account
+        selectedAccount = accounts.first;
+      }
+    } else {
+      // No account ID, use the first account
       selectedAccount = accounts.first;
     }
     
     showCupertinoModalPopup(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => Container(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            top: 16,
-            left: 16,
-            right: 16,
-          ),
-          decoration: BoxDecoration(
-            color: themeData.cardColor,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Edit Savings Goal',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: themeData.textColor,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Icon(CupertinoIcons.xmark, color: CupertinoColors.systemGrey),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  
-                  // Name Field
-                  Text(
-                    'Goal Name:',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: themeData.textColor,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  CupertinoTextField(
-                    controller: nameController,
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: themeData.brightness == Brightness.dark
-                          ? Color(0xFF2C2C2E) // Darker gray
-                          : CupertinoColors.systemGrey6,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    style: TextStyle(color: themeData.textColor),
-                  ),
-                  SizedBox(height: 16),
-                  
-                  // Reason Field
-                  Text(
-                    'Reason:',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: themeData.textColor,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  CupertinoTextField(
-                    controller: reasonController,
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: themeData.brightness == Brightness.dark
-                          ? Color(0xFF2C2C2E) // Darker gray
-                          : CupertinoColors.systemGrey6,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    style: TextStyle(color: themeData.textColor),
-                  ),
-                  SizedBox(height: 16),
-                  
-                  // Target Amount Field
-                  Text(
-                    'Target Amount:',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: themeData.textColor,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  CupertinoTextField(
-                    controller: amountController,
-                    prefix: Padding(
-                      padding: EdgeInsets.only(left: 12),
-                      child: Text('₱', style: TextStyle(color: themeData.textColor)),
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: themeData.brightness == Brightness.dark
-                          ? Color(0xFF2C2C2E) // Darker gray
-                          : CupertinoColors.systemGrey6,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
-                    style: TextStyle(color: themeData.textColor),
-                  ),
-                  SizedBox(height: 16),
-                  
-                  // Current Amount Field
-                  Text(
-                    'Current Amount:',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: themeData.textColor,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  CupertinoTextField(
-                    controller: currentAmountController,
-                    prefix: Padding(
-                      padding: EdgeInsets.only(left: 12),
-                      child: Text('₱', style: TextStyle(color: themeData.textColor)),
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: themeData.brightness == Brightness.dark
-                          ? Color(0xFF2C2C2E) // Darker gray
-                          : CupertinoColors.systemGrey6,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
-                    style: TextStyle(color: themeData.textColor),
-                  ),
-                  SizedBox(height: 16),
-                  
-                  // Target Date Field
-                  Text(
-                    'Target Date:',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: themeData.textColor,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () async {
-                      await SavingsHelper.showDatePicker(
-                        context, 
-                        themeData, 
-                        targetDate, 
-                        (date) {
-                          setState(() {
-                            targetDate = date;
-                          });
-                        },
-                      );
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: themeData.brightness == Brightness.dark
-                            ? Color(0xFF2C2C2E) // Darker gray
-                            : CupertinoColors.systemGrey6,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            DateFormat('MMM dd, yyyy').format(targetDate),
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: themeData.textColor,
-                            ),
+      builder: (context) => DefaultTextStyle(
+        style: TextStyle(
+          color: themeData.textColor,
+          fontSize: 14.0,
+        ),
+        child: StatefulBuilder(
+          builder: (context, setState) => Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              top: 16,
+              left: 16,
+              right: 16,
+            ),
+            decoration: BoxDecoration(
+              color: themeData.cardColor,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Edit Savings Goal',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: themeData.textColor,
                           ),
-                          Icon(CupertinoIcons.calendar, color: CupertinoColors.systemGrey),
-                        ],
-                      ),
+                        ),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Icon(CupertinoIcons.xmark, color: CupertinoColors.systemGrey),
+                        ),
+                      ],
                     ),
-                  ),
-                  SizedBox(height: 16),
-                  
-                  // Account Selection
-                  if (accounts.isNotEmpty) ...[
+                    SizedBox(height: 16),
+                    
+                    // Name Field
                     Text(
-                      'Associated Account:',
+                      'Goal Name:',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
@@ -598,115 +471,267 @@ class SavingsGoalDetailsSheet extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 8),
-                    Material(  // Needed for DropdownButton
-                      color: Colors.transparent,
+                    CupertinoTextField(
+                      controller: nameController,
+                      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: themeData.brightness == Brightness.dark
+                            ? Color(0xFF2C2C2E) // Darker gray
+                            : CupertinoColors.systemGrey6,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      style: TextStyle(color: themeData.textColor),
+                    ),
+                    SizedBox(height: 16),
+                    
+                    // Reason Field
+                    Text(
+                      'Reason:',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: themeData.textColor,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    CupertinoTextField(
+                      controller: reasonController,
+                      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: themeData.brightness == Brightness.dark
+                            ? Color(0xFF2C2C2E) // Darker gray
+                            : CupertinoColors.systemGrey6,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      style: TextStyle(color: themeData.textColor),
+                    ),
+                    SizedBox(height: 16),
+                    
+                    // Target Amount Field
+                    Text(
+                      'Target Amount:',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: themeData.textColor,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    CupertinoTextField(
+                      controller: amountController,
+                      prefix: Padding(
+                        padding: EdgeInsets.only(left: 12),
+                        child: Text('₱', style: TextStyle(color: themeData.textColor)),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: themeData.brightness == Brightness.dark
+                            ? Color(0xFF2C2C2E) // Darker gray
+                            : CupertinoColors.systemGrey6,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      style: TextStyle(color: themeData.textColor),
+                    ),
+                    SizedBox(height: 16),
+                    
+                    // Current Amount Field
+                    Text(
+                      'Current Amount:',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: themeData.textColor,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    CupertinoTextField(
+                      controller: currentAmountController,
+                      prefix: Padding(
+                        padding: EdgeInsets.only(left: 12),
+                        child: Text('₱', style: TextStyle(color: themeData.textColor)),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: themeData.brightness == Brightness.dark
+                            ? Color(0xFF2C2C2E) // Darker gray
+                            : CupertinoColors.systemGrey6,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      style: TextStyle(color: themeData.textColor),
+                    ),
+                    SizedBox(height: 16),
+                    
+                    // Target Date Field
+                    Text(
+                      'Target Date:',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: themeData.textColor,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () async {
+                        await SavingsHelper.showDatePicker(
+                          context, 
+                          themeData, 
+                          targetDate, 
+                          (date) {
+                            setState(() {
+                              targetDate = date;
+                            });
+                          },
+                        );
+                      },
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                         decoration: BoxDecoration(
                           color: themeData.brightness == Brightness.dark
                               ? Color(0xFF2C2C2E) // Darker gray
                               : CupertinoColors.systemGrey6,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<Account>(
-                            value: selectedAccount,
-                            isExpanded: true,
-                            icon: Icon(CupertinoIcons.chevron_down, size: 16, color: themeData.textColor),
-                            style: TextStyle(
-                              color: themeData.textColor,
-                              fontSize: 16,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              DateFormat('MMM dd, yyyy').format(targetDate),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: themeData.textColor,
+                              ),
                             ),
-                            dropdownColor: themeData.cardColor,
-                            items: accounts.map((Account account) {
-                              return DropdownMenuItem<Account>(
-                                value: account,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      SavingsHelper.getAccountIcon(account.type),
-                                      color: SavingsHelper.getAccountColor(account.type),
-                                      size: 20,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      account.name,
-                                      style: TextStyle(color: themeData.textColor),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (Account? newValue) {
-                              if (newValue != null) {
-                                setState(() {
-                                  selectedAccount = newValue;
-                                });
-                              }
-                            },
+                            Icon(CupertinoIcons.calendar, color: CupertinoColors.systemGrey),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    
+                    // Account Selection
+                    if (accounts.isNotEmpty) ...[
+                      Text(
+                        'Associated Account:',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: themeData.textColor,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Material(  // Needed for DropdownButton
+                        color: Colors.transparent,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                          decoration: BoxDecoration(
+                            color: themeData.brightness == Brightness.dark
+                                ? Color(0xFF2C2C2E) // Darker gray
+                                : CupertinoColors.systemGrey6,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<Account>(
+                              value: selectedAccount,
+                              isExpanded: true,
+                              icon: Icon(CupertinoIcons.chevron_down, size: 16, color: themeData.textColor),
+                              style: TextStyle(
+                                color: themeData.textColor,
+                                fontSize: 16,
+                              ),
+                              dropdownColor: themeData.cardColor,
+                              items: accounts.map((Account account) {
+                                return DropdownMenuItem<Account>(
+                                  value: account,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        SavingsHelper.getAccountIcon(account.type),
+                                        color: SavingsHelper.getAccountColor(account.type),
+                                        size: 20,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        account.name,
+                                        style: TextStyle(color: themeData.textColor),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (Account? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    selectedAccount = newValue;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                    ],
+                    
+                    // Submit Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: CupertinoButton(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        borderRadius: BorderRadius.circular(8),
+                        color: themeData.primaryColor,
+                        onPressed: () {
+                          if (nameController.text.trim().isEmpty) {
+                            SavingsHelper.showError(context, 'Please enter a goal name');
+                            return;
+                          }
+
+                          final targetAmount = double.tryParse(amountController.text);
+                          if (targetAmount == null || targetAmount <= 0) {
+                            SavingsHelper.showError(context, 'Please enter a valid target amount');
+                            return;
+                          }
+
+                          final currentAmount = double.tryParse(currentAmountController.text);
+                          if (currentAmount == null || currentAmount < 0) {
+                            SavingsHelper.showError(context, 'Please enter a valid current amount');
+                            return;
+                          }
+
+                          if (targetDate.isBefore(DateTime.now())) {
+                            SavingsHelper.showError(context, 'Target date must be in the future');
+                            return;
+                          }
+
+                          // Create updated goal
+                          final updatedGoal = goal.copyWith(
+                            name: nameController.text.trim(),
+                            reason: reasonController.text.trim(),
+                            targetAmount: targetAmount,
+                            currentAmount: currentAmount,
+                            targetDate: targetDate,
+                            accountId: selectedAccount?.id,
+                          );
+
+                          // Call the callback with the updated goal
+                          onGoalUpdated(updatedGoal);
+                          Navigator.pop(context); // Close the edit sheet
+                          Navigator.pop(context); // Close the details sheet
+                        },
+                        child: Text(
+                          'Save Changes',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: CupertinoColors.white,
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 24),
                   ],
-                  
-                  // Submit Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: CupertinoButton(
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                      borderRadius: BorderRadius.circular(8),
-                      color: themeData.primaryColor,
-                      onPressed: () {
-                        if (nameController.text.trim().isEmpty) {
-                          SavingsHelper.showError(context, 'Please enter a goal name');
-                          return;
-                        }
-
-                        final targetAmount = double.tryParse(amountController.text);
-                        if (targetAmount == null || targetAmount <= 0) {
-                          SavingsHelper.showError(context, 'Please enter a valid target amount');
-                          return;
-                        }
-
-                        final currentAmount = double.tryParse(currentAmountController.text);
-                        if (currentAmount == null || currentAmount < 0) {
-                          SavingsHelper.showError(context, 'Please enter a valid current amount');
-                          return;
-                        }
-
-                        if (targetDate.isBefore(DateTime.now())) {
-                          SavingsHelper.showError(context, 'Target date must be in the future');
-                          return;
-                        }
-
-                        // Create updated goal
-                        final updatedGoal = goal.copyWith(
-                          name: nameController.text.trim(),
-                          reason: reasonController.text.trim(),
-                          targetAmount: targetAmount,
-                          currentAmount: currentAmount,
-                          targetDate: targetDate,
-                          accountId: selectedAccount?.id,
-                        );
-
-                        // Call the callback with the updated goal
-                        onGoalUpdated(updatedGoal);
-                        Navigator.pop(context); // Close the edit sheet
-                        Navigator.pop(context); // Close the details sheet
-                      },
-                      child: Text(
-                        'Save Changes',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: CupertinoColors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -722,27 +747,30 @@ class SavingsGoalDetailsSheet extends StatelessWidget {
   ) {
     showCupertinoDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text('Delete Savings Goal'),
-        content: Text('Are you sure you want to delete "${goal.name}"? This action cannot be undone.'),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            child: Text('Cancel'),
-            onPressed: () => Navigator.pop(context),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            child: Text('Delete'),
-            onPressed: () {
-              if (goal.id != null) {
+      builder: (context) => DefaultTextStyle(
+        style: TextStyle(
+          color: themeData.textColor,
+          fontSize: 14.0,
+        ),
+        child: CupertinoAlertDialog(
+          title: Text('Delete Savings Goal'),
+          content: Text('Are you sure you want to delete "${goal.name}"? This action cannot be undone.'),
+          actions: [
+            CupertinoDialogAction(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
+            ),
+            CupertinoDialogAction(
+              isDestructiveAction: true,
+              child: Text('Delete'),
+              onPressed: () {
                 onGoalDeleted(goal.id!);
-              }
-              Navigator.pop(context); // Close the dialog
-              Navigator.pop(context); // Close the details sheet
-            },
-          ),
-        ],
+                Navigator.pop(context); // Close the dialog
+                Navigator.pop(context); // Close the details sheet
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

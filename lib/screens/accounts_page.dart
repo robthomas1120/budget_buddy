@@ -581,178 +581,185 @@ void _showAddAccountDialog() {
     
     showCupertinoModalPopup(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => Container(
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: themeData.cardColor,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Edit Account',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: themeData.textColor,
+      builder: (context) => DefaultTextStyle(
+        style: TextStyle(
+          color: themeData.textColor,
+          fontFamily: '.SF Pro Text',
+          fontSize: 16,
+        ),
+        child: StatefulBuilder(
+          builder: (context, setState) => Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: themeData.cardColor,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Edit Account',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: themeData.textColor,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 16),
-                CupertinoTextField(
-                  controller: _nameController,
-                  placeholder: 'Account Name',
-                  padding: EdgeInsets.all(12),
-                  style: TextStyle(color: themeData.textColor),
-                  placeholderStyle: TextStyle(color: themeData.brightness == Brightness.dark
-                      ? CupertinoColors.systemGrey
-                      : CupertinoColors.systemGrey),
-                  decoration: BoxDecoration(
-                    color: themeData.brightness == Brightness.dark
-                        ? Color(0xFF2C2C2E) // Darker gray
-                        : CupertinoColors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: themeData.brightness == Brightness.dark
-                        ? CupertinoColors.systemGrey.withOpacity(0.5)
-                        : CupertinoColors.systemGrey5),
+                  SizedBox(height: 16),
+                  CupertinoTextField(
+                    controller: _nameController,
+                    placeholder: 'Account Name',
+                    padding: EdgeInsets.all(12),
+                    style: TextStyle(color: themeData.textColor),
+                    placeholderStyle: TextStyle(color: themeData.brightness == Brightness.dark
+                        ? CupertinoColors.systemGrey
+                        : CupertinoColors.systemGrey),
+                    decoration: BoxDecoration(
+                      color: themeData.brightness == Brightness.dark
+                          ? Color(0xFF2C2C2E) // Darker gray
+                          : CupertinoColors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: themeData.brightness == Brightness.dark
+                          ? CupertinoColors.systemGrey.withOpacity(0.5)
+                          : CupertinoColors.systemGrey5),
+                    ),
                   ),
-                ),
-                SizedBox(height: 16),
-                Container(
-                  decoration: BoxDecoration(
-                    color: themeData.brightness == Brightness.dark
-                        ? Color(0xFF2C2C2E) // Darker gray
-                        : CupertinoColors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: themeData.brightness == Brightness.dark
-                        ? CupertinoColors.systemGrey.withOpacity(0.5)
-                        : CupertinoColors.systemGrey5),
+                  SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: themeData.brightness == Brightness.dark
+                          ? Color(0xFF2C2C2E) // Darker gray
+                          : CupertinoColors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: themeData.brightness == Brightness.dark
+                          ? CupertinoColors.systemGrey.withOpacity(0.5)
+                          : CupertinoColors.systemGrey5),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Account Type',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: themeData.brightness == Brightness.dark
+                                ? CupertinoColors.systemGrey
+                                : CupertinoColors.systemGrey,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        CupertinoSlidingSegmentedControl<String>(
+                          groupValue: _types.contains(_selectedType) ? _selectedType : 'Other',
+                          children: {
+                            for (String type in _types)
+                              type: Text(
+                                type,
+                                style: TextStyle(
+                                  color: themeData.textColor,
+                                ),
+                              ),
+                          },
+                          backgroundColor: themeData.brightness == Brightness.dark
+                              ? Color(0xFF1C1C1E) // Dark background
+                              : CupertinoColors.systemGrey6,
+                          thumbColor: themeData.brightness == Brightness.dark
+                              ? Color(0xFF3A3A3C) // Slightly lighter than background
+                              : CupertinoColors.white,
+                          onValueChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _selectedType = value;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  child: Column(
+                  SizedBox(height: 16),
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Account Type',
-                        style: TextStyle(
-                          fontSize: 12,
+                      CupertinoTextField(
+                        controller: _balanceController,
+                        placeholder: 'Balance (₱)',
+                        padding: EdgeInsets.all(12),
+                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        style: TextStyle(color: themeData.textColor),
+                        placeholderStyle: TextStyle(color: themeData.brightness == Brightness.dark
+                            ? CupertinoColors.systemGrey
+                            : CupertinoColors.systemGrey),
+                        decoration: BoxDecoration(
                           color: themeData.brightness == Brightness.dark
-                              ? CupertinoColors.systemGrey
-                              : CupertinoColors.systemGrey,
+                              ? Color(0xFF2C2C2E) // Darker gray
+                              : CupertinoColors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: themeData.brightness == Brightness.dark
+                              ? CupertinoColors.systemGrey.withOpacity(0.5)
+                              : CupertinoColors.systemGrey5),
                         ),
                       ),
                       SizedBox(height: 4),
-                      CupertinoSlidingSegmentedControl<String>(
-                        groupValue: _types.contains(_selectedType) ? _selectedType : 'Other',
-                        children: {
-                          for (String type in _types)
-                            type: Text(
-                              type,
-                              style: TextStyle(
-                                color: themeData.textColor,
-                              ),
-                            ),
-                        },
-                        backgroundColor: themeData.brightness == Brightness.dark
-                            ? Color(0xFF1C1C1E) // Dark background
-                            : CupertinoColors.systemGrey6,
-                        thumbColor: themeData.brightness == Brightness.dark
-                            ? Color(0xFF3A3A3C) // Slightly lighter than background
-                            : CupertinoColors.white,
-                        onValueChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedType = value;
-                            });
-                          }
-                        },
+                      Text(
+                        'Editing balance directly might not match transaction history',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: themeData.textColor.withOpacity(0.6),
+                        ),
                       ),
                     ],
                   ),
-                ),
-                SizedBox(height: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CupertinoTextField(
-                      controller: _balanceController,
-                      placeholder: 'Balance (₱)',
-                      padding: EdgeInsets.all(12),
-                      keyboardType: TextInputType.numberWithOptions(decimal: true),
-                      style: TextStyle(color: themeData.textColor),
-                      placeholderStyle: TextStyle(color: themeData.brightness == Brightness.dark
-                          ? CupertinoColors.systemGrey
-                          : CupertinoColors.systemGrey),
-                      decoration: BoxDecoration(
-                        color: themeData.brightness == Brightness.dark
-                            ? Color(0xFF2C2C2E) // Darker gray
-                            : CupertinoColors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: themeData.brightness == Brightness.dark
-                            ? CupertinoColors.systemGrey.withOpacity(0.5)
-                            : CupertinoColors.systemGrey5),
+                  SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      CupertinoButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('Cancel', style: TextStyle(color: themeData.secondaryColor)),
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Editing balance directly might not match transaction history',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: themeData.textColor.withOpacity(0.6),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    CupertinoButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text('Cancel', style: TextStyle(color: themeData.secondaryColor)),
-                    ),
-                    CupertinoButton.filled(
-                      onPressed: () async {
-                        if (_nameController.text.trim().isEmpty) {
-                          _showError('Please enter an account name', themeData);
-                          return;
-                        }
+                      CupertinoButton.filled(
+                        onPressed: () async {
+                          if (_nameController.text.trim().isEmpty) {
+                            _showError('Please enter an account name', themeData);
+                            return;
+                          }
 
-                        if (_balanceController.text.trim().isEmpty) {
-                          _showError('Please enter a balance', themeData);
-                          return;
-                        }
+                          if (_balanceController.text.trim().isEmpty) {
+                            _showError('Please enter a balance', themeData);
+                            return;
+                          }
 
-                        final balance = double.tryParse(_balanceController.text);
-                        if (balance == null) {
-                          _showError('Please enter a valid balance', themeData);
-                          return;
-                        }
+                          final balance = double.tryParse(_balanceController.text);
+                          if (balance == null) {
+                            _showError('Please enter a valid balance', themeData);
+                            return;
+                          }
 print('DEBUG: [AccountsPage] Updating account ${account.id}');
     print('DEBUG: [AccountsPage] New values - Name: ${_nameController.text.trim()}, Type: ${_selectedType}, Balance: ${_balanceController.text}');
 
-                        final updatedAccount = account.copyWith(
-                          name: _nameController.text.trim(),
-                          type: _selectedType,
-                          balance: balance,
-                        );
+                          final updatedAccount = account.copyWith(
+                            name: _nameController.text.trim(),
+                            type: _selectedType,
+                            balance: balance,
+                          );
 
-                        await DatabaseHelper.instance.updateAccount(updatedAccount);
+                          await DatabaseHelper.instance.updateAccount(updatedAccount);
                             print('DEBUG: [AccountsPage] Account updated successfully');
 
-                        Navigator.pop(context);
-                        _loadAccounts();
-                      },
-                      child: Text('Save'),
-                    ),
-                  ],
-                ),
-              ],
+                          Navigator.pop(context);
+                          _loadAccounts();
+                        },
+                        child: Text('Save'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

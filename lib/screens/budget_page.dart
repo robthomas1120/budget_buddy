@@ -37,9 +37,9 @@ Future<void> _loadBudgets() async {
   await DatabaseHelper.instance.recalculateAllActiveBudgets();
   print('DEBUG: Recalculated all active budgets');
   
-  // Then fetch the updated budgets
-  final budgets = await DatabaseHelper.instance.getAllBudgets();
-  print('DEBUG: Loaded ${budgets.length} budgets from database');
+  // Then fetch only the active budgets
+  final budgets = await DatabaseHelper.instance.getActiveBudgets();
+  print('DEBUG: Loaded ${budgets.length} active budgets from database');
   
   // Debug print each budget's details
   for (var budget in budgets) {
@@ -238,12 +238,14 @@ Future<void> _loadBudgets() async {
                       borderRadius: BorderRadius.circular(5),
                     ),
                   ),
-                  Container(
-                    height: 10,
-                    width: MediaQuery.of(context).size.width * 0.8 * progress,
-                    decoration: BoxDecoration(
-                      color: statusColor,
-                      borderRadius: BorderRadius.circular(5),
+                  FractionallySizedBox(
+                    widthFactor: progress,
+                    child: Container(
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
                     ),
                   ),
                 ],

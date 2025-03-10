@@ -9,6 +9,7 @@ class SavingsGoal {
   final DateTime startDate;
   final DateTime targetDate;
   final int? accountId;
+  final bool isActive;
 
   SavingsGoal({
     this.id,
@@ -19,6 +20,7 @@ class SavingsGoal {
     required this.startDate,
     required this.targetDate,
     this.accountId,
+    this.isActive = true,
   });
   Map<String, dynamic> toMap() {
     return {
@@ -30,6 +32,7 @@ class SavingsGoal {
       'start_date': startDate.millisecondsSinceEpoch,
       'target_date': targetDate.millisecondsSinceEpoch,
       'account_id': accountId,
+      'is_active': isActive ? 1 : 0,
     };
   }
     factory SavingsGoal.fromMap(Map<String, dynamic> map) {
@@ -42,6 +45,7 @@ class SavingsGoal {
       startDate: DateTime.fromMillisecondsSinceEpoch(map['start_date']),
       targetDate: DateTime.fromMillisecondsSinceEpoch(map['target_date']),
       accountId: map['account_id'],
+      isActive: map['is_active'] == null ? true : map['is_active'] == 1,
     );
   }
 
@@ -83,6 +87,7 @@ class SavingsGoal {
     DateTime? startDate,
     DateTime? targetDate,
     int? accountId,
+    bool? isActive,
   }) {
     return SavingsGoal(
       id: id ?? this.id,
@@ -93,6 +98,7 @@ class SavingsGoal {
       startDate: startDate ?? this.startDate,
       targetDate: targetDate ?? this.targetDate,
       accountId: accountId ?? this.accountId,
+      isActive: isActive ?? this.isActive,
     );
   }
 }

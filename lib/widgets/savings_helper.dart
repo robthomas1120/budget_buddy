@@ -12,6 +12,13 @@ class SavingsHelper {
     DateTime initialDate,
     Function(DateTime) onDateSelected,
   ) async {
+    // Create a minimum date with the time set to midnight to avoid time comparison issues
+    final now = DateTime.now();
+    final minimumDate = DateTime(now.year, now.month, now.day);
+    
+    // Ensure initialDate is not before minimumDate
+    final adjustedInitialDate = initialDate.isBefore(minimumDate) ? minimumDate : initialDate;
+    
     await showCupertinoModalPopup(
       context: context,
       builder: (BuildContext context) {
@@ -40,8 +47,8 @@ class SavingsHelper {
               Expanded(
                 child: CupertinoDatePicker(
                   mode: CupertinoDatePickerMode.date,
-                  initialDateTime: initialDate,
-                  minimumDate: DateTime.now(),
+                  initialDateTime: adjustedInitialDate,
+                  minimumDate: minimumDate,
                   maximumDate: DateTime.now().add(Duration(days: 1825)), // 5 years
                   onDateTimeChanged: (DateTime newDate) {
                     onDateSelected(newDate);

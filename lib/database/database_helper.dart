@@ -21,44 +21,45 @@ class DatabaseHelper {
     return _database!;
   }
 
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
+Future<Database> _initDB(String filePath) async {
+  final dbPath = await getDatabasesPath();
+  final path = join(dbPath, filePath);
 
-    return await openDatabase(
-      path,
-      version: 3, // Increased version to 3 for budget table
-      onCreate: _createDB,
-      onUpgrade: _upgradeDB,
-    );
-  }
+  return await openDatabase(
+    path,
+    version: 5,  // Increase version to 5 to trigger the upgrade
+    onCreate: _createDB,
+    onUpgrade: _upgradeDB,
+  );
+}
 
-  Future<void> _createDB(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE transactions(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        amount REAL NOT NULL,
-        type TEXT NOT NULL,
-        category TEXT NOT NULL,
-        date INTEGER NOT NULL,
-        notes TEXT,
-        account_id INTEGER,
-        FOREIGN KEY (account_id) REFERENCES accounts (id)
-      )
-    ''');
 
-    await db.execute('''
-      CREATE TABLE accounts(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        type TEXT NOT NULL,
-        icon_name TEXT,
-        balance REAL NOT NULL
-      )
-    ''');
+Future<void> _createDB(Database db, int version) async {
+  await db.execute('''
+    CREATE TABLE transactions(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      amount REAL NOT NULL,
+      type TEXT NOT NULL,
+      category TEXT NOT NULL,
+      date INTEGER NOT NULL,
+      notes TEXT,
+      account_id INTEGER,
+      FOREIGN KEY (account_id) REFERENCES accounts (id)
+    )
+  ''');
 
-      await db.execute('''
+  await db.execute('''
+    CREATE TABLE accounts(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      icon_name TEXT,
+      balance REAL NOT NULL
+    )
+  ''');
+
+  await db.execute('''
     CREATE TABLE savings_goals(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -68,33 +69,89 @@ class DatabaseHelper {
       start_date INTEGER NOT NULL,
       target_date INTEGER NOT NULL,
       account_id INTEGER,
+      is_active INTEGER NOT NULL DEFAULT 1,
       FOREIGN KEY (account_id) REFERENCES accounts (id)
     )
   ''');
 
+  // Create budgets table
+  await db.execute('''
+    CREATE TABLE budgets(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category TEXT NOT NULL,
+      amount REAL NOT NULL,
+      period TEXT NOT NULL,
+      start_date INTEGER NOT NULL,
+      end_date INTEGER NOT NULL,
+      spent REAL NOT NULL DEFAULT 0.0,
+      account_ids TEXT
+    )
+  ''');
 
-    // Create budgets table
-    await db.execute('''
-      CREATE TABLE budgets(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        category TEXT NOT NULL,
-        amount REAL NOT NULL,
-        period TEXT NOT NULL,
-        start_date INTEGER NOT NULL,
-        end_date INTEGER NOT NULL,
-        spent REAL NOT NULL DEFAULT 0.0,
-        account_ids TEXT
-      )
-    ''');
+  // Create a default account for existing users
+  await db.insert('accounts', {
+    'name': 'Cash',
+    'type': 'cash',
+    'icon_name': 'wallet',
+    'balance': 0.0,
+  });
+}
 
-    // Create a default account for existing users
-    await db.insert('accounts', {
-      'name': 'Cash',
-      'type': 'cash',
-      'icon_name': 'wallet',
-      'balance': 0.0,
-    });
-  }
+Future<void> updateSavingsGoalsFromAccounts() async {
+  final db = await instance.database;
+  
+  print('DEBUG: [DatabaseHelper] Updating savings goals from accounts');
+  
+  // Use a transaction to prevent database locking
+  await db.transaction((txn) async {
+    // Get all active savings goals
+    final goals = await txn.query(
+      'savings_goals',
+      where: 'is_active = 1',
+    );
+    
+    print('DEBUG: [DatabaseHelper] Found ${goals.length} active savings goals');
+    
+    for (var goalMap in goals) {
+      final goal = SavingsGoal.fromMap(goalMap);
+      
+      // If the goal is linked to an account, update its current amount
+      if (goal.accountId != null) {
+        final accountResult = await txn.query(
+          'accounts',
+          columns: ['balance'],
+          where: 'id = ?',
+          whereArgs: [goal.accountId],
+        );
+        
+        if (accountResult.isNotEmpty) {
+          final accountBalance = accountResult.first['balance'] as double;
+          
+          // Update the goal's current amount
+          await txn.update(
+            'savings_goals',
+            {'current_amount': accountBalance},
+            where: 'id = ?',
+            whereArgs: [goal.id],
+          );
+          
+          print('DEBUG: [DatabaseHelper] Updated goal ${goal.id} (${goal.name}) current amount to $accountBalance');
+          
+          // If the goal has reached or exceeded its target amount, mark it as inactive
+          if (accountBalance >= goal.targetAmount) {
+            print('DEBUG: [DatabaseHelper] Goal ${goal.id} (${goal.name}) has reached its target amount. Marking as inactive.');
+            await txn.update(
+              'savings_goals',
+              {'is_active': 0},
+              where: 'id = ?',
+              whereArgs: [goal.id],
+            );
+          }
+        }
+      }
+    }
+  });
+}
 
 Future<int> deleteSavingsGoal(int id) async {
   final db = await instance.database;
@@ -117,7 +174,27 @@ Future<int> updateSavingsGoal(SavingsGoal goal) async {
 
 Future<List<SavingsGoal>> getAllSavingsGoals() async {
   final db = await instance.database;
-  final result = await db.query('savings_goals', orderBy: 'target_date ASC');
+  print('DEBUG: [DatabaseHelper] Getting all savings goals');
+  
+  // Use a transaction to prevent database locking
+  final result = await db.transaction((txn) async {
+    return await txn.query('savings_goals', orderBy: 'target_date ASC');
+  });
+  
+  final goals = result.map((map) => SavingsGoal.fromMap(map)).toList();
+  print('DEBUG: [DatabaseHelper] Retrieved ${goals.length} savings goals');
+  return goals;
+}
+
+Future<List<SavingsGoal>> getActiveSavingsGoals() async {
+  final db = await instance.database;
+  final result = await db.query(
+    'savings_goals', 
+    where: 'is_active = ?',
+    whereArgs: [1],
+    orderBy: 'name ASC'
+  );
+  print('DEBUG: [DatabaseHelper] Retrieved ${result.length} active savings goals');
   return result.map((map) => SavingsGoal.fromMap(map)).toList();
 }
 
@@ -136,87 +213,70 @@ Future<SavingsGoal?> getSavingsGoal(int id) async {
   return null;
 }
 
-  Future<int> insertSavingsGoal(SavingsGoal goal) async {
-  final db = await instance.database;
-  print('DEBUG: [DatabaseHelper] Inserting savings goal: ${goal.name}');
-  return await db.insert('savings_goals', goal.toMap());
+Future<int> insertSavingsGoal(SavingsGoal goal) async {
+  try {
+    final db = await instance.database;
+    print('DEBUG: [DatabaseHelper] Inserting savings goal: ${goal.name}');
+    
+    // Use a transaction to prevent database locking
+    final id = await db.transaction((txn) async {
+      return await txn.insert('savings_goals', goal.toMap());
+    });
+    
+    print('DEBUG: [DatabaseHelper] Savings goal inserted with ID: $id');
+    return id;
+  } catch (e) {
+    print('DEBUG: [DatabaseHelper] Error inserting savings goal: $e');
+    throw e; // Re-throw to let the caller handle it
+  }
 }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // Add account_id column to transactions table if upgrading from version 1
-      await db.execute('ALTER TABLE transactions ADD COLUMN account_id INTEGER');
-      
-      // Create accounts table
-      await db.execute('''
-        CREATE TABLE accounts(
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          type TEXT NOT NULL,
-          icon_name TEXT,
-          balance REAL NOT NULL
-        )
-      ''');
+  print('DEBUG: [DatabaseHelper] Upgrading database from version $oldVersion to $newVersion');
+  
+  if (oldVersion < 2) {
+    // Add budget table in version 2
+    await db.execute('''
+      CREATE TABLE budgets(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category TEXT NOT NULL,
+        amount REAL NOT NULL,
+        period TEXT NOT NULL,
+        start_date INTEGER NOT NULL,
+        end_date INTEGER NOT NULL,
+        spent REAL NOT NULL DEFAULT 0.0,
+        account_ids TEXT
+      )
+    ''');
+  }
 
-      // Create a default account and set the balance based on existing transactions
-      final defaultAccountId = await db.insert('accounts', {
-        'name': 'Cash',
-        'type': 'cash',
-        'icon_name': 'wallet',
-        'balance': 0.0,
-      });
-
-      // Calculate the current balance from existing transactions
-      final incomeResult = await db.rawQuery(
-        'SELECT SUM(amount) as total FROM transactions WHERE type = ?',
-        ['income'],
-      );
-      final expenseResult = await db.rawQuery(
-        'SELECT SUM(amount) as total FROM transactions WHERE type = ?',
-        ['expense'],
-      );
-      
-      final totalIncome = incomeResult.isNotEmpty && incomeResult.first['total'] != null
-          ? (incomeResult.first['total'] as num).toDouble()
-          : 0.0;
-      
-      final totalExpense = expenseResult.isNotEmpty && expenseResult.first['total'] != null
-          ? (expenseResult.first['total'] as num).toDouble()
-          : 0.0;
-
-      final balance = totalIncome - totalExpense;
-
-      // Update the default account with the calculated balance
-      await db.update(
-        'accounts',
-        {'balance': balance},
-        where: 'id = ?',
-        whereArgs: [defaultAccountId],
-      );
-
-      // Link all existing transactions to the default account
-      await db.update(
-        'transactions',
-        {'account_id': defaultAccountId},
-        where: 'account_id IS NULL',
-      );
+  if (oldVersion < 4) {
+    // Add savings_goals table in version 4
+    await db.execute('''
+      CREATE TABLE savings_goals(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        reason TEXT,
+        target_amount REAL NOT NULL,
+        current_amount REAL NOT NULL DEFAULT 0.0,
+        start_date INTEGER NOT NULL,
+        target_date INTEGER NOT NULL,
+        account_id INTEGER,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        FOREIGN KEY (account_id) REFERENCES accounts (id)
+      )
+    ''');
+  }
+  
+  // Add is_active column to savings_goals table if upgrading from version 4
+  if (oldVersion == 4 && newVersion >= 5) {
+    try {
+      await db.execute('ALTER TABLE savings_goals ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1');
+      print('DEBUG: [DatabaseHelper] Added is_active column to savings_goals table');
+    } catch (e) {
+      print('DEBUG: [DatabaseHelper] Error adding is_active column: $e');
     }
-
-    if (oldVersion < 3) {
-      // Add budgets table in version 3
-      await db.execute('''
-        CREATE TABLE budgets(
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          category TEXT NOT NULL,
-          amount REAL NOT NULL,
-          period TEXT NOT NULL,
-          start_date INTEGER NOT NULL,
-          end_date INTEGER NOT NULL,
-          spent REAL NOT NULL DEFAULT 0.0,
-          account_ids TEXT
-        )
-      ''');
-    }
+  }
   }
 
   // CRUD Operations for Transactions
@@ -263,64 +323,13 @@ Future<int> insertTransaction(model.Transaction transaction) async {
           newBalance -= transaction.amount;
           print('DEBUG: [DatabaseHelper] Updating account "$accountName" balance: $currentBalance - ${transaction.amount} = $newBalance');
           
-          // Update any active budgets that include this account
-          final now = DateTime.now().millisecondsSinceEpoch;
-          
-          print('DEBUG: [DatabaseHelper] Checking active budgets for updates');
-          
-          final activeBudgets = await txn.query(
-            'budgets',
-            where: 'start_date <= ? AND end_date >= ?',
-            whereArgs: [now, now],
+          // For any expense transaction, update all budgets connected to this account
+          await _adjustBudgetsForTransaction(
+            txn,
+            transaction.accountId,
+            transaction.category,
+            transaction.amount // Add the amount to the budget's spent
           );
-          
-          print('DEBUG: [DatabaseHelper] Found ${activeBudgets.length} active budgets');
-          
-          for (var budgetMap in activeBudgets) {
-            final budget = Budget.fromMap(budgetMap);
-            
-            // Check if this transaction's account is included in the budget
-            bool shouldInclude = false;
-            
-            // If no specific accounts are set, include all accounts
-            if (budget.accountIds == null || budget.accountIds!.isEmpty) {
-              shouldInclude = true;
-              print('DEBUG: [DatabaseHelper] Budget ${budget.id} includes all accounts');
-            } 
-            // Include only if the transaction's account is in the budget's accounts
-            else if (transaction.accountId != null && 
-                     budget.accountIds!.contains(transaction.accountId)) {
-              shouldInclude = true;
-              print('DEBUG: [DatabaseHelper] Budget ${budget.id} includes account ${transaction.accountId}');
-            }
-            
-            if (shouldInclude) {
-              // Get current spent amount to ensure we're working with latest data
-              final currentBudgetData = await txn.query(
-                'budgets',
-                columns: ['spent', 'category'],
-                where: 'id = ?',
-                whereArgs: [budget.id],
-              );
-              
-              final currentSpent = currentBudgetData.first['spent'] as double;
-              final category = currentBudgetData.first['category'] as String;
-              final newSpent = currentSpent + transaction.amount;
-              
-              print('DEBUG: [DatabaseHelper] Updating budget ${budget.id} (${category}): current spent: $currentSpent, new spent: $newSpent');
-              
-              await txn.update(
-                'budgets',
-                {'spent': newSpent},
-                where: 'id = ?',
-                whereArgs: [budget.id],
-              );
-              
-              print('DEBUG: [DatabaseHelper] Budget ${budget.id} updated successfully');
-            } else {
-              print('DEBUG: [DatabaseHelper] Budget ${budget.id} does not include account ${transaction.accountId}, not updating');
-            }
-          }
         }
         
         // Update the account balance
@@ -354,7 +363,87 @@ Future<int> insertTransaction(model.Transaction transaction) async {
     
     print('DEBUG: [DatabaseHelper] Transaction processing complete, returning ID: $transactionId');
     return transactionId;
+  }).then((transactionId) async {
+    // Update savings goals after the transaction is complete
+    await updateSavingsGoalsFromAccounts();
+    return transactionId;
   });
+}
+
+  // Helper method to adjust budgets when a transaction is updated
+Future<void> _adjustBudgetsForTransaction(
+  Transaction txn,
+  int? accountId,
+  String category,
+  double amountChange
+) async {
+  print('DEBUG: [DatabaseHelper] Adjusting budgets for transaction');
+  print('DEBUG: [DatabaseHelper] - Category: $category');
+  print('DEBUG: [DatabaseHelper] - Account ID: $accountId');
+  print('DEBUG: [DatabaseHelper] - Amount Change: $amountChange');
+  
+  // If no account ID, we can't update any account-specific budgets
+  if (accountId == null) {
+    print('DEBUG: [DatabaseHelper] No account ID provided, skipping budget updates');
+    return;
+  }
+  
+  final now = DateTime.now().millisecondsSinceEpoch;
+  
+  // Get all active budgets, regardless of category
+  final activeBudgets = await txn.query(
+    'budgets',
+    where: 'start_date <= ? AND end_date >= ?',
+    whereArgs: [now, now],
+  );
+  
+  print('DEBUG: Found ${activeBudgets.length} active budgets');
+  
+  for (var budgetMap in activeBudgets) {
+    final budget = Budget.fromMap(budgetMap);
+    print('DEBUG: [DatabaseHelper] Processing budget ID: ${budget.id}, Category: ${budget.category}');
+    
+    // Check if this transaction's account is included in the budget
+    bool shouldInclude = false;
+    
+    // If no specific accounts are set for the budget, include all accounts
+    if (budget.accountIds == null || budget.accountIds!.isEmpty) {
+      print('DEBUG: [DatabaseHelper] Budget includes all accounts - skipping (requires specific accounts)');
+      continue; // Skip budgets that don't have specific accounts
+    } 
+    // If account IDs are specified, only include if the transaction's account is in the list
+    else if (budget.accountIds!.contains(accountId)) {
+      shouldInclude = true;
+      print('DEBUG: [DatabaseHelper] Budget includes account ID: $accountId');
+    } else {
+      print('DEBUG: [DatabaseHelper] Budget does not include account ID: $accountId');
+      continue;
+    }
+    
+    if (shouldInclude) {
+      // Get current spent amount to ensure we're working with latest data
+      final currentBudgetData = await txn.query(
+        'budgets',
+        columns: ['spent'],
+        where: 'id = ?',
+        whereArgs: [budget.id],
+      );
+      
+      final currentSpent = currentBudgetData.first['spent'] as double;
+      final newSpent = currentSpent + amountChange;
+      
+      print('DEBUG: [DatabaseHelper] Updating budget ${budget.id}: current spent: $currentSpent, new spent: $newSpent');
+      
+      await txn.update(
+        'budgets',
+        {'spent': newSpent > 0 ? newSpent : 0}, // Ensure spent doesn't go negative
+        where: 'id = ?',
+        whereArgs: [budget.id],
+      );
+      
+      print('DEBUG: [DatabaseHelper] Budget ${budget.id} updated successfully');
+    }
+  }
 }
 
   // Read transactions
@@ -419,7 +508,7 @@ Future<int> insertTransaction(model.Transaction transaction) async {
       orderBy: 'date DESC',
     );
     return result.map((map) => model.Transaction.fromMap(map)).toList();
-  }
+}
 
 Future<List<model.Transaction>> getTransactionsForBudgetPeriod(Budget budget) async {
   final db = await instance.database;
@@ -510,6 +599,27 @@ Future<List<model.Transaction>> getTransactionsForBudgetPeriod(Budget budget) as
             transaction.accountId!,
             transaction.type == 'income' ? transaction.amount : -transaction.amount,
           );
+          
+          // If this was an expense, update budgets for both old and new accounts
+          if (originalTrans.type == 'expense') {
+            // Remove the expense from the old account's budgets
+            await _adjustBudgetsForTransaction(
+              txn, 
+              originalTrans.accountId, 
+              originalTrans.category, 
+              -originalTrans.amount
+            );
+          }
+          
+          if (transaction.type == 'expense') {
+            // Add the expense to the new account's budgets
+            await _adjustBudgetsForTransaction(
+              txn, 
+              transaction.accountId, 
+              transaction.category, 
+              transaction.amount
+            );
+          }
         } else {
           // Same account, just adjust the difference
           double balanceChange = 0.0;
@@ -521,41 +631,42 @@ Future<List<model.Transaction>> getTransactionsForBudgetPeriod(Budget budget) as
           }
           
           await _adjustAccountBalance(txn, transaction.accountId!, balanceChange);
-        }
-      }
-      
-      // Update budgets if this is an expense and category or amount has changed
-      if (transaction.type == 'expense') {
-        // If the category changed, we need to update budgets for both categories
-        if (originalTrans.category != transaction.category) {
-          // First, adjust any budgets that had the old category
-          await _adjustBudgetsForTransaction(
-            txn, 
-            originalTrans.accountId, 
-            originalTrans.category, 
-            -originalTrans.amount
-          );
           
-          // Then, adjust any budgets for the new category
-          await _adjustBudgetsForTransaction(
-            txn, 
-            transaction.accountId, 
-            transaction.category, 
-            transaction.amount
-          );
-        } 
-        // If only the amount changed but category remained the same
-        else if (originalTrans.amount != transaction.amount) {
-          double amountDifference = transaction.amount - originalTrans.amount;
-          await _adjustBudgetsForTransaction(
-            txn, 
-            transaction.accountId, 
-            transaction.category, 
-            amountDifference
-          );
+          // Update budgets if this is an expense and amount has changed
+          if (transaction.type == 'expense' && originalTrans.type == 'expense') {
+            double amountDifference = transaction.amount - originalTrans.amount;
+            
+            if (amountDifference != 0) {
+              await _adjustBudgetsForTransaction(
+                txn, 
+                transaction.accountId, 
+                transaction.category, 
+                amountDifference
+              );
+            }
+          } 
+          // If transaction type changed from income to expense
+          else if (transaction.type == 'expense' && originalTrans.type == 'income') {
+            await _adjustBudgetsForTransaction(
+              txn, 
+              transaction.accountId, 
+              transaction.category, 
+              transaction.amount
+            );
+          }
+          // If transaction type changed from expense to income
+          else if (transaction.type == 'income' && originalTrans.type == 'expense') {
+            await _adjustBudgetsForTransaction(
+              txn, 
+              originalTrans.accountId, 
+              originalTrans.category, 
+              -originalTrans.amount
+            );
+          }
         }
       }
       
+      await updateSavingsGoalsFromAccounts();
       return updateResult;
     });
   }
@@ -581,47 +692,6 @@ Future<List<model.Transaction>> getTransactionsForBudgetPeriod(Budget budget) as
       );
     }
   }
-
-  // Helper method to adjust budgets when a transaction is updated
-Future<void> _adjustBudgetsForTransaction(
-  Transaction txn,
-  int? accountId,
-  String category,
-  double amountChange
-) async {
-  final now = DateTime.now().millisecondsSinceEpoch;
-  
-  // Updated query to remove category condition
-  final activeBudgets = await txn.query(
-    'budgets',
-    where: 'start_date <= ? AND end_date >= ?',
-    whereArgs: [now, now],
-  );
-  
-  for (var budgetMap in activeBudgets) {
-    final budget = Budget.fromMap(budgetMap);
-    
-    // Check if this transaction's account is included in the budget
-    bool shouldInclude = false;
-    if (budget.accountIds == null || budget.accountIds!.isEmpty) {
-      // If no specific accounts are set, include all accounts
-      shouldInclude = true;
-    } else if (accountId != null && budget.accountIds!.contains(accountId)) {
-      // Include only if the transaction's account is in the budget's accounts
-      shouldInclude = true;
-    }
-    
-    if (shouldInclude) {
-      final newSpent = budget.spent + amountChange;
-      await txn.update(
-        'budgets',
-        {'spent': newSpent > 0 ? newSpent : 0}, // Ensure spent doesn't go negative
-        where: 'id = ?',
-        whereArgs: [budget.id],
-      );
-    }
-  }
-}
 
   // Delete transaction
   Future<int> deleteTransaction(int id) async {
@@ -653,14 +723,14 @@ Future<void> _adjustBudgetsForTransaction(
       // If this is an expense, also adjust the budget(s)
       if (trans.type == 'expense') {
         await _adjustBudgetsForTransaction(
-          txn,
-          trans.accountId,
-          trans.category,
+          txn, 
+          trans.accountId, 
+          trans.category, 
           -trans.amount // Subtract the amount from the budget
         );
       }
-      
-      // Delete the transaction
+      await updateSavingsGoalsFromAccounts();
+
       return await txn.delete(
         'transactions',
         where: 'id = ?',
@@ -719,7 +789,10 @@ Future<void> _adjustBudgetsForTransaction(
   final db = await instance.database;
   print('DEBUG: [DatabaseHelper] Getting all accounts');
   
-  final result = await db.query('accounts', orderBy: 'name ASC');
+  // Use a dedicated transaction to prevent database locking
+  final result = await db.transaction((txn) async {
+    return await txn.query('accounts', orderBy: 'name ASC');
+  });
   
   final accounts = result.map((map) => Account.fromMap(map)).toList();
   print('DEBUG: [DatabaseHelper] Retrieved ${accounts.length} accounts');
@@ -731,7 +804,7 @@ Future<void> _adjustBudgetsForTransaction(
   
   return accounts;
 }
-  
+
   // Update account
   Future<int> updateAccount(Account account) async {
     final db = await instance.database;
@@ -807,20 +880,23 @@ Future<void> _adjustBudgetsForTransaction(
   // Get all budgets
   Future<List<Budget>> getAllBudgets() async {
     final db = await instance.database;
-    final result = await db.query('budgets', orderBy: 'end_date DESC');
+    final result = await db.query('budgets', orderBy: 'category ASC');
     return result.map((map) => Budget.fromMap(map)).toList();
   }
 
-  // Get active budgets
+  // Get only active budgets
   Future<List<Budget>> getActiveBudgets() async {
     final db = await instance.database;
     final now = DateTime.now().millisecondsSinceEpoch;
+    
     final result = await db.query(
       'budgets',
       where: 'start_date <= ? AND end_date >= ?',
       whereArgs: [now, now],
-      orderBy: 'end_date ASC',
+      orderBy: 'category ASC'
     );
+    
+    print('DEBUG: [DatabaseHelper] Retrieved ${result.length} active budgets');
     return result.map((map) => Budget.fromMap(map)).toList();
   }
 
@@ -831,7 +907,7 @@ Future<void> _adjustBudgetsForTransaction(
       'budgets',
       where: 'category = ?',
       whereArgs: [category],
-      orderBy: 'end_date DESC',
+      orderBy: 'category ASC',
     );
     return result.map((map) => Budget.fromMap(map)).toList();
   }
@@ -844,7 +920,7 @@ Future<void> _adjustBudgetsForTransaction(
       'budgets',
       where: 'account_ids LIKE ? OR account_ids IS NULL',
       whereArgs: ['%$accountId%'],
-      orderBy: 'end_date DESC',
+      orderBy: 'category ASC',
     );
     
     return result.map((map) {
