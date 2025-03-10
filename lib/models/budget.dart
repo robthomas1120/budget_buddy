@@ -2,6 +2,7 @@
 
 class Budget {
   final int? id;
+  final String title;
   final String category;
   final double amount;
   final String period; // 'weekly' or 'monthly'
@@ -12,6 +13,7 @@ class Budget {
   
   Budget({
     this.id,
+    required this.title,
     required this.category,
     required this.amount,
     required this.period,
@@ -25,6 +27,7 @@ class Budget {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'title': title,
       'category': category,
       'amount': amount,
       'period': period,
@@ -44,6 +47,7 @@ class Budget {
     
     return Budget(
       id: map['id'],
+      title: map['title'] ?? map['category'], // Fallback for older records
       category: map['category'],
       amount: map['amount'],
       period: map['period'],
@@ -57,6 +61,7 @@ class Budget {
   // Create a copy of this Budget with the given field values changed
   Budget copyWith({
     int? id,
+    String? title,
     String? category,
     double? amount,
     String? period,
@@ -67,6 +72,7 @@ class Budget {
   }) {
     return Budget(
       id: id ?? this.id,
+      title: title ?? this.title,
       category: category ?? this.category,
       amount: amount ?? this.amount,
       period: period ?? this.period,

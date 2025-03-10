@@ -21,17 +21,18 @@ class AddBudgetSheet extends StatefulWidget {
 }
 
 class _AddBudgetSheetState extends State<AddBudgetSheet> {
-  final _amountController = TextEditingController();
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  bool _isLoading = false;
   String _selectedCategory = 'Food';
   String _selectedPeriod = 'monthly';
-  List<Account> _accounts = [];
-  List<int> _selectedAccountIds = [];
-  bool _isLoading = true;
-  
-  final List<String> _categories = [
+  List<String> _categories = [
     'Food', 'Transportation', 'Entertainment', 'Housing', 
     'Shopping', 'Utilities', 'Healthcare', 'Education', 'Other'
   ];
+
+  List<Account> _accounts = [];
+  List<int> _selectedAccountIds = [];
 
   @override
   void initState() {
@@ -42,6 +43,7 @@ class _AddBudgetSheetState extends State<AddBudgetSheet> {
   @override
   void dispose() {
     _amountController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -59,12 +61,18 @@ class _AddBudgetSheetState extends State<AddBudgetSheet> {
   }
 
   Future<void> _createBudget(
+    String title,
     String category,
     String amountStr,
     String period,
     List<int> accountIds,
   ) async {
     // Validate inputs
+    if (title.isEmpty) {
+      _showError('Please enter a budget title');
+      return;
+    }
+    
     if (amountStr.isEmpty) {
       _showError('Please enter a budget amount');
       return;
@@ -94,6 +102,7 @@ class _AddBudgetSheetState extends State<AddBudgetSheet> {
 
     // Create budget object
     final budget = Budget(
+      title: title,
       category: category,
       amount: amount,
       period: period,
@@ -232,6 +241,8 @@ class _AddBudgetSheetState extends State<AddBudgetSheet> {
                     children: [
                       _buildHeader(themeData),
                       SizedBox(height: 16),
+                      _buildTitleField(themeData),
+                      SizedBox(height: 16),
                       _buildCategorySelector(themeData),
                       SizedBox(height: 16),
                       _buildAmountField(themeData),
@@ -265,6 +276,35 @@ class _AddBudgetSheetState extends State<AddBudgetSheet> {
           onTap: () => Navigator.pop(context),
           child: Icon(CupertinoIcons.xmark, color: themeData.brightness == Brightness.dark 
               ? CupertinoColors.systemGrey : CupertinoColors.systemGrey),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTitleField(AppThemeData themeData) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Budget Title:',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: themeData.textColor,
+          ),
+        ),
+        SizedBox(height: 8),
+        CupertinoTextField(
+          controller: _titleController,
+          placeholder: 'Enter budget title',
+          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            color: themeData.brightness == Brightness.dark 
+                ? CupertinoColors.systemGrey6.darkColor
+                : CupertinoColors.systemGrey6,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          style: TextStyle(color: themeData.textColor),
         ),
       ],
     );
@@ -500,6 +540,7 @@ class _AddBudgetSheetState extends State<AddBudgetSheet> {
         borderRadius: BorderRadius.circular(8),
         color: themeData.primaryColor,
         onPressed: () => _createBudget(
+          _titleController.text,
           _selectedCategory,
           _amountController.text,
           _selectedPeriod,

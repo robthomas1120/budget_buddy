@@ -43,7 +43,7 @@ Future<void> _loadBudgets() async {
   
   // Debug print each budget's details
   for (var budget in budgets) {
-    print('DEBUG: Budget ID: ${budget.id}, Category: ${budget.category}');
+    print('DEBUG: Budget ID: ${budget.id}, Title: ${budget.title}, Category: ${budget.category}');
     print('DEBUG: Amount: ${budget.amount}, Spent: ${budget.spent}');
     print('DEBUG: Period: ${budget.period}, Active: ${budget.isActive}');
     print('DEBUG: Account IDs: ${budget.accountIds}');
@@ -181,12 +181,31 @@ Future<void> _loadBudgets() async {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    budget.category,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: themeData.textColor,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          budget.title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: themeData.textColor,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          budget.category,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: themeData.textColor.withOpacity(0.7),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
                     ),
                   ),
                   Container(

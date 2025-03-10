@@ -26,6 +26,7 @@ class EditBudgetSheet extends StatefulWidget {
 class _EditBudgetSheetState extends State<EditBudgetSheet> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _amountController;
+  late TextEditingController _titleController;
   late String _selectedCategory;
   late String _selectedPeriod;
   List<Account> _accounts = [];
@@ -44,6 +45,7 @@ class _EditBudgetSheetState extends State<EditBudgetSheet> {
   void initState() {
     super.initState();
     _amountController = TextEditingController(text: widget.budget.amount.toString());
+    _titleController = TextEditingController(text: widget.budget.title);
     _selectedCategory = widget.budget.category;
     _selectedPeriod = widget.budget.period;
     _selectedAccountIds = widget.budget.accountIds ?? [];
@@ -58,6 +60,7 @@ class _EditBudgetSheetState extends State<EditBudgetSheet> {
   @override
   void dispose() {
     _amountController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -79,6 +82,7 @@ class _EditBudgetSheetState extends State<EditBudgetSheet> {
 
     final updatedBudget = Budget(
       id: widget.budget.id,
+      title: _titleController.text,
       category: _selectedCategory,
       amount: double.parse(_amountController.text),
       period: _selectedPeriod,
@@ -141,6 +145,32 @@ class _EditBudgetSheetState extends State<EditBudgetSheet> {
             ],
           ),
           SizedBox(height: 20),
+          
+          // Title Input
+          Text('Title', style: TextStyle(color: themeData.textColor)),
+          SizedBox(height: 8),
+          TextFormField(
+            controller: _titleController,
+            decoration: InputDecoration(
+              fillColor: themeData.brightness == Brightness.dark 
+                  ? CupertinoColors.systemGrey6.darkColor
+                  : CupertinoColors.systemGrey6,
+              filled: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              prefixStyle: TextStyle(color: themeData.textColor),
+            ),
+            style: TextStyle(color: themeData.textColor),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter a title';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 16),
           
           // Category Dropdown
           Text('Category', style: TextStyle(color: themeData.textColor)),

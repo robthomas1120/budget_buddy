@@ -144,10 +144,20 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          budget.category,
+          budget.title,
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
+            color: themeData.textColor,
+            decoration: TextDecoration.none,  // Explicitly remove decoration
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          budget.category,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
             color: themeData.textColor,
             decoration: TextDecoration.none,  // Explicitly remove decoration
           ),
