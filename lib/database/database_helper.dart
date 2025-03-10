@@ -97,60 +97,71 @@ Future<void> _createDB(Database db, int version) async {
   });
 }
 
-Future<void> updateSavingsGoalsFromAccounts() async {
+Future<void> updateSavingsGoalsFromAccounts({Transaction? txn}) async {
   final db = await instance.database;
   
   print('DEBUG: [DatabaseHelper] Updating savings goals from accounts');
   
-  // Use a transaction to prevent database locking
-  await db.transaction((txn) async {
-    // Get all active savings goals
-    final goals = await txn.query(
-      'savings_goals',
-      where: 'is_active = 1',
-    );
+  // If a transaction is provided, use it, otherwise create a new one
+  if (txn != null) {
+    // Use the provided transaction
+    await _updateSavingsGoalsWithTransaction(txn);
+  } else {
+    // Create a new transaction
+    await db.transaction((newTxn) async {
+      await _updateSavingsGoalsWithTransaction(newTxn);
+    });
+  }
+}
+
+// Helper method to update savings goals using a transaction
+Future<void> _updateSavingsGoalsWithTransaction(Transaction txn) async {
+  // Get all active savings goals
+  final goals = await txn.query(
+    'savings_goals',
+    where: 'is_active = 1',
+  );
+  
+  print('DEBUG: [DatabaseHelper] Found ${goals.length} active savings goals');
+  
+  for (var goalMap in goals) {
+    final goal = SavingsGoal.fromMap(goalMap);
     
-    print('DEBUG: [DatabaseHelper] Found ${goals.length} active savings goals');
-    
-    for (var goalMap in goals) {
-      final goal = SavingsGoal.fromMap(goalMap);
+    // If the goal is linked to an account, update its current amount
+    if (goal.accountId != null) {
+      final accountResult = await txn.query(
+        'accounts',
+        columns: ['balance'],
+        where: 'id = ?',
+        whereArgs: [goal.accountId],
+      );
       
-      // If the goal is linked to an account, update its current amount
-      if (goal.accountId != null) {
-        final accountResult = await txn.query(
-          'accounts',
-          columns: ['balance'],
+      if (accountResult.isNotEmpty) {
+        final accountBalance = accountResult.first['balance'] as double;
+        
+        // Update the goal's current amount
+        await txn.update(
+          'savings_goals',
+          {'current_amount': accountBalance},
           where: 'id = ?',
-          whereArgs: [goal.accountId],
+          whereArgs: [goal.id],
         );
         
-        if (accountResult.isNotEmpty) {
-          final accountBalance = accountResult.first['balance'] as double;
-          
-          // Update the goal's current amount
+        print('DEBUG: [DatabaseHelper] Updated goal ${goal.id} (${goal.name}) current amount to $accountBalance');
+        
+        // If the goal has reached or exceeded its target amount, mark it as inactive
+        if (accountBalance >= goal.targetAmount) {
+          print('DEBUG: [DatabaseHelper] Goal ${goal.id} (${goal.name}) has reached its target amount. Marking as inactive.');
           await txn.update(
             'savings_goals',
-            {'current_amount': accountBalance},
+            {'is_active': 0},
             where: 'id = ?',
             whereArgs: [goal.id],
           );
-          
-          print('DEBUG: [DatabaseHelper] Updated goal ${goal.id} (${goal.name}) current amount to $accountBalance');
-          
-          // If the goal has reached or exceeded its target amount, mark it as inactive
-          if (accountBalance >= goal.targetAmount) {
-            print('DEBUG: [DatabaseHelper] Goal ${goal.id} (${goal.name}) has reached its target amount. Marking as inactive.');
-            await txn.update(
-              'savings_goals',
-              {'is_active': 0},
-              where: 'id = ?',
-              whereArgs: [goal.id],
-            );
-          }
         }
       }
     }
-  });
+  }
 }
 
 Future<int> deleteSavingsGoal(int id) async {
@@ -305,23 +316,22 @@ Future<int> insertTransaction(model.Transaction transaction) async {
       // Get the current account balance
       final accountResult = await txn.query(
         'accounts',
-        columns: ['balance', 'name'],
+        columns: ['balance'],
         where: 'id = ?',
         whereArgs: [transaction.accountId],
       );
       
       if (accountResult.isNotEmpty) {
-        String accountName = accountResult.first['name'] as String;
         double currentBalance = accountResult.first['balance'] as double;
         double newBalance = currentBalance;
         
         // Add or subtract based on transaction type
         if (transaction.type == 'income') {
           newBalance += transaction.amount;
-          print('DEBUG: [DatabaseHelper] Updating account "$accountName" balance: $currentBalance + ${transaction.amount} = $newBalance');
+          print('DEBUG: [DatabaseHelper] Updating account balance: $currentBalance + ${transaction.amount} = $newBalance');
         } else if (transaction.type == 'expense') {
           newBalance -= transaction.amount;
-          print('DEBUG: [DatabaseHelper] Updating account "$accountName" balance: $currentBalance - ${transaction.amount} = $newBalance');
+          print('DEBUG: [DatabaseHelper] Updating account balance: $currentBalance - ${transaction.amount} = $newBalance');
           
           // For any expense transaction, update all budgets connected to this account
           await _adjustBudgetsForTransaction(
@@ -330,6 +340,10 @@ Future<int> insertTransaction(model.Transaction transaction) async {
             transaction.category,
             transaction.amount // Add the amount to the budget's spent
           );
+        } else if (transaction.type == 'transfer') {
+          // Handle transfer transactions
+          newBalance -= transaction.amount;
+          print('DEBUG: [DatabaseHelper] Updating source account balance: $currentBalance - ${transaction.amount} = $newBalance');
         }
         
         // Update the account balance
@@ -361,11 +375,10 @@ Future<int> insertTransaction(model.Transaction transaction) async {
       print('DEBUG: [DatabaseHelper] No account ID provided with transaction');
     }
     
+    // Update savings goals within the same transaction
+    await updateSavingsGoalsFromAccounts(txn: txn);
+    
     print('DEBUG: [DatabaseHelper] Transaction processing complete, returning ID: $transactionId');
-    return transactionId;
-  }).then((transactionId) async {
-    // Update savings goals after the transaction is complete
-    await updateSavingsGoalsFromAccounts();
     return transactionId;
   });
 }
@@ -666,7 +679,7 @@ Future<List<model.Transaction>> getTransactionsForBudgetPeriod(Budget budget) as
         }
       }
       
-      await updateSavingsGoalsFromAccounts();
+      await updateSavingsGoalsFromAccounts(txn: txn);
       return updateResult;
     });
   }
@@ -729,7 +742,7 @@ Future<List<model.Transaction>> getTransactionsForBudgetPeriod(Budget budget) as
           -trans.amount // Subtract the amount from the budget
         );
       }
-      await updateSavingsGoalsFromAccounts();
+      await updateSavingsGoalsFromAccounts(txn: txn);
 
       return await txn.delete(
         'transactions',
@@ -773,11 +786,15 @@ Future<List<model.Transaction>> getTransactionsForBudgetPeriod(Budget budget) as
   // Read accounts
   Future<Account?> getAccount(int id) async {
     final db = await instance.database;
-    final maps = await db.query(
-      'accounts',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    
+    // Use a transaction to prevent database locking
+    final maps = await db.transaction((txn) async {
+      return await txn.query(
+        'accounts',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    });
 
     if (maps.isNotEmpty) {
       return Account.fromMap(maps.first);
@@ -808,12 +825,16 @@ Future<List<model.Transaction>> getTransactionsForBudgetPeriod(Budget budget) as
   // Update account
   Future<int> updateAccount(Account account) async {
     final db = await instance.database;
-    return await db.update(
-      'accounts',
-      account.toMap(),
-      where: 'id = ?',
-      whereArgs: [account.id],
-    );
+    
+    // Use a transaction to prevent database locking
+    return await db.transaction((txn) async {
+      return await txn.update(
+        'accounts',
+        account.toMap(),
+        where: 'id = ?',
+        whereArgs: [account.id],
+      );
+    });
   }
   
   // Delete account

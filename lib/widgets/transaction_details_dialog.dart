@@ -62,7 +62,12 @@ class _TransactionDetailsDialogState extends State<TransactionDetailsDialog> {
     
     final transaction = widget.transaction;
     final isIncome = transaction.type == 'income';
-    final transactionColor = isIncome ? themeData.incomeColor : themeData.expenseColor;
+    final isTransfer = transaction.type == 'transfer';
+    final transactionColor = isIncome 
+        ? themeData.incomeColor 
+        : isTransfer 
+            ? CupertinoColors.systemBlue 
+            : themeData.expenseColor;
 
     return DefaultTextStyle(
       style: TextStyle(

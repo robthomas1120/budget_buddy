@@ -53,37 +53,55 @@ void _showAddTransactionSheet() {
       _loadTransactions();
       showCupertinoDialog(
         context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: Text('Success'),
-          content: Text('Transaction deleted successfully'),
-          actions: [
-            CupertinoDialogAction(
-              child: Text('OK'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
+        builder: (context) => DefaultTextStyle(
+          style: TextStyle(
+            color: CupertinoColors.label,
+            fontSize: 14.0,
+          ),
+          child: CupertinoAlertDialog(
+            title: Text('Success'),
+            content: Text('Transaction deleted successfully'),
+            actions: [
+              CupertinoDialogAction(
+                child: Text('OK'),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
         ),
       );
     } catch (e) {
       showCupertinoDialog(
         context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: Text('Error'),
-          content: Text('Failed to delete transaction: $e'),
-          actions: [
-            CupertinoDialogAction(
-              child: Text('OK'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
+        builder: (context) => DefaultTextStyle(
+          style: TextStyle(
+            color: CupertinoColors.label,
+            fontSize: 14.0,
+          ),
+          child: CupertinoAlertDialog(
+            title: Text('Error'),
+            content: Text('Failed to delete transaction: $e'),
+            actions: [
+              CupertinoDialogAction(
+                child: Text('OK'),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
         ),
       );
     }
   }
 
   void _updateTransaction(Transaction transaction) {
-    print("Update income transaction: ${transaction.title}");
-    _loadTransactions();
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => AddTransactionSheet(
+        transactionType: 'income',
+        onTransactionAdded: _loadTransactions,
+        transaction: transaction, // Pass the transaction to edit
+      ),
+    );
   }
 
   @override

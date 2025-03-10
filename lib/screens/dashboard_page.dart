@@ -116,15 +116,21 @@ class _DashboardPageState extends State<DashboardPage> {
       if (mounted) {
         showCupertinoDialog(
           context: context,
-          builder: (context) => CupertinoAlertDialog(
-            title: Text('Success'),
-            content: Text('Transaction deleted successfully'),
-            actions: [
-              CupertinoDialogAction(
-                child: Text('OK'),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
+          builder: (context) => DefaultTextStyle(
+            style: TextStyle(
+              color: Provider.of<ThemeProvider>(context).currentThemeData.textColor,
+              fontSize: 14.0,
+            ),
+            child: CupertinoAlertDialog(
+              title: Text('Success'),
+              content: Text('Transaction deleted successfully'),
+              actions: [
+                CupertinoDialogAction(
+                  child: Text('OK'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
           ),
         );
       }
@@ -133,15 +139,21 @@ class _DashboardPageState extends State<DashboardPage> {
       if (mounted) {
         showCupertinoDialog(
           context: context,
-          builder: (context) => CupertinoAlertDialog(
-            title: Text('Error'),
-            content: Text('Failed to delete transaction: $e'),
-            actions: [
-              CupertinoDialogAction(
-                child: Text('OK'),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
+          builder: (context) => DefaultTextStyle(
+            style: TextStyle(
+              color: Provider.of<ThemeProvider>(context).currentThemeData.textColor,
+              fontSize: 14.0,
+            ),
+            child: CupertinoAlertDialog(
+              title: Text('Error'),
+              content: Text('Failed to delete transaction: $e'),
+              actions: [
+                CupertinoDialogAction(
+                  child: Text('OK'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
           ),
         );
       }
@@ -149,8 +161,18 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _updateTransaction(Transaction transaction) {
-    print('DEBUG: [DashboardPage] Updating transaction: ${transaction.id}');
-    _loadData();
+    print('DEBUG: [DashboardPage] Updating transaction: ${transaction.title}');
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => AddTransactionSheet(
+        transactionType: transaction.type, // Pass the existing transaction type
+        onTransactionAdded: () {
+          print('DEBUG: [DashboardPage] Transaction updated callback triggered');
+          _loadData();
+        },
+        transaction: transaction, // Pass the transaction to edit
+      ),
+    );
   }
   
   @override

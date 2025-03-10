@@ -51,29 +51,41 @@ void _showAddTransactionSheet() {
       // Show a Cupertino alert instead of a Snackbar
       showCupertinoDialog(
         context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: Text('Success'),
-          content: Text('Transaction deleted successfully'),
-          actions: [
-            CupertinoDialogAction(
-              child: Text('OK'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
+        builder: (context) => DefaultTextStyle(
+          style: TextStyle(
+            color: CupertinoColors.label,
+            fontSize: 14.0,
+          ),
+          child: CupertinoAlertDialog(
+            title: Text('Success'),
+            content: Text('Transaction deleted successfully'),
+            actions: [
+              CupertinoDialogAction(
+                child: Text('OK'),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
         ),
       );
     } catch (e) {
       showCupertinoDialog(
         context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: Text('Error'),
-          content: Text('Failed to delete transaction: $e'),
-          actions: [
-            CupertinoDialogAction(
-              child: Text('OK'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
+        builder: (context) => DefaultTextStyle(
+          style: TextStyle(
+            color: CupertinoColors.label,
+            fontSize: 14.0,
+          ),
+          child: CupertinoAlertDialog(
+            title: Text('Error'),
+            content: Text('Failed to delete transaction: $e'),
+            actions: [
+              CupertinoDialogAction(
+                child: Text('OK'),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -81,10 +93,14 @@ void _showAddTransactionSheet() {
 
   // Add a method to handle updating transactions
   void _updateTransaction(Transaction transaction) {
-    // Here you would typically show a form to edit the transaction
-    // For now, we'll just reload the data
-    print("Update expense transaction: ${transaction.title}");
-    _loadTransactions();
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => AddTransactionSheet(
+        transactionType: 'expense',
+        onTransactionAdded: _loadTransactions,
+        transaction: transaction, // Pass the transaction to edit
+      ),
+    );
   }
 
   @override
