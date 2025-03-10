@@ -234,6 +234,12 @@ class BudgetHelper {
       whereArgs: [id],
     );
   }
+  
+  // Delete all budgets
+  Future<int> deleteAllBudgets() async {
+    final db = await _baseHelper.database;
+    return await db.delete('budgets');
+  }
 
   // Generate a new budget period based on an existing budget
   Future<int> renewBudget(Budget budget) async {

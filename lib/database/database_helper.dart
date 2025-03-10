@@ -109,6 +109,9 @@ class DatabaseHelper {
   Future<int> deleteBudget(int id) => 
       _budgetHelper.deleteBudget(id);
       
+  Future<int> deleteAllBudgets() =>
+      _budgetHelper.deleteAllBudgets();
+      
   Future<int> renewBudget(Budget budget) => 
       _budgetHelper.renewBudget(budget);
       
@@ -142,6 +145,9 @@ class DatabaseHelper {
       
   Future<int> deleteSavingsGoal(int id) => 
       _savingsHelper.deleteSavingsGoal(id);
+      
+  Future<int> deleteAllSavingsGoals() =>
+      _savingsHelper.deleteAllSavingsGoals();
       
   Future<int> updateSavingsGoalAmount(int id, double amount) => 
       _savingsHelper.updateSavingsGoalAmount(id, amount);

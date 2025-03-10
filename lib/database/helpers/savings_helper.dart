@@ -80,6 +80,12 @@ class SavingsHelper {
     );
   }
   
+  // Delete all savings goals
+  Future<int> deleteAllSavingsGoals() async {
+    final db = await _baseHelper.database;
+    return await db.delete('savings_goals');
+  }
+  
   // Update current amount for a savings goal
   Future<int> updateSavingsGoalAmount(int id, double amount) async {
     final db = await _baseHelper.database;
