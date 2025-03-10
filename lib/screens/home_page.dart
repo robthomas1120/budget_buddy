@@ -1,4 +1,4 @@
-// Update lib/screens/home_page.dart to include the new budget page
+// lib/screens/home_page.dart
 
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
@@ -6,8 +6,8 @@ import '../providers/theme_provider.dart';
 import 'dashboard_page.dart';
 import 'income_page.dart';
 import 'expense_page.dart';
+import 'savings_page.dart'; // Import the new savings page
 import 'settings_page.dart';
-import 'budget_page.dart'; // Add this import
 
 class HomePage extends StatefulWidget {
   @override
@@ -17,17 +17,33 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   // Create a list of page widgets
   late List<Widget> _pages;
+  final _tabController = CupertinoTabController(initialIndex: 0);
   
   @override
   void initState() {
     super.initState();
     _pages = [
-      DashboardPage(),
+      DashboardPage(
+        onSettingsPressed: _showSettings,
+      ),
       IncomePage(),
       ExpensePage(),
-      BudgetPage(), // Add the budget page
-      SettingsPage(),
+      SavingsPage(), // Add the savings page instead of the budget page
+      // Note: Settings page removed from tab bar
     ];
+  }
+
+  void _showSettings() {
+    Navigator.push(
+      context,
+      CupertinoPageRoute(builder: (context) => SettingsPage()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -46,6 +62,7 @@ class _HomePageState extends State<HomePage> {
     return DefaultTextStyle(
       style: baseTextStyle,
       child: CupertinoTabScaffold(
+        controller: _tabController,
         tabBar: CupertinoTabBar(
           activeColor: themeData.primaryColor,
           items: [
@@ -62,12 +79,8 @@ class _HomePageState extends State<HomePage> {
               label: 'Expenses',
             ),
             BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.money_dollar_circle), // Budget icon
-              label: 'Budget',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.settings),
-              label: 'Settings',
+              icon: Icon(CupertinoIcons.money_dollar_circle), 
+              label: 'Savings',
             ),
           ],
         ),
