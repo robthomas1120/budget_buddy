@@ -60,17 +60,24 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final themeData = themeProvider.currentThemeData;
     
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: themeData.cardColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    return DefaultTextStyle(  // Added DefaultTextStyle wrapper
+      style: TextStyle(
+        color: themeData.textColor,
+        fontFamily: '.SF Pro Text',
+        fontSize: 16.0,
       ),
-      child: SafeArea(
-        top: false,
-        child: _isLoading 
-          ? Center(child: CupertinoActivityIndicator()) 
-          : _buildContent(themeData),
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: themeData.cardColor,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: _isLoading 
+            ? Center(child: CupertinoActivityIndicator()) 
+            : _buildContent(themeData),
+        ),
       ),
     );
   }
@@ -89,6 +96,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: themeData.textColor,
+                decoration: TextDecoration.none,  // Explicitly remove decoration
               ),
             ),
             GestureDetector(
@@ -128,6 +136,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: themeData.textColor,
+            decoration: TextDecoration.none,  // Explicitly remove decoration
           ),
         ),
         SizedBox(height: 4),
@@ -136,6 +145,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
           style: TextStyle(
             fontSize: 16,
             color: themeData.textColor.withOpacity(0.7),
+            decoration: TextDecoration.none,  // Explicitly remove decoration
           ),
         ),
         SizedBox(height: 16),
@@ -157,6 +167,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
           style: TextStyle(
             fontSize: 14,
             color: themeData.textColor.withOpacity(0.7),
+            decoration: TextDecoration.none,  // Explicitly remove decoration
           ),
         ),
         SizedBox(height: 4),
@@ -169,6 +180,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
                     ? themeData.primaryColor.withOpacity(0.1)
                     : CupertinoColors.systemGrey.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.transparent),  // Clear any borders
               ),
               child: Text(
                 budget.isActive ? 'Active' : 'Expired',
@@ -178,6 +190,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
                   color: budget.isActive 
                       ? themeData.primaryColor
                       : CupertinoColors.systemGrey,
+                  decoration: TextDecoration.none,  // Explicitly remove decoration
                 ),
               ),
             ),
@@ -189,6 +202,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
                     ? themeData.expenseColor.withOpacity(0.1)
                     : themeData.primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.transparent),  // Clear any borders
               ),
               child: Text(
                 budget.isOverBudget ? 'Over Budget' : 'Within Budget',
@@ -198,6 +212,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
                   color: budget.isOverBudget 
                       ? themeData.expenseColor
                       : themeData.primaryColor,
+                  decoration: TextDecoration.none,  // Explicitly remove decoration
                 ),
               ),
             ),
@@ -214,6 +229,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
         style: TextStyle(
           fontSize: 14,
           color: themeData.textColor.withOpacity(0.7),
+          decoration: TextDecoration.none,  // Explicitly remove decoration
         ),
       );
     }
@@ -227,6 +243,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: themeData.textColor,
+            decoration: TextDecoration.none,  // Explicitly remove decoration
           ),
         ),
         SizedBox(height: 8),
@@ -243,6 +260,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
                 decoration: BoxDecoration(
                   color: _getAccountColor(account.type).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.transparent),  // Clear any borders
                 ),
                 child: Row(
                   children: [
@@ -257,6 +275,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
                       style: TextStyle(
                         color: themeData.textColor,
                         fontWeight: FontWeight.w500,
+                        decoration: TextDecoration.none,  // Explicitly remove decoration
                       ),
                     ),
                   ],
@@ -325,6 +344,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
             style: TextStyle(
               fontSize: 14,
               color: themeData.textColor.withOpacity(0.7),
+              decoration: TextDecoration.none,  // Explicitly remove decoration
             ),
           ),
           Text(
@@ -333,6 +353,7 @@ class _BudgetDetailSheetState extends State<BudgetDetailSheet> {
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: valueColor ?? themeData.textColor,
+              decoration: TextDecoration.none,  // Explicitly remove decoration
             ),
           ),
         ],
