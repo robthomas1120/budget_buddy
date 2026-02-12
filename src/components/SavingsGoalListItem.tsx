@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SavingsGoal } from '../types';
 import { useAppTheme } from '../context/ThemeContext';
 import { getThemeClasses } from '../theme/themes';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface SavingsGoalListItemProps {
     goal: SavingsGoal;
@@ -13,6 +14,7 @@ interface SavingsGoalListItemProps {
 
 const SavingsGoalListItem: React.FC<SavingsGoalListItemProps> = ({ goal, onPress, onDeposit }) => {
     const { theme } = useAppTheme();
+    const { currency } = useCurrency();
     const themeClasses = getThemeClasses(theme);
 
     const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
@@ -47,10 +49,10 @@ const SavingsGoalListItem: React.FC<SavingsGoalListItemProps> = ({ goal, onPress
 
             <View className="flex-row justify-between items-center mb-2">
                 <Text className={`text-base font-bold ${themeClasses.text.primary}`}>
-                    ₱{goal.currentAmount.toFixed(2)}
+                    {currency.symbol}{goal.currentAmount.toFixed(2)}
                 </Text>
                 <Text className={`text-sm ${themeClasses.text.secondary}`}>
-                    / ₱{goal.targetAmount.toFixed(2)}
+                    / {currency.symbol}{goal.targetAmount.toFixed(2)}
                 </Text>
             </View>
 
@@ -63,7 +65,7 @@ const SavingsGoalListItem: React.FC<SavingsGoalListItemProps> = ({ goal, onPress
             </View>
 
             <Text className={`text-xs ${themeClasses.text.secondary}`}>
-                ₱{remaining.toFixed(2)} to go
+                {currency.symbol}{remaining.toFixed(2)} to go
             </Text>
         </TouchableOpacity>
     );

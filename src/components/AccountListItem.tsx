@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Account } from '../types';
 import { useAppTheme } from '../context/ThemeContext';
 import { getThemeClasses } from '../theme/themes';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface AccountListItemProps {
     account: Account;
@@ -12,6 +13,7 @@ interface AccountListItemProps {
 
 const AccountListItem: React.FC<AccountListItemProps> = ({ account, onPress }) => {
     const { theme } = useAppTheme();
+    const { currency } = useCurrency();
     const themeClasses = getThemeClasses(theme);
 
     const getIconName = (type: string): keyof typeof MaterialCommunityIcons.glyphMap => {
@@ -47,7 +49,7 @@ const AccountListItem: React.FC<AccountListItemProps> = ({ account, onPress }) =
             </View>
 
             <Text className={`text-lg font-bold ${themeClasses.text.primary}`}>
-                ₱{account.balance.toFixed(2)}
+                {currency.symbol}{account.balance.toFixed(2)}
             </Text>
         </TouchableOpacity>
     );

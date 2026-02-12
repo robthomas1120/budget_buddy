@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Modal, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TextInput } from 'react-native';
+import { View, Modal, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TextInput } from 'react-native';
 import { Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Account } from '../types';
 import { useAppTheme } from '../context/ThemeContext';
 import { getThemeClasses } from '../theme/themes';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface DepositModalProps {
     visible: boolean;
@@ -16,6 +17,7 @@ interface DepositModalProps {
 
 const DepositModal: React.FC<DepositModalProps> = ({ visible, onClose, onDeposit, accounts, goalName }) => {
     const { theme } = useAppTheme();
+    const { currency } = useCurrency();
     const themeClasses = getThemeClasses(theme);
     const [amount, setAmount] = useState('');
     const [selectedAccountId, setSelectedAccountId] = useState<number | undefined>(accounts.length > 0 ? accounts[0].id : undefined);
@@ -53,7 +55,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ visible, onClose, onDeposit
                     <View className={`border rounded-lg px-3 py-2 mb-5 ${themeClasses.border} ${themeClasses.bg.background}`}>
                         <Text className={`text-xs ${themeClasses.text.secondary} mb-1`}>Amount</Text>
                         <View className="flex-row items-center">
-                            <Text className={`text-base ${themeClasses.text.primary} mr-2`}>₱</Text>
+                            <Text className={`text-base ${themeClasses.text.primary} mr-2`}>{currency.symbol}</Text>
                             <TextInput
                                 value={amount}
                                 onChangeText={setAmount}
@@ -86,7 +88,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ visible, onClose, onDeposit
                                         {acc.name}
                                     </Text>
                                     <Text className={`text-sm ${themeClasses.text.secondary}`}>
-                                        ₱{acc.balance.toFixed(2)}
+                                        {currency.symbol}{acc.balance.toFixed(2)}
                                     </Text>
                                 </View>
                                 <View

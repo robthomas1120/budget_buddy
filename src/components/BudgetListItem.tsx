@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Budget } from '../types';
 import { useAppTheme } from '../context/ThemeContext';
 import { getThemeClasses } from '../theme/themes';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface BudgetListItemProps {
     budget: Budget;
@@ -11,6 +12,7 @@ interface BudgetListItemProps {
 
 const BudgetListItem: React.FC<BudgetListItemProps> = ({ budget, onPress }) => {
     const { theme } = useAppTheme();
+    const { currency } = useCurrency();
     const themeClasses = getThemeClasses(theme);
 
     const progress = Math.min((budget.spent / budget.amount) * 100, 100);
@@ -32,7 +34,7 @@ const BudgetListItem: React.FC<BudgetListItemProps> = ({ budget, onPress }) => {
                     </Text>
                 </View>
                 <Text className={`text-base font-semibold ${isOverBudget ? 'text-red-600' : themeClasses.text.secondary}`}>
-                    ₱{budget.spent.toFixed(2)} / ₱{budget.amount.toFixed(2)}
+                    {currency.symbol}{budget.spent.toFixed(2)} / {currency.symbol}{budget.amount.toFixed(2)}
                 </Text>
             </View>
 
@@ -45,7 +47,7 @@ const BudgetListItem: React.FC<BudgetListItemProps> = ({ budget, onPress }) => {
             </View>
 
             <Text className={`text-xs ${themeClasses.text.secondary} mt-1.5`}>
-                {isOverBudget ? `Over budget by ₱${(budget.spent - budget.amount).toFixed(2)}` : `₱${(budget.amount - budget.spent).toFixed(2)} remaining`}
+                {isOverBudget ? `Over budget by ${currency.symbol}${(budget.spent - budget.amount).toFixed(2)}` : `${currency.symbol}${(budget.amount - budget.spent).toFixed(2)} remaining`}
             </Text>
         </TouchableOpacity>
     );

@@ -1,27 +1,30 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
-import { useTheme, Button, TextInput, SegmentedButtons, IconButton, Switch } from 'react-native-paper';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useApp } from '../context/AppContext';
+import { useAppTheme } from '../context/ThemeContext';
+import { getThemeClasses } from '../theme/themes';
 import { insertBudget } from '../database/BudgetHelper';
-import { Budget } from '../types';
+import { useCurrency } from '../context/CurrencyContext';
 
 const AddBudgetScreen = () => {
     const navigation = useNavigation();
-    const theme = useTheme();
-    const { accounts, db, refreshData } = useApp();
+    const { refreshData, db } = useApp();
+    const { theme } = useAppTheme();
+    const { currency } = useCurrency();
+    const themeClasses = getThemeClasses(theme);
 
     const [title, setTitle] = useState('');
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('Food');
-    const [period, setPeriod] = useState<'weekly' | 'monthly'>('monthly');
-    const [selectedAccountIds, setSelectedAccountIds] = useState<number[]>([]);
+    const [period, setPeriod] = useState('Monthly');
 
-    const categories = ['Food', 'Transportation', 'Entertainment', 'Housing', 'Shopping', 'Utilities', 'Healthcare', 'Education', 'Other'];
+    const categories = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Bills', 'Health', 'Education', 'Other'];
+    const periods = ['Weekly', 'Monthly', 'Yearly', 'One-time'];
 
     const handleSave = async () => {
-        if (!title || !amount) {
-            Alert.alert('Error', 'Please fill in all required fields');
+        if (!title || !amount || !db) {
+            Alert.alert('Error', 'Please fill in all fields');
             return;
         }
 
@@ -31,199 +34,113 @@ const AddBudgetScreen = () => {
             return;
         }
 
-        // Date calculation logic
-        const now = new Date();
-        let startDate = new Date();
-        let endDate = new Date();
-
-        if (period === 'weekly') {
-            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            endDate = new Date(startDate);
-            endDate.setDate(endDate.getDate() + 6);
-        } else {
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        }
-
         try {
-            if (db) {
-                const newBudget: Budget = {
-                    title,
-                    category,
-                    amount: parsedAmount,
-                    spent: 0, // Initial spent is 0, will be calculated later or we can run logic to calculate based on existing txs
-                    period,
-                    startDate: startDate.getTime(),
-                    endDate: endDate.getTime(),
-                    accountIds: selectedAccountIds.length > 0 ? selectedAccountIds : undefined,
-                    isActive: true
-                };
+            await insertBudget(db, {
+                title,
+                amount: parsedAmount,
+                spent: 0,
+                category,
+                period,
+                startDate: Date.now(),
+                endDate: Date.now() + 30 * 24 * 60 * 60 * 1000, // approx 1 month
+                isActive: true
+            });
 
-                // Note: In a real app we might want to calculate 'spent' immediately based on existing transactions in that period.
-                // For now we trust the helper or subsequent refreshes to handle it. 
-                // actually existing `BudgetHelper` does have logic to recalculate, but `insertBudget` is simple.
-                // We will just insert it. The next `refreshBudgets` call in AppContext *should* ideally recalculate or we can trigger it.
-                // The Flutter app calls `recalculateAllActiveBudgets` on load.
-
-                await insertBudget(db, newBudget);
-                await refreshData(); // This refreshes budgets, but might not recalculate spent immediately if the helper doesn't do it.
-                // For this migration, we assume the user adds a budget and then it tracks future stuff or we can add a recalc step. 
-                // Let's just save for now.
-
-                navigation.goBack();
-            }
+            await refreshData();
+            navigation.goBack();
         } catch (error) {
             console.error(error);
             Alert.alert('Error', 'Failed to save budget');
         }
     };
 
-    const toggleAccount = (id: number) => {
-        if (selectedAccountIds.includes(id)) {
-            setSelectedAccountIds(selectedAccountIds.filter(aid => aid !== id));
-        } else {
-            setSelectedAccountIds([...selectedAccountIds, id]);
-        }
-    };
+    const primaryColor = theme === 'light' ? '#10b981' : theme === 'dark' ? '#10b981' : '#ec4899';
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <View style={styles.header}>
-                <IconButton icon="close" onPress={() => navigation.goBack()} />
-                <Text style={styles.headerTitle}>Create Budget</Text>
-                <Button mode="text" onPress={handleSave}>Save</Button>
-            </View>
+        <View className={`flex-1 ${themeClasses.bg.background}`}>
+            <ScrollView className="p-4">
 
-            <ScrollView contentContainerStyle={styles.content}>
-                <TextInput
-                    label="Budget Title"
-                    value={title}
-                    onChangeText={setTitle}
-                    style={styles.input}
-                    mode="outlined"
-                />
+                {/* Title Input */}
+                <View className="mb-4">
+                    <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Budget Name</Text>
+                    <TextInput
+                        value={title}
+                        onChangeText={setTitle}
+                        placeholder="e.g. Monthly Groceries"
+                        placeholderTextColor="#9CA3AF"
+                        className={`border rounded-xl px-4 py-3 ${themeClasses.border} ${themeClasses.bg.surface} ${themeClasses.text.primary}`}
+                    />
+                </View>
 
-                <TextInput
-                    label="Amount"
-                    value={amount}
-                    onChangeText={setAmount}
-                    keyboardType="numeric"
-                    left={<TextInput.Affix text="₱ " />}
-                    style={styles.input}
-                    mode="outlined"
-                />
+                {/* Amount Input */}
+                <View className="mb-4">
+                    <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Limit Amount</Text>
+                    <View className={`flex-row items-center border rounded-xl px-4 py-3 ${themeClasses.border} ${themeClasses.bg.surface}`}>
+                        <Text className={`text-lg font-bold mr-2 ${themeClasses.text.primary}`}>{currency.symbol}</Text>
+                        <TextInput
+                            value={amount}
+                            onChangeText={setAmount}
+                            keyboardType="numeric"
+                            placeholder="0.00"
+                            placeholderTextColor="#9CA3AF"
+                            className={`flex-1 text-xl font-bold ${themeClasses.text.primary}`}
+                        />
+                    </View>
+                </View>
 
-                <Text style={styles.label}>Category</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipContainer}>
-                    {categories.map(cat => (
-                        <TouchableOpacity
-                            key={cat}
-                            style={[
-                                styles.chip,
-                                category === cat && { backgroundColor: theme.colors.primary }
-                            ]}
-                            onPress={() => setCategory(cat)}
-                        >
-                            <Text style={[styles.chipText, category === cat && { color: 'white' }]}>{cat}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
+                {/* Category Selector */}
+                <View className="mb-4">
+                    <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Category</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                        {categories.map(cat => (
+                            <TouchableOpacity
+                                key={cat}
+                                onPress={() => setCategory(cat)}
+                                className={`mr-2 px-4 py-2 rounded-full border ${category === cat ? 'bg-opacity-20' : themeClasses.bg.surface} ${themeClasses.border}`}
+                                style={category === cat ? { backgroundColor: primaryColor + '30', borderColor: primaryColor } : {}}
+                            >
+                                <Text className={`${category === cat ? 'font-bold' : ''} ${themeClasses.text.primary}`}
+                                    style={category === cat ? { color: primaryColor } : {}}>
+                                    {cat}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
 
-                <Text style={styles.label}>Period</Text>
-                <SegmentedButtons
-                    value={period}
-                    onValueChange={val => setPeriod(val as 'weekly' | 'monthly')}
-                    buttons={[
-                        { value: 'weekly', label: 'Weekly' },
-                        { value: 'monthly', label: 'Monthly' },
-                    ]}
-                    style={styles.segment}
-                />
-
-                <Text style={styles.label}>Include Accounts (Optional)</Text>
-                <Text style={styles.subLabel}>Leave empty to include all accounts</Text>
-                <View style={styles.accountsContainer}>
-                    {accounts.map(acc => (
-                        <TouchableOpacity
-                            key={acc.id}
-                            style={[
-                                styles.accountChip,
-                                selectedAccountIds.includes(acc.id!) && { borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryContainer }
-                            ]}
-                            onPress={() => acc.id && toggleAccount(acc.id)}
-                        >
-                            <Text style={{ color: theme.colors.primary }}>{acc.name}</Text>
-                        </TouchableOpacity>
-                    ))}
+                {/* Period Selector */}
+                <View className="mb-6">
+                    <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Period</Text>
+                    <View className="flex-row flex-wrap">
+                        {periods.map(p => (
+                            <TouchableOpacity
+                                key={p}
+                                onPress={() => setPeriod(p)}
+                                className={`mr-2 mb-2 px-4 py-2 rounded-full border ${period === p ? 'bg-opacity-20' : themeClasses.bg.surface} ${themeClasses.border}`}
+                                style={period === p ? { backgroundColor: primaryColor + '30', borderColor: primaryColor } : {}}
+                            >
+                                <Text className={`${period === p ? 'font-bold' : ''} ${themeClasses.text.primary}`}
+                                    style={period === p ? { color: primaryColor } : {}}>
+                                    {p}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
                 </View>
 
             </ScrollView>
+
+            <View className={`p-4 border-t ${themeClasses.border} ${themeClasses.bg.surface}`}>
+                <TouchableOpacity
+                    onPress={handleSave}
+                    className="py-4 rounded-xl items-center shadow-sm"
+                    style={{ backgroundColor: primaryColor }}
+                >
+                    <Text className="text-white font-bold text-lg">Create Budget</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 8,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    content: {
-        padding: 16,
-    },
-    input: {
-        marginBottom: 16,
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 8,
-        marginTop: 8,
-    },
-    subLabel: {
-        fontSize: 12,
-        color: '#666',
-        marginBottom: 8,
-    },
-    chipContainer: {
-        flexDirection: 'row',
-        marginBottom: 16,
-    },
-    chip: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        backgroundColor: '#e0e0e0',
-        marginRight: 8,
-    },
-    chipText: {
-        fontSize: 14,
-    },
-    segment: {
-        marginBottom: 16,
-    },
-    accountsContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-    },
-    accountChip: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        marginRight: 8,
-        marginBottom: 8,
-    }
-});
 
 export default AddBudgetScreen;

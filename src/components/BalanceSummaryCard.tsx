@@ -1,44 +1,60 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
 import { getThemeClasses } from '../theme/themes';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface BalanceSummaryCardProps {
     currentBalance: number;
-    onBalanceTap: () => void;
+    onBalanceTap?: () => void;
 }
 
 const BalanceSummaryCard: React.FC<BalanceSummaryCardProps> = ({ currentBalance, onBalanceTap }) => {
-    const [isBalanceVisible, setIsBalanceVisible] = useState(false);
     const { theme } = useAppTheme();
+    const { currency } = useCurrency();
+    const [isBalanceVisible, setIsBalanceVisible] = React.useState(true);
     const themeClasses = getThemeClasses(theme);
 
-    return (
-        <View className={`p-5 rounded-xl my-2.5 ${themeClasses.bg.primary}`}>
-            <View className="flex-row items-center justify-between">
-                <TouchableOpacity onPress={onBalanceTap} activeOpacity={0.9} className="flex-1 justify-center">
-                    <Text className={`text-base mb-1 ${themeClasses.text.onPrimary} opacity-90`}>
-                        Current Balance
-                    </Text>
-                    <Text className={`text-3xl font-bold ${themeClasses.text.onPrimary}`}>
-                        {isBalanceVisible ? `₱${currentBalance.toFixed(2)}` : '₱ ******'}
-                    </Text>
-                </TouchableOpacity>
+    const primaryColor = theme === 'light' ? '#10b981' : theme === 'dark' ? '#10b981' : '#ec4899';
 
-                <TouchableOpacity
-                    onPress={() => setIsBalanceVisible(!isBalanceVisible)}
-                    className="pl-2.5 justify-center"
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                    <MaterialCommunityIcons
-                        name={isBalanceVisible ? "eye-off" : "eye"}
-                        size={28}
-                        color="white"
-                    />
-                </TouchableOpacity>
+    const toggleBalanceVisibility = () => {
+        setIsBalanceVisible(!isBalanceVisible);
+    };
+
+    return (
+        <TouchableOpacity
+            onPress={onBalanceTap}
+            activeOpacity={0.9}
+            className="rounded-2xl p-6 mb-4 shadow-lg"
+            style={{ backgroundColor: primaryColor }}
+        >
+            <View className="mb-2">
+                <Text className="text-white/80 text-sm font-medium uppercase tracking-wider mb-1">
+                    Total Balance
+                </Text>
+
+                <View className="flex-row items-center justify-between">
+                    <Text className="text-white text-4xl font-bold">
+                        {isBalanceVisible ? `${currency.symbol}${currentBalance.toFixed(2)}` : '••••••'}
+                    </Text>
+
+                    <TouchableOpacity
+                        onPress={toggleBalanceVisibility}
+                        hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                        className="bg-white/20 p-2 rounded-full"
+                    >
+                        <MaterialCommunityIcons
+                            name={isBalanceVisible ? "eye" : "eye-off"}
+                            size={32}
+                            color="rgba(255,255,255,0.9)"
+                        />
+                    </TouchableOpacity>
+                </View>
             </View>
-        </View>
+
+
+        </TouchableOpacity>
     );
 };
 

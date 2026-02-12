@@ -6,10 +6,12 @@ import { useApp } from '../context/AppContext';
 import { useAppTheme } from '../context/ThemeContext';
 import { getThemeClasses } from '../theme/themes';
 import AccountListItem from '../components/AccountListItem';
+import { useCurrency } from '../context/CurrencyContext';
 
 const AccountsScreen = () => {
   const { accounts } = useApp();
   const { theme } = useAppTheme();
+  const { currency } = useCurrency();
   const themeClasses = getThemeClasses(theme);
   const navigation = useNavigation<any>();
 
@@ -21,7 +23,7 @@ const AccountsScreen = () => {
       <ScrollView className="p-4 pb-20">
         <View className={`p-5 rounded-xl mb-4 items-center`} style={{ backgroundColor: primaryColor }}>
           <Text className="text-white/90 text-base mb-1">Total Balance</Text>
-          <Text className="text-white text-3xl font-bold">₱{totalBalance.toFixed(2)}</Text>
+          <Text className="text-white text-3xl font-bold">{currency.symbol}{totalBalance.toFixed(2)}</Text>
         </View>
 
         <Text className={`text-xl font-bold mb-3 ${themeClasses.text.primary}`}>

@@ -10,10 +10,12 @@ import DepositModal from '../components/DepositModal';
 import { updateAccount } from '../database/AccountHelper';
 import { updateSavingsGoal } from '../database/SavingsHelper';
 import { insertTransaction } from '../database/TransactionHelper';
+import { useCurrency } from '../context/CurrencyContext';
 
 const SavingsScreen = () => {
   const { savingsGoals, accounts, refreshData, db } = useApp();
   const { theme } = useAppTheme();
+  const { currency } = useCurrency();
   const themeClasses = getThemeClasses(theme);
   const navigation = useNavigation<any>();
 
@@ -76,7 +78,7 @@ const SavingsScreen = () => {
       <ScrollView className="p-4 pb-20">
         <View className={`p-5 rounded-xl mb-4 items-center`} style={{ backgroundColor: primaryColor }}>
           <Text className="text-white/90 text-base mb-1">Total Saved</Text>
-          <Text className="text-white text-3xl font-bold">₱{totalSaved.toFixed(2)}</Text>
+          <Text className="text-white text-3xl font-bold">{currency.symbol}{totalSaved.toFixed(2)}</Text>
         </View>
 
         <Text className={`text-xl font-bold mb-3 ${themeClasses.text.primary}`}>

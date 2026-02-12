@@ -7,6 +7,8 @@ import { AppProvider } from './src/context/AppContext';
 import { ThemeProvider } from './src/context/ThemeContext';
 import { initDatabase } from './src/database/DatabaseHelper';
 
+import { CurrencyProvider } from './src/context/CurrencyContext';
+
 export default function App() {
   const [dbReady, setDbReady] = useState(false);
 
@@ -28,12 +30,14 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <AppProvider>
-        <NavigationContainer>
-          <AppNavigator />
-          <StatusBar style="auto" />
-        </NavigationContainer>
-      </AppProvider>
+      <CurrencyProvider>
+        <AppProvider>
+          <NavigationContainer>
+            <AppNavigator />
+            <StatusBar style="auto" />
+          </NavigationContainer>
+        </AppProvider>
+      </CurrencyProvider>
     </ThemeProvider>
   );
 }

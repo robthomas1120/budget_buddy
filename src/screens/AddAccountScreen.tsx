@@ -1,23 +1,28 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
-import { useTheme, Button, TextInput, SegmentedButtons, IconButton } from 'react-native-paper';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useApp } from '../context/AppContext';
+import { useAppTheme } from '../context/ThemeContext';
+import { getThemeClasses } from '../theme/themes';
 import { insertAccount } from '../database/AccountHelper';
-import { Account } from '../types';
+import { useCurrency } from '../context/CurrencyContext';
 
 const AddAccountScreen = () => {
     const navigation = useNavigation();
-    const theme = useTheme();
-    const { db, refreshData } = useApp();
+    const { refreshData, db } = useApp();
+    const { theme } = useAppTheme();
+    const { currency } = useCurrency();
+    const themeClasses = getThemeClasses(theme);
 
     const [name, setName] = useState('');
     const [balance, setBalance] = useState('');
-    const [type, setType] = useState('cash');
+    const [type, setType] = useState('Cash');
+
+    const types = ['Cash', 'Bank', 'E-Wallet', 'Credit Card', 'Investment'];
 
     const handleSave = async () => {
-        if (!name || !balance) {
-            Alert.alert('Error', 'Please fill in all required fields');
+        if (!name || !balance || !db) {
+            Alert.alert('Error', 'Please fill in all fields');
             return;
         }
 
@@ -28,98 +33,87 @@ const AddAccountScreen = () => {
         }
 
         try {
-            if (db) {
-                const newAccount: Account = {
-                    name,
-                    type,
-                    balance: parsedBalance,
-                    iconName: 'default', // Placeholder, logical mapping done in UI based on type
-                    color: 'default' // Placeholder
-                };
+            await insertAccount(db, {
+                name,
+                balance: parsedBalance,
+                type
+            });
 
-                await insertAccount(db, newAccount);
-                await refreshData();
-                navigation.goBack();
-            }
+            await refreshData();
+            navigation.goBack();
         } catch (error) {
             console.error(error);
             Alert.alert('Error', 'Failed to save account');
         }
     };
 
+    const primaryColor = theme === 'light' ? '#10b981' : theme === 'dark' ? '#10b981' : '#ec4899';
+
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <View style={styles.header}>
-                <IconButton icon="close" onPress={() => navigation.goBack()} />
-                <Text style={styles.headerTitle}>Add Account</Text>
-                <Button mode="text" onPress={handleSave}>Save</Button>
-            </View>
+        <View className={`flex-1 ${themeClasses.bg.background}`}>
+            <ScrollView className="p-4">
 
-            <ScrollView contentContainerStyle={styles.content}>
-                <TextInput
-                    label="Account Name"
-                    value={name}
-                    onChangeText={setName}
-                    style={styles.input}
-                    mode="outlined"
-                />
+                {/* Name Input */}
+                <View className="mb-4">
+                    <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Account Name</Text>
+                    <TextInput
+                        value={name}
+                        onChangeText={setName}
+                        placeholder="e.g. BPI Savings"
+                        placeholderTextColor="#9CA3AF"
+                        className={`border rounded-xl px-4 py-3 ${themeClasses.border} ${themeClasses.bg.surface} ${themeClasses.text.primary}`}
+                    />
+                </View>
 
-                <TextInput
-                    label="Current Balance"
-                    value={balance}
-                    onChangeText={setBalance}
-                    keyboardType="numeric"
-                    left={<TextInput.Affix text="₱ " />}
-                    style={styles.input}
-                    mode="outlined"
-                />
+                {/* Balance Input */}
+                <View className="mb-4">
+                    <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Current Balance</Text>
+                    <View className={`flex-row items-center border rounded-xl px-4 py-3 ${themeClasses.border} ${themeClasses.bg.surface}`}>
+                        <Text className={`text-lg font-bold mr-2 ${themeClasses.text.primary}`}>{currency.symbol}</Text>
+                        <TextInput
+                            value={balance}
+                            onChangeText={setBalance}
+                            keyboardType="numeric"
+                            placeholder="0.00"
+                            placeholderTextColor="#9CA3AF"
+                            className={`flex-1 text-xl font-bold ${themeClasses.text.primary}`}
+                        />
+                    </View>
+                </View>
 
-                <Text style={styles.label}>Account Type</Text>
-                <SegmentedButtons
-                    value={type}
-                    onValueChange={setType}
-                    buttons={[
-                        { value: 'cash', label: 'Cash' },
-                        { value: 'bank', label: 'Bank' },
-                        { value: 'e-wallet', label: 'E-Wallet' },
-                    ]}
-                    style={styles.segment}
-                />
+                {/* Type Selector */}
+                <View className="mb-6">
+                    <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Account Type</Text>
+                    <View className="flex-row flex-wrap">
+                        {types.map(t => (
+                            <TouchableOpacity
+                                key={t}
+                                onPress={() => setType(t)}
+                                className={`mr-2 mb-2 px-4 py-2 rounded-full border ${type === t ? 'bg-opacity-20' : themeClasses.bg.surface} ${themeClasses.border}`}
+                                style={type === t ? { backgroundColor: primaryColor + '30', borderColor: primaryColor } : {}}
+                            >
+                                <Text className={`${type === t ? 'font-bold' : ''} ${themeClasses.text.primary}`}
+                                    style={type === t ? { color: primaryColor } : {}}>
+                                    {t}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+
             </ScrollView>
+
+            <View className={`p-4 border-t ${themeClasses.border} ${themeClasses.bg.surface}`}>
+                <TouchableOpacity
+                    onPress={handleSave}
+                    className="py-4 rounded-xl items-center shadow-sm"
+                    style={{ backgroundColor: primaryColor }}
+                >
+                    <Text className="text-white font-bold text-lg">Add Account</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 8,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    content: {
-        padding: 16,
-    },
-    input: {
-        marginBottom: 16,
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 8,
-        marginTop: 8,
-    },
-    segment: {
-        marginBottom: 16,
-    },
-});
 
 export default AddAccountScreen;
