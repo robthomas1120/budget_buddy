@@ -1,26 +1,18 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Provider as PaperProvider } from 'react-native-paper';
-import { lightTheme, darkTheme, darkPinkTheme } from '../theme/themes';
-
-type ThemeType = 'light' | 'dark' | 'dark-pink';
+import { ThemeType } from '../theme/themes';
 
 interface ThemeContextType {
-    themeType: ThemeType;
-    setThemeType: (type: ThemeType) => void;
-    theme: any;
+    theme: ThemeType;
+    setTheme: (theme: ThemeType) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>({
-    themeType: 'light',
-    setThemeType: () => { },
-    theme: lightTheme,
-});
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-    const systemScheme = useColorScheme();
-    const [themeType, setThemeType] = useState<ThemeType>('light');
+const THEME_STORAGE_KEY = '@budget_buddy_theme';
+
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+    const [theme, setThemeState] = useState<ThemeType>('light');
 
     useEffect(() => {
         loadTheme();
@@ -28,44 +20,35 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 
     const loadTheme = async () => {
         try {
-            const savedTheme = await AsyncStorage.getItem('user_theme');
-            if (savedTheme) {
-                setThemeType(savedTheme as ThemeType);
-            } else if (systemScheme) {
-                setThemeType(systemScheme as ThemeType);
+            const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+            if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'dark-pink')) {
+                setThemeState(savedTheme as ThemeType);
             }
         } catch (error) {
-            console.log('Failed to load theme', error);
+            console.error('Failed to load theme', error);
         }
     };
 
-    const saveTheme = async (type: ThemeType) => {
+    const setTheme = async (newTheme: ThemeType) => {
         try {
-            await AsyncStorage.setItem('user_theme', type);
-            setThemeType(type);
+            setThemeState(newTheme);
+            await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme);
         } catch (error) {
-            console.log('Failed to save theme', error);
-        }
-    };
-
-    const getTheme = () => {
-        switch (themeType) {
-            case 'dark':
-                return darkTheme;
-            case 'dark-pink':
-                return darkPinkTheme;
-            default:
-                return lightTheme;
+            console.error('Failed to save theme', error);
         }
     };
 
     return (
-        <ThemeContext.Provider value={{ themeType, setThemeType: saveTheme, theme: getTheme() }}>
-            <PaperProvider theme={getTheme()}>
-                {children}
-            </PaperProvider>
+        <ThemeContext.Provider value={{ theme, setTheme }}>
+            {children}
         </ThemeContext.Provider>
     );
 };
 
-export const useAppTheme = () => useContext(ThemeContext);
+export const useAppTheme = () => {
+    const context = useContext(ThemeContext);
+    if (!context) {
+        throw new Error('useAppTheme must be used within ThemeProvider');
+    }
+    return context;
+};

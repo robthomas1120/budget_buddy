@@ -1,35 +1,52 @@
-import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
+// Theme type definition
+export type ThemeType = 'light' | 'dark' | 'dark-pink';
 
-export const lightTheme = {
-    ...MD3LightTheme,
-    colors: {
-        ...MD3LightTheme.colors,
-        primary: '#6200ee',
-        secondary: '#03dac6',
-        background: '#ffffff',
-        surface: '#f6f6f6',
+// Theme class mappings for NativeWind
+export const themeClasses = {
+    light: {
+        bg: {
+            primary: 'bg-light-primary',
+            surface: 'bg-light-surface',
+            surfaceVariant: 'bg-light-surfaceVariant',
+            background: 'bg-light-background',
+        },
+        text: {
+            primary: 'text-light-text',
+            secondary: 'text-light-textSecondary',
+            onPrimary: 'text-white',
+        },
+        border: 'border-light-border',
+    },
+    dark: {
+        bg: {
+            primary: 'bg-dark-primary',
+            surface: 'bg-dark-surface',
+            surfaceVariant: 'bg-dark-surfaceVariant',
+            background: 'bg-dark-background',
+        },
+        text: {
+            primary: 'text-dark-text',
+            secondary: 'text-dark-textSecondary',
+            onPrimary: 'text-white',
+        },
+        border: 'border-dark-border',
+    },
+    'dark-pink': {
+        bg: {
+            primary: 'bg-pink-primary',
+            surface: 'bg-pink-surface',
+            surfaceVariant: 'bg-pink-surfaceVariant',
+            background: 'bg-pink-background',
+        },
+        text: {
+            primary: 'text-pink-text',
+            secondary: 'text-pink-textSecondary',
+            onPrimary: 'text-white',
+            accent: 'text-pink-accent',
+        },
+        border: 'border-pink-border',
     },
 };
 
-export const darkTheme = {
-    ...MD3DarkTheme,
-    colors: {
-        ...MD3DarkTheme.colors,
-        primary: '#bb86fc',
-        secondary: '#03dac6',
-        background: '#121212',
-        surface: '#121212',
-    },
-};
-
-export const darkPinkTheme = {
-    ...MD3DarkTheme,
-    colors: {
-        ...MD3DarkTheme.colors,
-        primary: '#ff80ab', // Pink accent
-        secondary: '#ff4081',
-        background: '#1a000d', // Very dark pink/black
-        surface: '#2d0016', // Slightly lighter dark pink
-        onSurface: '#ffcfe5',
-    },
-};
+// Helper to get theme classes
+export const getThemeClasses = (theme: ThemeType) => themeClasses[theme];

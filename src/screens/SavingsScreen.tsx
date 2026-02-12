@@ -1,130 +1,133 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
-import { useTheme, Button } from 'react-native-paper';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import { useAppTheme } from '../context/ThemeContext';
+import { getThemeClasses } from '../theme/themes';
 import SavingsGoalListItem from '../components/SavingsGoalListItem';
 import DepositModal from '../components/DepositModal';
-import { updateSavingsGoal } from '../database/SavingsHelper';
 import { updateAccount } from '../database/AccountHelper';
+import { updateSavingsGoal } from '../database/SavingsHelper';
 import { insertTransaction } from '../database/TransactionHelper';
-import { SavingsGoal, Account, Transaction } from '../types';
 
 const SavingsScreen = () => {
-  const { savingsGoals, accounts, loading, refreshData, db } = useApp();
-  const theme = useTheme();
+  const { savingsGoals, accounts, refreshData, db } = useApp();
+  const { theme } = useAppTheme();
+  const themeClasses = getThemeClasses(theme);
   const navigation = useNavigation<any>();
 
   const [depositModalVisible, setDepositModalVisible] = useState(false);
-  const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null);
+  const [selectedGoal, setSelectedGoal] = useState<any>(null);
 
   const totalSaved = savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0);
-
-  const openDepositModal = (goal: SavingsGoal) => {
-    setSelectedGoal(goal);
-    setDepositModalVisible(true);
-  };
+  const primaryColor = theme === 'light' ? '#10b981' : theme === 'dark' ? '#10b981' : '#ec4899';
 
   const handleDeposit = async (amount: number, accountId: number) => {
     if (!db || !selectedGoal) return;
 
-    const account = accounts.find(a => a.id === accountId);
-    if (!account) {
-      Alert.alert('Error', 'Account not found');
-      return;
-    }
-
-    if (account.balance < amount) {
-      Alert.alert('Error', 'Insufficient funds in selected account');
-      return;
-    }
-
     try {
-      // 1. Deduct from Account
-      const updatedAccount: Account = { ...account, balance: account.balance - amount };
-      await updateAccount(db, updatedAccount);
+      const account = accounts.find(a => a.id === accountId);
+      if (!account) {
+        alert('Account not found');
+        return;
+      }
 
-      // 2. Add to Savings Goal
-      const updatedGoal: SavingsGoal = { ...selectedGoal, currentAmount: selectedGoal.currentAmount + amount };
-      await updateSavingsGoal(db, updatedGoal);
+      if (account.balance < amount) {
+        alert('Insufficient balance');
+        return;
+      }
 
-      // 3. Create Transaction Record
-      const transaction: Transaction = {
+      // Deduct from account
+      await updateAccount(db, accountId, { balance: account.balance - amount });
+
+      // Add to savings goal
+      await updateSavingsGoal(db, selectedGoal.id, {
+        currentAmount: selectedGoal.currentAmount + amount,
+      });
+
+      // Create transaction record
+      await insertTransaction(db, {
         title: `Deposit to ${selectedGoal.name}`,
-        amount: amount,
-        type: 'expense', // Considered expense from account view, or transfer
+        amount,
+        type: 'expense',
         category: 'Savings',
         date: Date.now(),
-        accountId: accountId,
-        notes: 'Auto-generated deposit'
-      };
-      await insertTransaction(db, transaction);
+        notes: `Deposited to savings goal`,
+        accountId,
+      });
 
       await refreshData();
-      Alert.alert('Success', 'Deposit successful!');
-
+      setDepositModalVisible(false);
+      setSelectedGoal(null);
     } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'Failed to process deposit');
+      console.error('Deposit failed:', error);
+      alert('Deposit failed');
     }
   };
 
+  const openDepositModal = (goal: any) => {
+    setSelectedGoal(goal);
+    setDepositModalVisible(true);
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refreshData} />
-        }
-      >
-        <View style={[styles.summaryCard, { backgroundColor: theme.colors.primary }]}>
-          <Text style={styles.summaryLabel}>Total Saved</Text>
-          <Text style={styles.summaryAmount}>₱{totalSaved.toFixed(2)}</Text>
+    <View className={`flex-1 ${themeClasses.bg.background}`}>
+      <ScrollView className="p-4 pb-20">
+        <View className={`p-5 rounded-xl mb-4 items-center`} style={{ backgroundColor: primaryColor }}>
+          <Text className="text-white/90 text-base mb-1">Total Saved</Text>
+          <Text className="text-white text-3xl font-bold">₱{totalSaved.toFixed(2)}</Text>
         </View>
 
-        <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>Your Goals</Text>
+        <Text className={`text-xl font-bold mb-3 ${themeClasses.text.primary}`}>
+          Your Goals
+        </Text>
 
         {savingsGoals.length === 0 ? (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="piggy-bank-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No savings goals yet</Text>
-            <Text style={styles.emptySubtext}>Start saving for something special</Text>
-            <Button
-              mode="text"
-              style={styles.emptyButton}
-              onPress={() => navigation.navigate('AddSavingsGoal')}
-            >
-              Create Goal
-            </Button>
+          <View className="items-center py-20">
+            <MaterialCommunityIcons
+              name="piggy-bank-outline"
+              size={64}
+              color={theme === 'light' ? '#D1D5DB' : '#4B5563'}
+            />
+            <Text className={`text-lg ${themeClasses.text.secondary} mt-4`}>
+              No savings goals yet
+            </Text>
+            <Text className={`text-sm ${themeClasses.text.secondary} text-center mt-2 px-6`}>
+              Create a goal to start saving
+            </Text>
           </View>
         ) : (
           savingsGoals.map(goal => (
             <SavingsGoalListItem
               key={goal.id}
               goal={goal}
-              onPress={() => { /* Detail view */ }}
+              onPress={() => {
+                // Navigate to goal details if needed
+              }}
               onDeposit={() => openDepositModal(goal)}
             />
           ))
         )}
       </ScrollView>
 
-      <View style={styles.fabContainer}>
-        <Button
-          mode="contained"
-          style={styles.fab}
-          contentStyle={styles.fabContent}
+      <View className="absolute bottom-5 right-5">
+        <TouchableOpacity
           onPress={() => navigation.navigate('AddSavingsGoal')}
+          className="w-14 h-14 rounded-full items-center justify-center shadow-lg"
+          style={{ backgroundColor: primaryColor }}
         >
           <MaterialCommunityIcons name="plus" size={30} color="white" />
-        </Button>
+        </TouchableOpacity>
       </View>
 
       {selectedGoal && (
         <DepositModal
           visible={depositModalVisible}
-          onClose={() => setDepositModalVisible(false)}
+          onClose={() => {
+            setDepositModalVisible(false);
+            setSelectedGoal(null);
+          }}
           onDeposit={handleDeposit}
           accounts={accounts}
           goalName={selectedGoal.name}
@@ -133,71 +136,5 @@ const SavingsScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 80,
-  },
-  summaryCard: {
-    padding: 24,
-    borderRadius: 12,
-    marginBottom: 24,
-    alignItems: 'center',
-    elevation: 4,
-  },
-  summaryLabel: {
-    color: 'white',
-    fontSize: 16,
-    marginBottom: 8,
-    opacity: 0.9,
-  },
-  summaryAmount: {
-    color: 'white',
-    fontSize: 32,
-    fontWeight: 'bold',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  emptyState: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#888',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#aaa',
-    marginBottom: 24,
-  },
-  emptyButton: {
-    marginTop: 8,
-  },
-  fabContainer: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-  },
-  fab: {
-    borderRadius: 30,
-    minWidth: 56,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fabContent: {
-    height: 56,
-  }
-});
 
 export default SavingsScreen;

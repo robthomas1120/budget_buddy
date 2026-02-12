@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Surface, useTheme } from 'react-native-paper';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Transaction } from '../types';
+import { useAppTheme } from '../context/ThemeContext';
+import { getThemeClasses } from '../theme/themes';
 
 interface TransactionListItemProps {
     transaction: Transaction;
@@ -11,81 +12,45 @@ interface TransactionListItemProps {
 }
 
 const TransactionListItem: React.FC<TransactionListItemProps> = ({ transaction, onDelete, onUpdate }) => {
-    const theme = useTheme();
+    const { theme } = useAppTheme();
+    const themeClasses = getThemeClasses(theme);
     const isIncome = transaction.type === 'income';
-    const transactionColor = isIncome ? '#4CAF50' : '#F44336'; // Green or Red
-
-    const formattedDate = new Date(transaction.date).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    });
 
     return (
-        <Surface style={styles.container} elevation={1}>
-            <TouchableOpacity
-                style={styles.content}
-                onPress={onUpdate}
-                onLongPress={onDelete} // Simple way to trigger delete for now
-            >
-                <View style={[styles.iconContainer, { backgroundColor: `${transactionColor}20` }]}>
-                    <MaterialCommunityIcons
-                        name={isIncome ? "arrow-down" : "arrow-up"}
-                        size={24}
-                        color={transactionColor}
-                    />
-                </View>
-
-                <View style={styles.detailsContainer}>
-                    <Text style={[styles.title, { color: transactionColor }]}>{transaction.title}</Text>
-                    <Text style={styles.subtitle}>
-                        {transaction.category} • {formattedDate}
+        <TouchableOpacity
+            onPress={onUpdate}
+            className={`p-4 mb-2 rounded-lg ${themeClasses.bg.surface} border ${themeClasses.border}`}
+            activeOpacity={0.7}
+        >
+            <View className="flex-row justify-between items-start">
+                <View className="flex-1">
+                    <Text className={`text-base font-semibold ${themeClasses.text.primary}`}>
+                        {transaction.title}
+                    </Text>
+                    <Text className={`text-sm ${themeClasses.text.secondary} mt-0.5`}>
+                        {transaction.category} • {new Date(transaction.date).toLocaleDateString()}
                     </Text>
                 </View>
 
-                <Text style={[styles.amount, { color: transactionColor }]}>
-                    ₱{transaction.amount.toFixed(2)}
-                </Text>
-            </TouchableOpacity>
-        </Surface>
+                <View className="items-end">
+                    <Text className={`text-lg font-bold ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
+                        {isIncome ? '+' : '-'}₱{transaction.amount.toFixed(2)}
+                    </Text>
+                    <TouchableOpacity
+                        onPress={onDelete}
+                        className="mt-1"
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                        <MaterialCommunityIcons
+                            name="delete-outline"
+                            size={20}
+                            color="#ef4444"
+                        />
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </TouchableOpacity>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        marginVertical: 6,
-        borderRadius: 12,
-        backgroundColor: 'white',
-    },
-    content: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-    },
-    iconContainer: {
-        width: 44,
-        height: 44,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    detailsContainer: {
-        flex: 1,
-    },
-    title: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    subtitle: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 4,
-    },
-    amount: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-});
 
 export default TransactionListItem;

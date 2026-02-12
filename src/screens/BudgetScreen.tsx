@@ -1,111 +1,62 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { useTheme, Button } from 'react-native-paper';
+import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import { useAppTheme } from '../context/ThemeContext';
+import { getThemeClasses } from '../theme/themes';
 import BudgetListItem from '../components/BudgetListItem';
 
 const BudgetScreen = () => {
-  const { budgets, scores, loading, refreshData, db } = useApp() as any; // forceful type cast for now as AppContext might be outdated in my thought model
-  const theme = useTheme();
+  const { budgets } = useApp();
+  const { theme } = useAppTheme();
+  const themeClasses = getThemeClasses(theme);
   const navigation = useNavigation<any>();
 
-  // Filter for active budgets logic could go here, for now showing all
-  const activeBudgets = budgets;
+  const activeBudgets = budgets.filter(b => b.isActive);
+  const primaryColor = theme === 'light' ? '#10b981' : theme === 'dark' ? '#10b981' : '#ec4899';
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refreshData} />
-        }
-      >
+    <View className={`flex-1 ${themeClasses.bg.background}`}>
+      <ScrollView className="p-4 pb-20">
         {activeBudgets.length === 0 ? (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="currency-usd" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No budgets yet</Text>
-            <Text style={styles.emptySubtext}>Create a budget to track your spending</Text>
-            <Button
-              mode="contained"
-              style={styles.emptyButton}
-              onPress={() => navigation.navigate('AddBudget')}
-            >
-              Add Budget
-            </Button>
+          <View className="items-center py-20">
+            <MaterialCommunityIcons
+              name="wallet-outline"
+              size={64}
+              color={theme === 'light' ? '#D1D5DB' : '#4B5563'}
+            />
+            <Text className={`text-lg ${themeClasses.text.secondary} mt-4`}>
+              No budgets yet
+            </Text>
+            <Text className={`text-sm ${themeClasses.text.secondary} text-center mt-2 px-6`}>
+              Create a budget to track your spending
+            </Text>
           </View>
         ) : (
-          activeBudgets.map((budget: any) => (
+          activeBudgets.map(budget => (
             <BudgetListItem
               key={budget.id}
               budget={budget}
-              onPress={() => { /* Show details */ }}
+              onPress={() => {
+                // Navigate to budget details if needed
+              }}
             />
           ))
         )}
       </ScrollView>
 
-      {activeBudgets.length > 0 && (
-        <View style={styles.fabContainer}>
-          <Button
-            mode="contained"
-            style={styles.fab}
-            contentStyle={styles.fabContent}
-            onPress={() => { /* Navigate to Add Budget */ }}
-          >
-            <MaterialCommunityIcons name="plus" size={30} color="white" />
-          </Button>
-        </View>
-      )}
+      <View className="absolute bottom-5 right-5">
+        <TouchableOpacity
+          onPress={() => navigation.navigate('AddBudget')}
+          className="w-14 h-14 rounded-full items-center justify-center shadow-lg"
+          style={{ backgroundColor: primaryColor }}
+        >
+          <MaterialCommunityIcons name="plus" size={30} color="white" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 80,
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 100,
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 16,
-    color: '#444',
-  },
-  emptySubtext: {
-    fontSize: 16,
-    color: '#888',
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  emptyButton: {
-    paddingHorizontal: 16,
-  },
-  fabContainer: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-  },
-  fab: {
-    borderRadius: 30,
-    minWidth: 56,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fabContent: {
-    height: 56,
-  }
-});
 
 export default BudgetScreen;

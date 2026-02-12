@@ -1,9 +1,10 @@
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { useTheme, Button } from 'react-native-paper';
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import { useAppTheme } from '../context/ThemeContext';
+import { getThemeClasses } from '../theme/themes';
 import BalanceSummaryCard from '../components/BalanceSummaryCard';
 import TransactionListItem from '../components/TransactionListItem';
 import { deleteTransaction } from '../database/TransactionHelper';
@@ -17,7 +18,8 @@ const DashboardScreen = () => {
     refreshData,
     db
   } = useApp();
-  const theme = useTheme();
+  const { theme } = useAppTheme();
+  const themeClasses = getThemeClasses(theme);
   const navigation = useNavigation<any>();
 
   const currentBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
@@ -35,14 +37,15 @@ const DashboardScreen = () => {
   };
 
   const handleUpdateTransaction = (transaction: any) => {
-    // Navigate to AddTransaction with params to edit
     navigation.navigate('AddTransaction', { transaction });
   };
 
+  const primaryColor = theme === 'light' ? '#10b981' : theme === 'dark' ? '#10b981' : '#ec4899';
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View className={`flex-1 ${themeClasses.bg.background}`}>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        className="p-4 pb-20"
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={refreshData} />
         }
@@ -52,18 +55,28 @@ const DashboardScreen = () => {
           onBalanceTap={() => navigation.navigate('Accounts')}
         />
 
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>Recent Transactions</Text>
-          <Button mode="text" onPress={() => { /* Navigate to All Transactions */ }}>
-            See All
-          </Button>
+        <View className="flex-row justify-between items-center mt-2.5 mb-1.5">
+          <Text className={`text-xl font-bold ${themeClasses.text.primary}`}>
+            Recent Transactions
+          </Text>
+          <TouchableOpacity onPress={() => { /* Navigate to All Transactions */ }}>
+            <Text className={themeClasses.text.secondary}>See All</Text>
+          </TouchableOpacity>
         </View>
 
         {recentTransactions.length === 0 ? (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="file-document-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>No transactions yet</Text>
-            <Text style={styles.emptySubtext}>Add your first transaction by tapping the + button</Text>
+          <View className="items-center py-10">
+            <MaterialCommunityIcons
+              name="file-document-outline"
+              size={48}
+              color={theme === 'light' ? '#D1D5DB' : '#4B5563'}
+            />
+            <Text className={`text-lg ${themeClasses.text.secondary} mt-4`}>
+              No transactions yet
+            </Text>
+            <Text className={`text-sm ${themeClasses.text.secondary} text-center mt-2`}>
+              Add your first transaction by tapping the + button
+            </Text>
           </View>
         ) : (
           recentTransactions.map(t => (
@@ -77,69 +90,17 @@ const DashboardScreen = () => {
         )}
       </ScrollView>
 
-      <View style={styles.fabContainer}>
-        <Button
-          mode="contained"
-          style={styles.fab}
-          contentStyle={styles.fabContent}
+      <View className="absolute bottom-5 right-5">
+        <TouchableOpacity
           onPress={() => navigation.navigate('AddTransaction')}
+          className="w-14 h-14 rounded-full items-center justify-center shadow-lg"
+          style={{ backgroundColor: primaryColor }}
         >
           <MaterialCommunityIcons name="plus" size={30} color="white" />
-        </Button>
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 80, // Space for FAB
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  emptyState: {
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyText: {
-    fontSize: 18,
-    color: '#888',
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#aaa',
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  fabContainer: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-  },
-  fab: {
-    borderRadius: 30,
-    minWidth: 56,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fabContent: {
-    height: 56,
-  }
-});
 
 export default DashboardScreen;
