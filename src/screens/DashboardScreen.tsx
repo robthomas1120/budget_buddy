@@ -37,7 +37,7 @@ const DashboardScreen = () => {
   };
 
   const handleUpdateTransaction = (transaction: any) => {
-    navigation.navigate('AddTransaction', { transaction });
+    navigation.navigate('TransactionDetail', { transaction });
   };
 
   const primaryColor = theme === 'light' ? '#10b981' : theme === 'dark' ? '#10b981' : '#ec4899';

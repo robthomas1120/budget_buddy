@@ -86,7 +86,7 @@ const BudgetDetailsScreen = () => {
                             key={t.id}
                             transaction={t}
                             isOutflow={t.type === 'transfer' ? t.budgetId === budgetId : t.type === 'expense'}
-                            onUpdate={() => navigation.navigate('AddTransaction', { transaction: t })}
+                            onUpdate={() => navigation.navigate('TransactionDetail', { transaction: t })}
                             onDelete={() => { }} // Handle deletion if needed, but AppContext handles global state
                         />
                     ))

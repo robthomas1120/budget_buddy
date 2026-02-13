@@ -14,6 +14,7 @@ import AddAccountScreen from '../screens/AddAccountScreen';
 import AddSavingsGoalScreen from '../screens/AddSavingsGoalScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import BudgetDetailsScreen from '../screens/BudgetDetailsScreen';
+import TransactionDetailScreen from '../screens/TransactionDetailScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -173,6 +174,11 @@ const AppNavigator = () => {
         options={({ route }: any) => ({
           title: route.params?.title || 'Budget Details'
         })}
+      />
+      <Stack.Screen
+        name="TransactionDetail"
+        component={TransactionDetailScreen}
+        options={{ title: 'Transaction Details' }}
       />
     </Stack.Navigator>
   );
