@@ -102,17 +102,33 @@ const TransactionDetailScreen = () => {
         <View className={`flex-1 ${themeClasses.bg.background}`}>
             <ScrollView className="flex-1 p-4">
                 {/* Header Section */}
-                <View className="items-center py-8">
-                    <Text className={`text-2xl font-bold ${themeClasses.text.primary} text-center mb-2`}>
+                <View className="items-start py-8 px-2">
+                    <Text className={`text-2xl font-bold ${themeClasses.text.primary} mb-2`}>
                         {transaction.title}
                     </Text>
-                    <Text className={`text-4xl font-bold ${amountColor}`}>
-                        {isIncome ? '+' : isExpense ? '-' : ''}{currency.symbol}{transaction.amount.toFixed(2)}
-                    </Text>
-                    {isTransfer && transaction.fee ? (
-                        <Text className={`text-sm ${themeClasses.text.secondary} mt-1`}>
-                            Fee: {currency.symbol}{transaction.fee.toFixed(2)}
+                    <View className="flex-row items-center">
+                        <Text
+                            className={`text-3xl font-bold ${amountColor} mr-1.5`}
+                            style={{ includeFontPadding: false, marginTop: 2 }}
+                        >
+                            {isIncome ? '+' : isExpense ? '-' : ''}{currency.symbol}
                         </Text>
+                        <Text
+                            className={`text-5xl font-extrabold ${amountColor}`}
+                            style={{ includeFontPadding: false }}
+                        >
+                            {transaction.amount.toFixed(2)}
+                        </Text>
+                    </View>
+                    {isTransfer && transaction.fee ? (
+                        <View className="flex-row items-center mt-1">
+                            <Text className={`text-sm ${themeClasses.text.secondary} mr-1`}>
+                                Fee:
+                            </Text>
+                            <Text className={`text-sm font-semibold ${themeClasses.text.primary}`}>
+                                {currency.symbol}{transaction.fee.toFixed(2)}
+                            </Text>
+                        </View>
                     ) : null}
                 </View>
 

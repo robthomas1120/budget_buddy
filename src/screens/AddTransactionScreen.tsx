@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
@@ -230,225 +230,239 @@ const AddTransactionScreen = () => {
 
   return (
     <View className={`flex-1 ${themeClasses.bg.background}`}>
-      <ScrollView className="p-4">
-        {/* Type Selector */}
-        <View className={`flex-row mb-4 rounded-lg p-1 border ${themeClasses.border} ${toggleContainerBg}`}>
-          <TouchableOpacity
-            className={`flex-1 py-2 rounded-md ${type === 'expense' ? activeItemBg : ''}`}
-            onPress={() => setType('expense')}
-          >
-            <Text className={`text-center font-semibold ${type === 'expense' ? 'text-red-500' : 'text-gray-500'}`}>Expense</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className={`flex-1 py-2 rounded-md ${type === 'income' ? activeItemBg : ''}`}
-            onPress={() => setType('income')}
-          >
-            <Text className={`text-center font-semibold ${type === 'income' ? 'text-green-500' : 'text-gray-500'}`}>Income</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className={`flex-1 py-2 rounded-md ${type === 'transfer' ? activeItemBg : ''}`}
-            onPress={() => setType('transfer')}
-          >
-            <Text className={`text-center font-semibold ${type === 'transfer' ? activeTextColor : 'text-gray-500'}`}>Transfer</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Amount Input */}
-        <View className="mb-4">
-          <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Amount</Text>
-          <View className={`flex-row items-center border rounded-xl px-4 py-3 ${themeClasses.border} ${themeClasses.bg.surface}`}>
-            <Text className={`text-lg font-bold mr-2 ${themeClasses.text.primary}`}>{currency.symbol}</Text>
-            <TextInput
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="numeric"
-              placeholder="0.00"
-              placeholderTextColor="#9CA3AF"
-              className={`flex-1 text-xl font-bold ${themeClasses.text.primary}`}
-            />
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+        <ScrollView className="p-4">
+          {/* Type Selector */}
+          <View className={`flex-row mb-4 rounded-lg p-1 border ${themeClasses.border} ${toggleContainerBg}`}>
+            <TouchableOpacity
+              className={`flex-1 py-2 rounded-md ${type === 'expense' ? activeItemBg : ''}`}
+              onPress={() => setType('expense')}
+            >
+              <Text className={`text-center font-semibold ${type === 'expense' ? 'text-red-500' : 'text-gray-500'}`}>Expense</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`flex-1 py-2 rounded-md ${type === 'income' ? activeItemBg : ''}`}
+              onPress={() => setType('income')}
+            >
+              <Text className={`text-center font-semibold ${type === 'income' ? 'text-green-500' : 'text-gray-500'}`}>Income</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`flex-1 py-2 rounded-md ${type === 'transfer' ? activeItemBg : ''}`}
+              onPress={() => setType('transfer')}
+            >
+              <Text className={`text-center font-semibold ${type === 'transfer' ? activeTextColor : 'text-gray-500'}`}>Transfer</Text>
+            </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Title Input (Hidden for Transfers) */}
-        {type !== 'transfer' && (
+          {/* Amount Input */}
           <View className="mb-4">
-            <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Title</Text>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              placeholder="What is this for?"
-              placeholderTextColor="#9CA3AF"
-              className={`border rounded-xl px-4 py-3 ${themeClasses.border} ${themeClasses.bg.surface} ${themeClasses.text.primary}`}
-            />
+            <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Amount</Text>
+            <View className={`flex-row items-center border rounded-xl px-4 ${themeClasses.border} ${themeClasses.bg.surface}`}>
+              <Text
+                className={`text-xl font-bold mr-2 ${themeClasses.text.primary}`}
+                style={{ includeFontPadding: false, marginTop: 2 }}
+              >
+                {currency.symbol}
+              </Text>
+              <TextInput
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="numeric"
+                placeholder="0.00"
+                placeholderTextColor="#9CA3AF"
+                className={`flex-1 text-xl font-bold py-3 ${themeClasses.text.primary}`}
+                style={{ includeFontPadding: false, textAlignVertical: 'center', paddingVertical: 0 }}
+              />
+            </View>
           </View>
-        )}
 
-        {/* Fund Type Picker (Transaction Source) */}
-        <View className="mb-4">
-          <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>{type === 'transfer' ? 'From' : 'Transaction Source'}</Text>
-          <View className={`flex-row rounded-lg p-1 border ${themeClasses.border} ${toggleContainerBg}`}>
-            <TouchableOpacity
-              className={`flex-1 py-2 rounded-md ${fundType === 'account' ? activeItemBg : ''}`}
-              onPress={() => setFundType('account')}
-            >
-              <View className="flex-row items-center justify-center">
-                <MaterialCommunityIcons name="bank" size={16} color={fundType === 'account' ? primaryColor : '#9CA3AF'} className="mr-2" />
-                <Text className={`font-semibold ${fundType === 'account' ? activeTextColor : themeClasses.text.secondary}`}>Accounts</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`flex-1 py-2 rounded-md ${fundType === 'budget' ? activeItemBg : ''}`}
-              onPress={() => setFundType('budget')}
-            >
-              <View className="flex-row items-center justify-center">
-                <MaterialCommunityIcons name="wallet" size={16} color={fundType === 'budget' ? primaryColor : '#9CA3AF'} className="mr-2" />
-                <Text className={`font-semibold ${fundType === 'budget' ? activeTextColor : themeClasses.text.secondary}`}>Budgets</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+          {/* Title Input (Hidden for Transfers) */}
+          {type !== 'transfer' && (
+            <View className="mb-4">
+              <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Title</Text>
+              <TextInput
+                value={title}
+                onChangeText={setTitle}
+                placeholder="What is this for?"
+                placeholderTextColor="#9CA3AF"
+                className={`border rounded-xl px-4 py-3 ${themeClasses.border} ${themeClasses.bg.surface} ${themeClasses.text.primary}`}
+              />
+            </View>
+          )}
 
-        {/* Conditional Account/Budget Selector */}
-        {fundType === 'account' ? (
-          <View className="mb-6">
-            <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Accounts</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-              {accounts.map(acc => (
-                <TouchableOpacity
-                  key={acc.id}
-                  onPress={() => setAccountId(acc.id)}
-                  className={`mr-2 px-4 py-3 rounded-xl border ${accountId === acc.id ? 'bg-opacity-20' : themeClasses.bg.surface} ${themeClasses.border}`}
-                  style={accountId === acc.id ? { backgroundColor: primaryColor + '30', borderColor: primaryColor } : {}}
-                >
-                  <Text className={`font-semibold ${themeClasses.text.primary}`}>{acc.name}</Text>
-                  <Text className={`text-xs ${themeClasses.text.secondary} mt-0.5`}>{currency.symbol}{acc.balance.toFixed(2)}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+          {/* Fund Type Picker (Transaction Source) */}
+          <View className="mb-4">
+            <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>{type === 'transfer' ? 'From' : 'Transaction Source'}</Text>
+            <View className={`flex-row rounded-lg p-1 border ${themeClasses.border} ${toggleContainerBg}`}>
+              <TouchableOpacity
+                className={`flex-1 py-2 rounded-md ${fundType === 'account' ? activeItemBg : ''}`}
+                onPress={() => setFundType('account')}
+              >
+                <View className="flex-row items-center justify-center">
+                  <MaterialCommunityIcons name="bank" size={16} color={fundType === 'account' ? primaryColor : '#9CA3AF'} className="mr-2" />
+                  <Text className={`font-semibold ${fundType === 'account' ? activeTextColor : themeClasses.text.secondary}`}>Accounts</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`flex-1 py-2 rounded-md ${fundType === 'budget' ? activeItemBg : ''}`}
+                onPress={() => setFundType('budget')}
+              >
+                <View className="flex-row items-center justify-center">
+                  <MaterialCommunityIcons name="wallet" size={16} color={fundType === 'budget' ? primaryColor : '#9CA3AF'} className="mr-2" />
+                  <Text className={`font-semibold ${fundType === 'budget' ? activeTextColor : themeClasses.text.secondary}`}>Budgets</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
-        ) : (
-          <View className="mb-6">
-            <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Budgets</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-              {budgets.filter(b => b.isActive).map(budget => (
-                <TouchableOpacity
-                  key={budget.id}
-                  onPress={() => setBudgetId(budget.id)}
-                  className={`mr-2 px-4 py-3 rounded-xl border ${budgetId === budget.id ? 'bg-opacity-20' : themeClasses.bg.surface} ${themeClasses.border}`}
-                  style={budgetId === budget.id ? { backgroundColor: primaryColor + '30', borderColor: primaryColor } : {}}
-                >
-                  <View className="flex-row items-center justify-between">
-                    <Text className={`font-semibold ${themeClasses.text.primary} mr-2`}>{budget.title}</Text>
-                  </View>
-                  <Text className={`text-xs ${themeClasses.text.secondary} mt-0.5`}>
-                    Balance: {currency.symbol}{budget.spent.toFixed(2)}
+
+          {/* Conditional Account/Budget Selector */}
+          {fundType === 'account' ? (
+            <View className="mb-6">
+              <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Accounts</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                {accounts.map(acc => (
+                  <TouchableOpacity
+                    key={acc.id}
+                    onPress={() => setAccountId(acc.id)}
+                    className={`mr-2 px-4 py-3 rounded-xl border ${accountId === acc.id ? 'bg-opacity-20' : themeClasses.bg.surface} ${themeClasses.border}`}
+                    style={accountId === acc.id ? { backgroundColor: primaryColor + '30', borderColor: primaryColor } : {}}
+                  >
+                    <Text className={`font-semibold ${themeClasses.text.primary}`}>{acc.name}</Text>
+                    <Text className={`text-xs ${themeClasses.text.secondary} mt-0.5`}>{currency.symbol}{acc.balance.toFixed(2)}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          ) : (
+            <View className="mb-6">
+              <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Budgets</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                {budgets.filter(b => b.isActive).map(budget => (
+                  <TouchableOpacity
+                    key={budget.id}
+                    onPress={() => setBudgetId(budget.id)}
+                    className={`mr-2 px-4 py-3 rounded-xl border ${budgetId === budget.id ? 'bg-opacity-20' : themeClasses.bg.surface} ${themeClasses.border}`}
+                    style={budgetId === budget.id ? { backgroundColor: primaryColor + '30', borderColor: primaryColor } : {}}
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <Text className={`font-semibold ${themeClasses.text.primary} mr-2`}>{budget.title}</Text>
+                    </View>
+                    <Text className={`text-xs ${themeClasses.text.secondary} mt-0.5`}>
+                      Balance: {currency.symbol}{budget.spent.toFixed(2)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* Transfer Destination and Fee */}
+          {type === 'transfer' && (
+            <View>
+              {/* Destination Picker */}
+              <View className="mb-4">
+                <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>To</Text>
+                <View className={`flex-row rounded-lg p-1 border ${themeClasses.border} ${toggleContainerBg}`}>
+                  <TouchableOpacity
+                    className={`flex-1 py-2 rounded-md ${toFundType === 'account' ? activeItemBg : ''}`}
+                    onPress={() => setToFundType('account')}
+                  >
+                    <View className="flex-row items-center justify-center">
+                      <MaterialCommunityIcons name="bank" size={16} color={toFundType === 'account' ? primaryColor : '#9CA3AF'} className="mr-2" />
+                      <Text className={`font-semibold ${toFundType === 'account' ? activeTextColor : themeClasses.text.secondary}`}>Accounts</Text>
+                    </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className={`flex-1 py-2 rounded-md ${toFundType === 'budget' ? activeItemBg : ''}`}
+                    onPress={() => setToFundType('budget')}
+                  >
+                    <View className="flex-row items-center justify-center">
+                      <MaterialCommunityIcons name="wallet" size={16} color={toFundType === 'budget' ? primaryColor : '#9CA3AF'} className="mr-2" />
+                      <Text className={`font-semibold ${toFundType === 'budget' ? activeTextColor : themeClasses.text.secondary}`}>Budgets</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Conditional Destination Account/Budget Selector */}
+              {toFundType === 'account' ? (
+                <View className="mb-6">
+                  <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Target Account</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                    {accounts.map(acc => (
+                      <TouchableOpacity
+                        key={acc.id}
+                        onPress={() => setToAccountId(acc.id)}
+                        className={`mr-2 px-4 py-3 rounded-xl border ${toAccountId === acc.id ? 'bg-opacity-20' : themeClasses.bg.surface} ${themeClasses.border}`}
+                        style={toAccountId === acc.id ? { backgroundColor: primaryColor + '30', borderColor: primaryColor } : {}}
+                      >
+                        <Text className={`font-semibold ${themeClasses.text.primary}`}>{acc.name}</Text>
+                        <Text className={`text-xs ${themeClasses.text.secondary} mt-0.5`}>{currency.symbol}{acc.balance.toFixed(2)}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              ) : (
+                <View className="mb-6">
+                  <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Target Budget</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                    {budgets.filter(b => b.isActive).map(budget => (
+                      <TouchableOpacity
+                        key={budget.id}
+                        onPress={() => setToBudgetId(budget.id)}
+                        className={`mr-2 px-4 py-3 rounded-xl border ${toBudgetId === budget.id ? 'bg-opacity-20' : themeClasses.bg.surface} ${themeClasses.border}`}
+                        style={toBudgetId === budget.id ? { backgroundColor: primaryColor + '30', borderColor: primaryColor } : {}}
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <Text className={`font-semibold ${themeClasses.text.primary} mr-2`}>{budget.title}</Text>
+                        </View>
+                        <Text className={`text-xs ${themeClasses.text.secondary} mt-0.5`}>
+                          Balance: {currency.symbol}{budget.spent.toFixed(2)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
+              {/* Fee Input */}
+              <View className="mb-4">
+                <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Transaction Fee (Optional)</Text>
+                <View className={`flex-row items-center border rounded-xl px-4 ${themeClasses.border} ${themeClasses.bg.surface}`}>
+                  <Text
+                    className={`text-xl font-bold mr-2 ${themeClasses.text.primary}`}
+                    style={{ includeFontPadding: false }}
+                  >
+                    {currency.symbol}
                   </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-
-        {/* Transfer Destination and Fee */}
-        {type === 'transfer' && (
-          <View>
-            {/* Destination Picker */}
-            <View className="mb-4">
-              <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>To</Text>
-              <View className={`flex-row rounded-lg p-1 border ${themeClasses.border} ${toggleContainerBg}`}>
-                <TouchableOpacity
-                  className={`flex-1 py-2 rounded-md ${toFundType === 'account' ? activeItemBg : ''}`}
-                  onPress={() => setToFundType('account')}
-                >
-                  <View className="flex-row items-center justify-center">
-                    <MaterialCommunityIcons name="bank" size={16} color={toFundType === 'account' ? primaryColor : '#9CA3AF'} className="mr-2" />
-                    <Text className={`font-semibold ${toFundType === 'account' ? activeTextColor : themeClasses.text.secondary}`}>Accounts</Text>
-                  </View>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className={`flex-1 py-2 rounded-md ${toFundType === 'budget' ? activeItemBg : ''}`}
-                  onPress={() => setToFundType('budget')}
-                >
-                  <View className="flex-row items-center justify-center">
-                    <MaterialCommunityIcons name="wallet" size={16} color={toFundType === 'budget' ? primaryColor : '#9CA3AF'} className="mr-2" />
-                    <Text className={`font-semibold ${toFundType === 'budget' ? activeTextColor : themeClasses.text.secondary}`}>Budgets</Text>
-                  </View>
-                </TouchableOpacity>
+                  <TextInput
+                    value={fee}
+                    onChangeText={setFee}
+                    keyboardType="numeric"
+                    placeholder="0.00"
+                    placeholderTextColor="#9CA3AF"
+                    className={`flex-1 text-xl font-bold py-3 ${themeClasses.text.primary}`}
+                    style={{ includeFontPadding: false, textAlignVertical: 'center', paddingVertical: 0 }}
+                  />
+                </View>
               </View>
             </View>
+          )}
 
-            {/* Conditional Destination Account/Budget Selector */}
-            {toFundType === 'account' ? (
-              <View className="mb-6">
-                <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Target Account</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-                  {accounts.map(acc => (
-                    <TouchableOpacity
-                      key={acc.id}
-                      onPress={() => setToAccountId(acc.id)}
-                      className={`mr-2 px-4 py-3 rounded-xl border ${toAccountId === acc.id ? 'bg-opacity-20' : themeClasses.bg.surface} ${themeClasses.border}`}
-                      style={toAccountId === acc.id ? { backgroundColor: primaryColor + '30', borderColor: primaryColor } : {}}
-                    >
-                      <Text className={`font-semibold ${themeClasses.text.primary}`}>{acc.name}</Text>
-                      <Text className={`text-xs ${themeClasses.text.secondary} mt-0.5`}>{currency.symbol}{acc.balance.toFixed(2)}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            ) : (
-              <View className="mb-6">
-                <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Target Budget</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-                  {budgets.filter(b => b.isActive).map(budget => (
-                    <TouchableOpacity
-                      key={budget.id}
-                      onPress={() => setToBudgetId(budget.id)}
-                      className={`mr-2 px-4 py-3 rounded-xl border ${toBudgetId === budget.id ? 'bg-opacity-20' : themeClasses.bg.surface} ${themeClasses.border}`}
-                      style={toBudgetId === budget.id ? { backgroundColor: primaryColor + '30', borderColor: primaryColor } : {}}
-                    >
-                      <View className="flex-row items-center justify-between">
-                        <Text className={`font-semibold ${themeClasses.text.primary} mr-2`}>{budget.title}</Text>
-                      </View>
-                      <Text className={`text-xs ${themeClasses.text.secondary} mt-0.5`}>
-                        Balance: {currency.symbol}{budget.spent.toFixed(2)}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
+        </ScrollView>
 
-            {/* Fee Input */}
-            <View className="mb-4">
-              <Text className={`text-sm font-semibold mb-1.5 ${themeClasses.text.primary}`}>Transaction Fee (Optional)</Text>
-              <View className={`flex-row items-center border rounded-xl px-4 py-3 ${themeClasses.border} ${themeClasses.bg.surface}`}>
-                <Text className={`text-lg font-bold mr-2 ${themeClasses.text.primary}`}>{currency.symbol}</Text>
-                <TextInput
-                  value={fee}
-                  onChangeText={setFee}
-                  keyboardType="numeric"
-                  placeholder="0.00"
-                  placeholderTextColor="#9CA3AF"
-                  className={`flex-1 text-xl font-bold ${themeClasses.text.primary}`}
-                />
-              </View>
-            </View>
-          </View>
-        )}
-
-      </ScrollView>
-
-      <View className={`p-4 pb-10 border-t ${themeClasses.border} ${themeClasses.bg.surface}`}>
-        <TouchableOpacity
-          onPress={handleSave}
-          className="py-4 rounded-xl items-center shadow-sm"
-          style={{ backgroundColor: primaryColor }}
-        >
-          <Text className="text-white font-bold text-lg">
-            {isEditing ? 'Update Transaction' : 'Save Transaction'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+        <View className={`p-4 pb-10 border-t ${themeClasses.border} ${themeClasses.bg.surface}`}>
+          <TouchableOpacity
+            onPress={handleSave}
+            className="py-4 rounded-xl items-center shadow-sm"
+            style={{ backgroundColor: primaryColor }}
+          >
+            <Text className="text-white font-bold text-lg">
+              {isEditing ? 'Update Transaction' : 'Save Transaction'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 };
