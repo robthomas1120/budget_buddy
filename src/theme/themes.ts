@@ -1,8 +1,27 @@
 // Theme type definition
 export type ThemeType = 'light' | 'dark' | 'dark-pink';
 
+interface ThemeDefinition {
+    bg: {
+        primary: string;
+        surface: string;
+        surfaceVariant: string;
+        background: string;
+    };
+    text: {
+        primary: string;
+        secondary: string;
+        onPrimary: string;
+        accent?: string;
+    };
+    raw: {
+        textSecondary: string;
+    };
+    border: string;
+}
+
 // Theme class mappings for NativeWind
-export const themeClasses = {
+export const themeClasses: Record<ThemeType, ThemeDefinition> = {
     light: {
         bg: {
             primary: 'bg-light-primary',
@@ -14,6 +33,9 @@ export const themeClasses = {
             primary: 'text-light-text',
             secondary: 'text-light-textSecondary',
             onPrimary: 'text-white',
+        },
+        raw: {
+            textSecondary: '#6b7280',
         },
         border: 'border-light-border',
     },
@@ -28,6 +50,9 @@ export const themeClasses = {
             primary: 'text-dark-text',
             secondary: 'text-dark-textSecondary',
             onPrimary: 'text-white',
+        },
+        raw: {
+            textSecondary: '#9ca3af',
         },
         border: 'border-dark-border',
     },
@@ -44,9 +69,12 @@ export const themeClasses = {
             onPrimary: 'text-white',
             accent: 'text-pink-accent',
         },
+        raw: {
+            textSecondary: '#a1a1aa',
+        },
         border: 'border-pink-border',
     },
 };
 
 // Helper to get theme classes
-export const getThemeClasses = (theme: ThemeType) => themeClasses[theme];
+export const getThemeClasses = (theme: ThemeType): ThemeDefinition => themeClasses[theme];

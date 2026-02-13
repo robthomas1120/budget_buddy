@@ -7,6 +7,7 @@ import { useAppTheme } from '../context/ThemeContext';
 import { getThemeClasses } from '../theme/themes';
 import { useCurrency } from '../context/CurrencyContext';
 import { Transaction } from '../types';
+import { deleteTransaction } from '../database/TransactionHelper';
 
 type RootStackParamList = {
     TransactionDetail: { transaction: Transaction };
@@ -19,7 +20,7 @@ const TransactionDetailScreen = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<TransactionDetailRouteProp>();
     const { transaction } = route.params;
-    const { accounts, budgets, deleteTransaction, db, refreshData } = useApp();
+    const { accounts, budgets, db, refreshData } = useApp();
     const { theme } = useAppTheme();
     const { currency } = useCurrency();
     const themeClasses = getThemeClasses(theme);
@@ -85,10 +86,10 @@ const TransactionDetailScreen = () => {
     };
 
     const InfoRow = ({ label, value, icon, color }: { label: string, value: string, icon: any, color?: string }) => (
-        <View className="flex-row items-center justify-between py-4 border-b border-gray-100" style={{ borderBottomColor: theme === 'light' ? '#f3f4f6' : '#374151' }}>
+        <View className="flex-row items-center justify-between py-4 border-b border-gray-100" style={{ borderBottomColor: theme === 'light' ? '#e5e7eb' : '#374151' }}>
             <View className="flex-row items-center">
                 <View className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${themeClasses.bg.surfaceVariant}`}>
-                    <MaterialCommunityIcons name={icon} size={18} color={color || themeClasses.text.secondary.replace('text-', '')} />
+                    <MaterialCommunityIcons name={icon} size={18} color={color || themeClasses.raw.textSecondary} />
                 </View>
                 <Text className={`text-sm ${themeClasses.text.secondary}`}>{label}</Text>
             </View>
@@ -177,7 +178,7 @@ const TransactionDetailScreen = () => {
                         <View className="py-4">
                             <View className="flex-row items-center mb-2">
                                 <View className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${themeClasses.bg.surfaceVariant}`}>
-                                    <MaterialCommunityIcons name="note-text-outline" size={18} color={themeClasses.text.secondary.replace('text-', '')} />
+                                    <MaterialCommunityIcons name="note-text-outline" size={18} color={(themeClasses as any).raw.textSecondary} />
                                 </View>
                                 <Text className={`text-sm ${themeClasses.text.secondary}`}>Notes</Text>
                             </View>

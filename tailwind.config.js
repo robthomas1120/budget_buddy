@@ -16,7 +16,7 @@ module.exports = {
                     surfaceVariant: '#f3f4f6', // gray-100
                     text: '#111827',          // gray-900
                     textSecondary: '#6b7280', // gray-500
-                    border: '#e5e7eb',        // gray-200
+                    border: '#d1d5db',        // gray-300
                 },
                 // Dark theme
                 dark: {

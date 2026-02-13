@@ -299,7 +299,7 @@ const AddTransactionScreen = () => {
                 onPress={() => setFundType('account')}
               >
                 <View className="flex-row items-center justify-center">
-                  <MaterialCommunityIcons name="bank" size={16} color={fundType === 'account' ? primaryColor : '#9CA3AF'} className="mr-2" />
+                  <MaterialCommunityIcons name="bank" size={16} color={fundType === 'account' ? primaryColor : themeClasses.raw.textSecondary} className="mr-2" />
                   <Text className={`font-semibold ${fundType === 'account' ? activeTextColor : themeClasses.text.secondary}`}>Accounts</Text>
                 </View>
               </TouchableOpacity>
@@ -308,7 +308,7 @@ const AddTransactionScreen = () => {
                 onPress={() => setFundType('budget')}
               >
                 <View className="flex-row items-center justify-center">
-                  <MaterialCommunityIcons name="wallet" size={16} color={fundType === 'budget' ? primaryColor : '#9CA3AF'} className="mr-2" />
+                  <MaterialCommunityIcons name="wallet" size={16} color={fundType === 'budget' ? primaryColor : themeClasses.raw.textSecondary} className="mr-2" />
                   <Text className={`font-semibold ${fundType === 'budget' ? activeTextColor : themeClasses.text.secondary}`}>Budgets</Text>
                 </View>
               </TouchableOpacity>
