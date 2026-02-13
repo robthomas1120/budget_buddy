@@ -39,7 +39,7 @@ const BudgetScreen = () => {
               key={budget.id}
               budget={budget}
               onPress={() => {
-                // Navigate to budget details if needed
+                navigation.navigate('BudgetDetails', { budgetId: budget.id, title: budget.title });
               }}
             />
           ))

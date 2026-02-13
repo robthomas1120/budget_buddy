@@ -18,7 +18,7 @@ const AddAccountScreen = () => {
     const [balance, setBalance] = useState('');
     const [type, setType] = useState('Cash');
 
-    const types = ['Cash', 'Bank', 'E-Wallet', 'Credit Card', 'Investment'];
+    const types = ['Cash', 'Bank', 'E-Wallet'];
 
     const handleSave = async () => {
         if (!name || !balance || !db) {
@@ -29,6 +29,11 @@ const AddAccountScreen = () => {
         const parsedBalance = parseFloat(balance);
         if (isNaN(parsedBalance)) {
             Alert.alert('Error', 'Invalid balance');
+            return;
+        }
+
+        if (parsedBalance < 0) {
+            Alert.alert('Error', 'Initial balance cannot be negative');
             return;
         }
 

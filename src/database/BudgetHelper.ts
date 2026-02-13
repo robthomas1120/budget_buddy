@@ -24,9 +24,9 @@ export const insertBudget = async (db: SQLite.SQLiteDatabase, budget: Budget) =>
 export const getBudgets = async (db: SQLite.SQLiteDatabase): Promise<Budget[]> => {
     const result = await db.getAllAsync<any>(`
         SELECT b.*, 
-        COALESCE((SELECT SUM(CASE WHEN t.type = 'expense' THEN t.amount ELSE -t.amount END) 
+        COALESCE((SELECT SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE -t.amount END) 
                   FROM transactions t 
-                  WHERE t.budget_id = b.id), 0) as calculated_spent 
+                  WHERE t.budget_id = b.id), 0) as balance 
         FROM budgets b
     `);
     return result.map(row => ({
@@ -37,7 +37,7 @@ export const getBudgets = async (db: SQLite.SQLiteDatabase): Promise<Budget[]> =
         period: row.period,
         startDate: row.start_date,
         endDate: row.end_date,
-        spent: row.calculated_spent, // Use the calculated value
+        spent: row.balance, // Re-purpose 'spent' as 'balance'
         accountIds: row.account_ids ? row.account_ids.split(',').map(Number) : [],
         isActive: row.is_active === 1
     }));

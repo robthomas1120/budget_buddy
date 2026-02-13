@@ -24,31 +24,24 @@ const BudgetListItem: React.FC<BudgetListItemProps> = ({ budget, onPress }) => {
             className={`p-4 mb-3 rounded-xl ${themeClasses.bg.surface} border ${themeClasses.border}`}
             activeOpacity={0.7}
         >
-            <View className="flex-row justify-between items-start mb-2">
+            <View className="flex-row justify-between items-center">
                 <View className="flex-1">
                     <Text className={`text-lg font-bold ${themeClasses.text.primary}`}>
                         {budget.title}
                     </Text>
-                    <Text className={`text-sm ${themeClasses.text.secondary} mt-0.5`}>
-                        {budget.category} • {budget.period}
+                    <Text className={`text-xs ${themeClasses.text.secondary} mt-0.5`}>
+                        Budget Wallet
                     </Text>
                 </View>
-                <Text className={`text-base font-semibold ${isOverBudget ? 'text-red-600' : themeClasses.text.secondary}`}>
-                    {currency.symbol}{budget.spent.toFixed(2)} / {currency.symbol}{budget.amount.toFixed(2)}
-                </Text>
+                <View className="items-end">
+                    <Text className={`text-xl font-bold ${budget.spent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {currency.symbol}{budget.spent.toFixed(2)}
+                    </Text>
+                    <Text className={`text-[10px] ${themeClasses.text.secondary}`}>
+                        Current Balance
+                    </Text>
+                </View>
             </View>
-
-            {/* Progress Bar */}
-            <View className={`h-2 rounded-full ${themeClasses.bg.surfaceVariant} overflow-hidden`}>
-                <View
-                    className={`h-full ${isOverBudget ? 'bg-red-500' : 'bg-green-500'}`}
-                    style={{ width: `${progress}%` }}
-                />
-            </View>
-
-            <Text className={`text-xs ${themeClasses.text.secondary} mt-1.5`}>
-                {isOverBudget ? `Over budget by ${currency.symbol}${(budget.spent - budget.amount).toFixed(2)}` : `${currency.symbol}${(budget.amount - budget.spent).toFixed(2)} remaining`}
-            </Text>
         </TouchableOpacity>
     );
 };

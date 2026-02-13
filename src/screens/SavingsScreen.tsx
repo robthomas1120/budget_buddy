@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
@@ -36,15 +36,16 @@ const SavingsScreen = () => {
       }
 
       if (account.balance < amount) {
-        alert('Insufficient balance');
+        Alert.alert('Insufficient Balance', `You don't have enough funds in ${account.name} for this deposit.`);
         return;
       }
 
       // Deduct from account
-      await updateAccount(db, accountId, { balance: account.balance - amount });
+      await updateAccount(db, { ...account, balance: account.balance - amount });
 
       // Add to savings goal
-      await updateSavingsGoal(db, selectedGoal.id, {
+      await updateSavingsGoal(db, {
+        ...selectedGoal,
         currentAmount: selectedGoal.currentAmount + amount,
       });
 

@@ -35,7 +35,10 @@ const AddSavingsGoalScreen = () => {
                 name,
                 targetAmount: parsedAmount,
                 currentAmount: 0,
-                reason
+                reason,
+                startDate: Date.now(),
+                targetDate: Date.now() + 30 * 24 * 60 * 60 * 1000, // Default 1 month
+                isActive: true
             });
 
             await refreshData();
@@ -97,7 +100,7 @@ const AddSavingsGoalScreen = () => {
 
             </ScrollView>
 
-            <View className={`p-4 border-t ${themeClasses.border} ${themeClasses.bg.surface}`}>
+            <View className={`p-4 pb-10 border-t ${themeClasses.border} ${themeClasses.bg.surface}`}>
                 <TouchableOpacity
                     onPress={handleSave}
                     className="py-4 rounded-xl items-center shadow-sm"

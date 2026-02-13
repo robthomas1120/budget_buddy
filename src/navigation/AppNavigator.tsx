@@ -13,6 +13,7 @@ import AddBudgetScreen from '../screens/AddBudgetScreen';
 import AddAccountScreen from '../screens/AddAccountScreen';
 import AddSavingsGoalScreen from '../screens/AddSavingsGoalScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import BudgetDetailsScreen from '../screens/BudgetDetailsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -165,6 +166,13 @@ const AppNavigator = () => {
         name="AddSavingsGoal"
         component={AddSavingsGoalScreen}
         options={{ presentation: 'modal', title: 'New Savings Goal' }}
+      />
+      <Stack.Screen
+        name="BudgetDetails"
+        component={BudgetDetailsScreen}
+        options={({ route }: any) => ({
+          title: route.params?.title || 'Budget Details'
+        })}
       />
     </Stack.Navigator>
   );
