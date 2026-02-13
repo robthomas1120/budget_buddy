@@ -2,12 +2,15 @@ export interface Transaction {
   id?: number;
   title: string;
   amount: number;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'transfer';
   category: string;
   date: number; // stored as milliseconds since epoch
   notes?: string;
   accountId?: number;
   budgetId?: number;
+  toAccountId?: number;
+  toBudgetId?: number;
+  fee?: number;
 }
 
 export interface Account {

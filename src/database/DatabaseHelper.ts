@@ -20,8 +20,13 @@ export const createTables = async (db: SQLite.SQLiteDatabase) => {
       notes TEXT,
       account_id INTEGER,
       budget_id INTEGER,
+      to_account_id INTEGER,
+      to_budget_id INTEGER,
+      fee REAL,
       FOREIGN KEY (account_id) REFERENCES accounts (id),
-      FOREIGN KEY (budget_id) REFERENCES budgets (id)
+      FOREIGN KEY (budget_id) REFERENCES budgets (id),
+      FOREIGN KEY (to_account_id) REFERENCES accounts (id),
+      FOREIGN KEY (to_budget_id) REFERENCES budgets (id)
     );
   `);
 
@@ -90,10 +95,12 @@ export const initDatabase = async () => {
 
     // Migration: Add budget_id to transactions if it doesn't exist
     try {
-      await db.execAsync('ALTER TABLE transactions ADD COLUMN budget_id INTEGER REFERENCES budgets(id);');
-      console.log('Migration: Added budget_id to transactions');
+      await db.execAsync('ALTER TABLE transactions ADD COLUMN to_account_id INTEGER;');
+      await db.execAsync('ALTER TABLE transactions ADD COLUMN to_budget_id INTEGER;');
+      await db.execAsync('ALTER TABLE transactions ADD COLUMN fee REAL;');
+      console.log('Migration: Added transfer columns to transactions');
     } catch (e) {
-      // Column likely already exists
+      // Columns likely already exist
     }
 
     await seedDatabase(db);

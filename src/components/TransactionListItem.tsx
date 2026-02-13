@@ -10,17 +10,39 @@ interface TransactionListItemProps {
     transaction: Transaction;
     onDelete: () => void;
     onUpdate: () => void;
+    isOutflow?: boolean;
 }
 
-const TransactionListItem: React.FC<TransactionListItemProps> = ({ transaction, onDelete, onUpdate }) => {
+const TransactionListItem: React.FC<TransactionListItemProps> = ({ transaction, onDelete, onUpdate, isOutflow }) => {
     const { theme } = useAppTheme();
     const { currency } = useCurrency();
     const themeClasses = getThemeClasses(theme);
 
-    const isExpense = transaction.type === 'expense';
-    const amountColor = isExpense ? 'text-red-500' : 'text-green-500';
-    const iconName = isExpense ? 'arrow-top-right' : 'arrow-bottom-left';
-    const iconColor = isExpense ? '#ef4444' : '#10b981';
+    const type = transaction.type;
+    const isActuallyOutflow = isOutflow !== undefined ? isOutflow : (type === 'expense');
+
+    // Icon and Color logic
+    let iconName: any = 'swap-horizontal';
+    let iconColor = '#3b82f6'; // Blue for transfer
+    let amountColor = 'text-blue-500';
+
+    if (type === 'expense') {
+        iconName = 'arrow-top-right';
+        iconColor = '#ef4444';
+        amountColor = 'text-red-500';
+    } else if (type === 'income') {
+        iconName = 'arrow-bottom-left';
+        iconColor = '#10b981';
+        amountColor = 'text-green-500';
+    } else if (type === 'transfer') {
+        // Use custom sign color if provided, otherwise stick to neutral blue
+        if (isOutflow !== undefined) {
+            amountColor = isActuallyOutflow ? 'text-red-500' : 'text-green-500';
+        } else {
+            amountColor = 'text-blue-500';
+            iconColor = '#3b82f6';
+        }
+    }
 
     return (
         <TouchableOpacity
@@ -36,20 +58,18 @@ const TransactionListItem: React.FC<TransactionListItemProps> = ({ transaction, 
                     {transaction.title}
                 </Text>
                 <Text className={`text-xs ${themeClasses.text.secondary} mt-0.5`}>
-                    {transaction.category} • {new Date(transaction.date).toLocaleDateString()}
+                    {type.charAt(0).toUpperCase() + type.slice(1)} • {new Date(transaction.date).toLocaleDateString()}
                 </Text>
             </View>
 
             <View className="items-end">
                 <Text className={`text-base font-bold ${amountColor}`}>
-                    {isExpense ? '-' : '+'}{currency.symbol}{transaction.amount.toFixed(2)}
+                    {type === 'transfer' && isOutflow === undefined ? '' : (isActuallyOutflow ? '-' : '+')}
+                    {currency.symbol}{transaction.amount.toFixed(2)}
                 </Text>
-                {transaction.accountId && (
-                    <Text className={`text-xs ${themeClasses.text.secondary} mt-0.5`}>
-                        {/* We could lookup account name here if needed */}
-                        Account
-                    </Text>
-                )}
+                <Text className={`text-xs ${themeClasses.text.secondary} mt-0.5`}>
+                    {transaction.category || (type === 'transfer' ? 'Transfer' : 'Other')}
+                </Text>
             </View>
         </TouchableOpacity>
     );

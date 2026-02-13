@@ -22,7 +22,7 @@ const BudgetDetailsScreen = () => {
 
     const budgetTransactions = useMemo(() => {
         return transactions
-            .filter(t => t.budgetId === budgetId)
+            .filter(t => t.budgetId === budgetId || t.toBudgetId === budgetId)
             .sort((a, b) => b.date - a.date);
     }, [transactions, budgetId]);
 
@@ -85,6 +85,7 @@ const BudgetDetailsScreen = () => {
                         <TransactionListItem
                             key={t.id}
                             transaction={t}
+                            isOutflow={t.type === 'transfer' ? t.budgetId === budgetId : t.type === 'expense'}
                             onUpdate={() => navigation.navigate('AddTransaction', { transaction: t })}
                             onDelete={() => { }} // Handle deletion if needed, but AppContext handles global state
                         />
